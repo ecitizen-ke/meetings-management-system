@@ -7,7 +7,7 @@ import { useSelector } from "react-redux";
 const Profile = () => {
   const user = useSelector((state) => state.auth);
   useEffect(() => {
-    console.log("user ", user);
+    // console.log("user ", user);
   });
   return (
     <Container className="profile-box">
@@ -16,9 +16,9 @@ const Profile = () => {
         <img className="logo" src={logo} alt="Logo" />
       </div>
       <div>
-        <div className="profile-name">John Doe</div>
+        <div className="profile-name">{user.auth ? user.auth.name : ``}</div>
         <div className="profile-email">
-          <small>john.doe@gmail.com</small>
+          <small>{user.auth ? user.auth.email : ``}</small>
         </div>
       </div>
     </Container>

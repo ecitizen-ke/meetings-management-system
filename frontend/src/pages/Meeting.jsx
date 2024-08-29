@@ -14,12 +14,16 @@ import {
 import { DataGrid } from "@mui/x-data-grid";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
+import Snackbar from "@mui/material/Snackbar";
+
+let count = 0;
 
 const Meeting = () => {
   const [open, setOpen] = useState(false);
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
-
+  const [meetings, setMeetings] = useState([]);
+  const [openToast, setOpenToast] = useState(false);
   const style = {
     position: "absolute",
     top: "50%",
@@ -35,6 +39,7 @@ const Meeting = () => {
     register,
     handleSubmit,
     watch,
+    reset,
     formState: { errors, isSubmitting },
   } = useForm();
 
@@ -47,29 +52,56 @@ const Meeting = () => {
       headerName: "Time",
       width: 130,
     },
+    {
+      field: "actions",
+      headerName: "Actions",
+      width: 150,
+      sortable: false,
+      filterable: false,
+      renderCell: (params) => (
+        <div>
+          <Button
+            variant="contained"
+            color="primary"
+            size="small"
+            style={{ marginRight: 8 }}
+            onClick={() => handleEdit(params.row)}
+          >
+            Edit
+          </Button>
+          <Button
+            variant="contained"
+            color="secondary"
+            size="small"
+            onClick={() => handleDelete(params.row)}
+          >
+            Delete
+          </Button>
+        </div>
+      ),
+    },
   ];
 
-  const rows = [
-    { id: 1, title: "Kickoff Meeting", date: "28-08-2024", time: "16:30hrs" },
-  ];
+  // const rows = [
+  //   { id: 1, title: "Kickoff Meeting", date: "28-08-2024", time: "16:30hrs" },
+  // ];
 
   const onSubmit = async (data) => {
     console.log(data);
+    data["id"] = ++count;
+    setMeetings([...meetings, data]);
+    setOpen(false);
+    reset();
+    setOpenToast(true);
+  };
 
-    const res = await new Promise((resolve, reject) => {
-      // Simulate an asynchronous operation using setTimeout
-      setTimeout(() => {
-        const success = true; // You can change this to false to test rejection
+  // snackbar close
+  const handleToastClose = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
 
-        if (success) {
-          resolve("Operation was successful!");
-        } else {
-          reject("Operation failed.");
-        }
-      }, 5000);
-    });
-
-    console.log(res);
+    setOpenToast(false);
   };
 
   return (
@@ -93,7 +125,7 @@ const Meeting = () => {
 
       <div style={{ width: "100%" }}>
         <DataGrid
-          rows={rows}
+          rows={meetings}
           columns={columns}
           initialState={{
             pagination: {
@@ -262,6 +294,15 @@ const Meeting = () => {
           </form>
         </Box>
       </Modal>
+
+      {/* Toastr */}
+
+      <Snackbar
+        open={openToast}
+        autoHideDuration={6000}
+        onClose={handleToastClose}
+        message="Meeting was saved successfully"
+      />
     </>
   );
 };

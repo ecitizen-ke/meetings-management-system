@@ -43,7 +43,7 @@ const Login = () => {
           dispatch(
             login({
               auth: {
-                username: "admin",
+                email: e.email,
                 name: "Admin User",
               },
               isLoggedIn: true,
@@ -104,6 +104,7 @@ const Login = () => {
                 id="outlined-basic"
                 label="Email Address"
                 variant="outlined"
+                value={`admin@tests.co.ke`}
                 type="email"
                 {...register("email", {
                   required: "This field is required",
@@ -137,6 +138,7 @@ const Login = () => {
                 id="outlined"
                 label="Password"
                 variant="outlined"
+                value={`linspace`}
                 type="password"
                 {...register("password", {
                   required: "This field is required",
