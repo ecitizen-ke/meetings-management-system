@@ -1,4 +1,3 @@
-# backend/app/models.py
 from flask import current_app as app
 import MySQLdb
 
