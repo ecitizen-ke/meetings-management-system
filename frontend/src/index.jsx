@@ -17,7 +17,33 @@ const theme = createTheme({
     secondary: {
       main: red[500],
     },
-    
+  },
+  typography: {
+    fontFamily: "Lexend",
+    h1: {
+      fontSize: "3rem",
+      fontWeight: 700,
+    },
+    h2: {
+      fontSize: "2.5rem",
+      fontWeight: 600,
+    },
+    h3: {
+      fontSize: "2rem",
+      fontWeight: 500,
+    },
+    h4: {
+      fontSize: "1.75rem",
+      fontWeight: 400,
+    },
+    h5: {
+      fontSize: "1.5rem",
+      fontWeight: 300,
+    },
+    h6: {
+      fontSize: "1.25rem",
+      fontWeight: 200,
+    },
   },
 });
 

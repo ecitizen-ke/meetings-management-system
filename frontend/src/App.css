@@ -1,6 +1,5 @@
 body{
-    background-color: #efefef;
-    font-family: "Rubik", sans-serif;
+    font-family: "Lexend", sans-serif;
     font-optical-sizing: auto;
     font-weight: 400;
     font-style: normal;
@@ -12,10 +11,10 @@ body{
     justify-content: center;
     align-items: center;
     flex-direction: column;
-    background-color: #efefef;
+    /* background-color: #efefef; */
 }
 .login-form{
-    width: 500px;
+    width: 650px;
 }
 .form-control{
     padding-bottom: 12px;
@@ -29,4 +28,31 @@ body{
     display: flex;
     justify-content: space-between;
     align-items: center
+}
+.login-title >h5{
+    font-size: 32px !important;
+  
+    margin-bottom: 20px;
+}
+.login-area{
+    margin-top: 100px;
+    margin-bottom: 100px;
+}
+.login-subtitle{
+    font-size: 32px;
+}
+/* responsive */
+@media (max-width: 768px) {
+    .login-page{
+        flex-direction: column;
+    }
+    .login-form{
+        width: 100%;
+    }
+    .login-title > h5{
+        font-size: 24px !important;
+    }
+    .login-subtitle{
+        font-size: 24px;
+    }
 }

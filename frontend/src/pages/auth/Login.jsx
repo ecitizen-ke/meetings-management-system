@@ -1,13 +1,20 @@
-import { Email, Lock, LoginRounded } from "@mui/icons-material";
+import {
+  Email,
+  Lock,
+  LoginRounded,
+  Visibility,
+  VisibilityOff,
+} from "@mui/icons-material";
 import {
   Button,
   Card,
+  IconButton,
   InputAdornment,
   Link,
   TextField,
   Typography,
 } from "@mui/material";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { login } from "../../redux/features/auth/authSlice";
@@ -24,6 +31,7 @@ const Login = () => {
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
 
   const auth = useSelector((state) => state.auth);
   useEffect(() => {
@@ -33,6 +41,10 @@ const Login = () => {
       navigate("/");
     }
   });
+
+  const handleClickShowPassword = () => {
+    setShowPassword(!showPassword);
+  };
 
   const onSubmit = async (e) => {
     // auth simulation
@@ -61,13 +73,7 @@ const Login = () => {
   return (
     <div className="login-page">
       <div className="login-form">
-        <Card
-          style={{
-            padding: 15,
-          }}
-          sx={{ minWidth: 275 }}
-          variant="outlined"
-        >
+        <div>
           <div
             style={{
               display: "flex",
@@ -86,98 +92,131 @@ const Login = () => {
             />
           </div>
           <br />
-          <Typography gutterBottom variant="h4" component="div">
-            Login
-          </Typography>
+          <div
+            style={{
+              textAlign: "center",
+            }}
+            className="login-title"
+          >
+            <h4>Login</h4>
 
-          <form noValidate onSubmit={handleSubmit(onSubmit)} method="post">
-            <div className="form-control">
-              <TextField
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Email color="primary" />
-                    </InputAdornment>
-                  ),
-                }}
-                fullWidth={true}
-                id="outlined-basic"
-                label="Email Address"
-                variant="outlined"
-                value={`admin@tests.co.ke`}
-                type="email"
-                {...register("email", {
-                  required: "This field is required",
-                  pattern: {
-                    value: /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/,
-                    message: "Please enter a valid email address",
-                  },
-                })}
-                error={errors.email && true}
-              />
-              {errors.email && (
-                <span
-                  style={{
-                    color: "crimson",
+            <h3 className="login-subtitle"> Boardroom Management System</h3>
+          </div>
+
+          <div className="login-area">
+            <form noValidate onSubmit={handleSubmit(onSubmit)} method="post">
+              <div className="form-control">
+                <TextField
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Email color="primary" />
+                      </InputAdornment>
+                    ),
                   }}
-                >
-                  {errors.email.message}
-                </span>
-              )}
-            </div>
-            <div className="form-control">
-              <TextField
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Lock color="primary" />
-                    </InputAdornment>
-                  ),
-                }}
-                fullWidth={true}
-                id="outlined"
-                label="Password"
-                variant="outlined"
-                value={`linspace`}
-                type="password"
-                {...register("password", {
-                  required: "This field is required",
-                  minLength: {
-                    value: 6,
-                    message: "Password must be at least 6 characters long",
-                  },
-                })}
-                error={errors.password && true}
-              />
-              {errors.password && (
-                <span
-                  style={{
-                    color: "crimson",
+                  fullWidth={true}
+                  id="outlined-basic"
+                  label="Email Address"
+                  variant="outlined"
+                  defaultValue={`admin@tests.co.ke`}
+                  placeholder="Enter your email address"
+                  type="email"
+                  {...register("email", {
+                    required: "This field is required",
+                    pattern: {
+                      value: /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/,
+                      message: "Please enter a valid email address",
+                    },
+                  })}
+                  error={errors.email && true}
+                />
+                {errors.email && (
+                  <span
+                    style={{
+                      color: "crimson",
+                    }}
+                  >
+                    {errors.email.message}
+                  </span>
+                )}
+              </div>
+              <div className="form-control">
+                <TextField
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Lock color="primary" />
+                      </InputAdornment>
+                    ),
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={handleClickShowPassword}
+                          aria-label="Show Password"
+                        >
+                          <Typography
+                            style={{
+                              fontSize: 14,
+                            }}
+                            variant="h6"
+                          >
+                            Show password
+                          </Typography>
+                          {!showPassword ? <Visibility /> : <VisibilityOff />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
                   }}
-                >
-                  {errors.password.message}
-                </span>
-              )}
-            </div>
-            <br />
-            <Link variant="secondary" underline="none" href="">
-              Forgot Password ?
-            </Link>
-            <br />
-            <br />
-            <Button
-              disabled={isSubmitting}
-              fullWidth={true}
-              variant="contained"
-              color="primary"
-              type="submit"
-              endIcon={isSubmitting ? "" : <LoginRounded />}
-              size="large"
-            >
-              {isSubmitting ? "Signing you in" : "Login"}
-            </Button>
-          </form>
-        </Card>
+                  fullWidth={true}
+                  id="outlined"
+                  label="Password"
+                  variant="outlined"
+                  // value={`linspace`}
+                  defaultValue={`linspace`}
+                  placeholder="Password"
+                  type={!showPassword ? "password" : "text"}
+                  {...register("password", {
+                    required: "This field is required",
+                    minLength: {
+                      value: 6,
+                      message: "Password must be at least 6 characters long",
+                    },
+                  })}
+                  error={errors.password && true}
+                />
+                {errors.password && (
+                  <span
+                    style={{
+                      color: "crimson",
+                    }}
+                  >
+                    {errors.password.message}
+                  </span>
+                )}
+              </div>
+              <br />
+              <Link variant="secondary" underline="none" href="">
+                Forgot Password ?
+              </Link>
+              <br />
+              <br />
+              <Button
+                disabled={isSubmitting}
+                fullWidth={true}
+                variant="contained"
+                color="primary"
+                type="submit"
+                endIcon={isSubmitting ? "" : <LoginRounded />}
+                size="large"
+                style={{
+                  borderRadius: "9999px",
+                }}
+              >
+                {isSubmitting ? "Signing you in" : "Sign In"}
+              </Button>
+            </form>
+          </div>
+        </div>
       </div>
     </div>
   );
