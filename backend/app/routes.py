@@ -17,7 +17,7 @@ def get_meeting(meeting_id):
         return jsonify({"error": "Meeting not found"}), 404
     return jsonify(meeting)
 
-@main_bp.route('/attendees', methods=['POST'])
+@main_bp.route('/attendees', methods=['GET'])
 def submit_attendee():
     data = request.get_json()
     add_attendee(data)

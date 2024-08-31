@@ -4,3 +4,4 @@ python-dotenv
 qrcode[pil]
 pandas
 pdfkit
+flask-cors
