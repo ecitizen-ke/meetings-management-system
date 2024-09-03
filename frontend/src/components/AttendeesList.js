@@ -6,7 +6,9 @@ const AttendeesList = () => {
 
   useEffect(() => {
     const fetchAttendees = async () => {
-      const response = await axios.get('/admin/attendees');
+      
+      const response = await axios.get('http://localhost:5000/attendees');
+      console.log(response.data)
       setAttendees(response.data);
     };
 
