@@ -354,6 +354,15 @@ def get_meeting_by_id(meeting_id):
     cursor = connection.cursor(MySQLdb.cursors.DictCursor)
     cursor.execute("SELECT * FROM meetings WHERE id = %s", (meeting_id,))
     meeting = cursor.fetchone()
+    meeting['start_time'] = str(meeting['start_time'])
+    meeting['end_time'] = str(meeting['end_time'])
+    meeting['resources_id'] = json.loads(meeting['resources_id'])
+    cursor.execute("SELECT name FROM boardrooms WHERE id = %s", (meeting['boardroom_id'],))
+    boardroom = cursor.fetchone()
+    meeting['boardroom_name'] = boardroom['name']
+    cursor.execute("SELECT name FROM departments WHERE id = %s", (meeting['department_id'],))
+    department = cursor.fetchone()
+    meeting['department_name'] = department['name']
     cursor.close()
     connection.close()
     return meeting
@@ -363,6 +372,10 @@ def get_attendees(meeting_id):
     cursor = connection.cursor(MySQLdb.cursors.DictCursor)
     cursor.execute("SELECT * FROM attendees WHERE meeting_id = %s", (meeting_id,))
     attendees = cursor.fetchall()
+    cursor.execute("SELECT title FROM meetings WHERE id = %s", (meeting_id,))
+    meeting = cursor.fetchone()
+    for attendee in attendees:
+        attendee['meeting_title'] = meeting['title']
     cursor.close()
     connection.close()
     return attendees
