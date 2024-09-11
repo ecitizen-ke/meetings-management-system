@@ -2,153 +2,9 @@ from flask import current_app as app
 import MySQLdb
 from werkzeug.security import generate_password_hash
 import json
-# to serialize time to a json serializable format
 from datetime import time
+from .migrations import get_db_connection
 
-def get_db_connection():
-    return MySQLdb.connect(
-        host=app.config['MYSQL_HOST'],
-        user=app.config['MYSQL_USER'],
-        password=app.config['MYSQL_PASSWORD'],
-        db=app.config['MYSQL_DB'],
-    )
-def ensure_tables_exist():
-    connection = get_db_connection()
-    cursor = connection.cursor()
-
-    # create department table
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS departments (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(100) NOT NULL,
-        description TEXT,
-        created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    );
-    """)
-    # create resources table
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS resources (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(100) NOT NULL,
-        description TEXT,
-        created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    );
-    """)
-
-    # cursor.create users table
-
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS users (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        first_name VARCHAR(100) NOT NULL,
-        last_name VARCHAR(100),
-        email VARCHAR(100) NOT NULL,
-        phone_number VARCHAR(30),
-        password VARCHAR(255) NOT NULL,
-        department_id INT NOT NULL,
-        FOREIGN KEY (department_id) REFERENCES departments(id),
-        created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    );
-    """)
-    
-    # create boardroom table
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS boardrooms (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(100) NOT NULL,
-        capacity INT NOT NULL,
-        location TEXT NOT NULL,
-        description TEXT,
-        created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    );
-    """)
-    # create meeting table
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS meetings (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        title VARCHAR(100) NOT NULL,
-        description TEXT,
-        meeting_date DATE NOT NULL,
-        start_time TIME NOT NULL,
-        end_time TIME NOT NULL,
-        boardroom_id INT NOT NULL,
-        department_id INT NOT NULL,
-        resources_id JSON,
-        FOREIGN KEY (boardroom_id) REFERENCES boardrooms(id),
-        FOREIGN KEY (department_id) REFERENCES departments(id),
-        created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    );
-    """)
-
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS attendees (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        first_name VARCHAR(50) NOT NULL,
-        last_name VARCHAR(50) NOT NULL,
-        email VARCHAR(100) NOT NULL,
-        phone VARCHAR(20),
-        department VARCHAR(100),
-        meeting_id INT NOT NULL,
-        FOREIGN KEY (meeting_id) REFERENCES meetings(id),
-        created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    );
-    """)
-
-     # Create roles table
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS roles (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(50) NOT NULL UNIQUE,
-        description TEXT,
-        created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    );
-    """)
-
-    # Create users_roles relationship table
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS users_roles (
-        user_id INT NOT NULL,
-        role_id INT NOT NULL,
-        PRIMARY KEY (user_id, role_id),
-        FOREIGN KEY (user_id) REFERENCES users(id),
-        FOREIGN KEY (role_id) REFERENCES roles(id),
-        created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    );
-    """)
-
-    # Create permissions table and relationships 
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS permissions (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(50) NOT NULL UNIQUE,
-        created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    );
-    """)
-
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS roles_permissions (
-        role_id INT NOT NULL,
-        permission_id INT NOT NULL,
-        PRIMARY KEY (role_id, permission_id),
-        FOREIGN KEY (role_id) REFERENCES roles(id),
-        FOREIGN KEY (permission_id) REFERENCES permissions(id),
-        created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    );
-    """)
-
-    connection.commit()
-    cursor.close()
-    connection.close()
 
 def create_department(data):
     connection = get_db_connection()
@@ -170,7 +26,6 @@ def create_department(data):
         connection.close()
 
 def get_departments():
-    ensure_tables_exist()
     connection = get_db_connection()
     cursor = connection.cursor(MySQLdb.cursors.DictCursor)
     cursor.execute("SELECT * FROM departments")
@@ -199,7 +54,6 @@ def create_resource(data):
         connection.close()
 
 def get_resources():
-    ensure_tables_exist()
     connection = get_db_connection()
     cursor = connection.cursor(MySQLdb.cursors.DictCursor)
     cursor.execute("SELECT * FROM resources")
@@ -228,7 +82,6 @@ def create_boardroom(data):
         connection.close()
 
 def get_boardrooms():
-    ensure_tables_exist()
     connection = get_db_connection()
     cursor = connection.cursor(MySQLdb.cursors.DictCursor)
     cursor.execute("SELECT * FROM boardrooms")
@@ -284,7 +137,6 @@ def create_meeting(data):
         connection.close()
 
 def get_users():
-    ensure_tables_exist()
     connection = get_db_connection()
     cursor = connection.cursor(MySQLdb.cursors.DictCursor)
     cursor.execute("SELECT id, first_name, last_name, email, phone_number, department_id FROM users")
@@ -313,7 +165,6 @@ def create_roles(data):
         connection.close()
 
 def get_roles():
-    ensure_tables_exist()
     connection = get_db_connection()
     cursor = connection.cursor(MySQLdb.cursors.DictCursor)
     cursor.execute("SELECT * FROM roles")
@@ -322,8 +173,7 @@ def get_roles():
     connection.close()
     return roles
 
-def get_meetings():
-    ensure_tables_exist() 
+def get_meetings(): 
     connection = get_db_connection()
     cursor = connection.cursor(MySQLdb.cursors.DictCursor)
     cursor.execute("SELECT * FROM meetings")
