@@ -6,9 +6,6 @@ __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
-<<<<<<< HEAD
-.idea/
-=======
 
 # C extensions
 *.so
@@ -118,4 +115,3 @@ $RECYCLE.BIN/
 
 # Others
 *.sqlite3
->>>>>>> 7be79089e2476066ba2a035435fbb54138c5358b

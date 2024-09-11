@@ -5,3 +5,5 @@ qrcode[pil]
 pandas
 pdfkit
 flask-cors
+flask-mysqldb
+Werkzeug
