@@ -37,7 +37,7 @@ def run_migrations():
     create_migrations_table(cursor)
 
     # This is a migration versioning number that will be usefull when we need to update the migrations in the future
-    migration_version = '202409111522_Initial Migration'
+    migration_version = '202409111522_SecondMigration'
 
     if check_if_migration_applied(cursor, migration_version):
         print(f"Migration {migration_version} already applied.")
@@ -173,6 +173,11 @@ def run_migrations():
         created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     );
+    """)
+
+    cursor.execute("""
+    ALTER TABLE meetings
+    ADD COLUMN status ENUM('draft','ongoing', 'complete','rescheduled','pending','cancelled' ) DEFAULT 'pending';
     """)
 
     mark_migration_as_applied(cursor, migration_version)

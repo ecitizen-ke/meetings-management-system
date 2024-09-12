@@ -2,7 +2,7 @@ from flask import current_app as app
 import MySQLdb
 from werkzeug.security import generate_password_hash
 import json
-from datetime import time
+from datetime import time, datetime
 from .migrations import get_db_connection
 
 
@@ -257,3 +257,51 @@ def assign_role_to_user(user_id, role_name):
     cursor.close()
     connection.close()
 
+from datetime import datetime, date, time, timedelta
+
+def reports_summary():
+    connection = get_db_connection()
+    cursor = connection.cursor(MySQLdb.cursors.DictCursor)
+    cursor.execute("SELECT * FROM meetings")
+    meetings = cursor.fetchall()
+
+    meetings_summary = {
+        "pending": 0,
+        "ongoing": 0,
+        "complete": 0
+    }
+
+    current_datetime = datetime.now()
+    current_date = current_datetime.date()
+    current_time = current_datetime.time()
+
+    for meeting in meetings:
+        meeting_date = meeting['meeting_date']
+        start_time = meeting['start_time']
+        end_time = meeting['end_time']
+
+        
+        if isinstance(start_time, timedelta):
+            start_time = (datetime.min + start_time).time()
+        if isinstance(end_time, timedelta):
+            end_time = (datetime.min + end_time).time()
+
+        start_datetime = datetime.combine(meeting_date, start_time)
+        end_datetime = datetime.combine(meeting_date, end_time)
+
+        if meeting_date < current_date:  
+            meetings_summary['complete'] += 1
+        elif meeting_date == current_date:  
+            if start_datetime <= current_datetime <= end_datetime:
+                meetings_summary['ongoing'] += 1
+            elif current_datetime < start_datetime:
+                meetings_summary['pending'] += 1
+            elif current_datetime > end_datetime:
+                meetings_summary['complete'] += 1
+        else:  
+            meetings_summary['pending'] += 1
+
+    cursor.close()
+    connection.close()
+
+    return meetings_summary
