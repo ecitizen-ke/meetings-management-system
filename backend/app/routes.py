@@ -15,7 +15,8 @@ from .models import (
     get_users,
     create_roles,
     get_roles,
-    create_meeting
+    create_meeting,
+    reports_summary
 )
 from .utils import generate_qr_code, generate_excel_report
 
@@ -179,6 +180,11 @@ def init_meeting():
 
     create_meeting(data)
     return jsonify({"msg": "Meeting created successfully"}), 201
+
+@main_bp.route("/reports-summary", methods=["GET"])
+def reports_summary_route():
+    summary = reports_summary()
+    return jsonify(summary)
     
 
 
