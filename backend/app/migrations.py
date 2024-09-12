@@ -37,7 +37,7 @@ def run_migrations():
     create_migrations_table(cursor)
 
     # This is a migration versioning number that will be usefull when we need to update the migrations in the future
-    migration_version = '202409111522_SecondMigration'
+    migration_version = '202409121509_ThirdMigration'
 
     if check_if_migration_applied(cursor, migration_version):
         print(f"Migration {migration_version} already applied.")
@@ -176,8 +176,54 @@ def run_migrations():
     """)
 
     cursor.execute("""
-    ALTER TABLE meetings
-    ADD COLUMN status ENUM('draft','ongoing', 'complete','rescheduled','pending','cancelled' ) DEFAULT 'pending';
+    SET @column_exists = (SELECT COUNT(*) 
+            FROM INFORMATION_SCHEMA.COLUMNS 
+            WHERE table_name = 'meetings' 
+            AND table_schema = DATABASE() 
+            AND column_name = 'status');
+
+            IF @column_exists = 0 THEN
+                ALTER TABLE meetings
+                ADD COLUMN status ENUM('draft', 'ongoing', 'complete', 'rescheduled', 'pending', 'cancelled') DEFAULT 'pending' AFTER resources_id;
+            END IF;
+    """)
+
+    cursor.execute("""
+    SET @column_exists = (SELECT COUNT(*)
+            FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE table_name = 'meetings'
+            AND table_schema = DATABASE()
+            AND column_name = 'location');
+
+            IF @column_exists = 0 THEN
+                ALTER TABLE meetings
+                ADD COLUMN location TEXT AFTER boardroom_id;
+            END IF;
+    """)
+    cursor.execute("""
+    SET @column_exists = (SELECT COUNT(*)
+            FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE table_name = 'users'
+            AND table_schema = DATABASE()
+            AND column_name = 'designation');
+
+            IF @column_exists = 0 THEN
+                ALTER TABLE users
+                ADD COLUMN designation VARCHAR(100) AFTER department_id;
+            END IF;
+    """)
+
+    cursor.execute("""
+    SET @column_exists = (SELECT COUNT(*)
+            FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE table_name = 'attendees'
+            AND table_schema = DATABASE()
+            AND column_name = 'designation');
+
+            IF @column_exists = 0 THEN
+                ALTER TABLE attendees
+                ADD COLUMN designation VARCHAR(100) AFTER department;
+            END IF;
     """)
 
     mark_migration_as_applied(cursor, migration_version)
