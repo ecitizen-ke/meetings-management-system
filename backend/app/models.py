@@ -99,10 +99,10 @@ def create_user(data):
 
         print(hashed_password)
         cursor.execute("""
-        INSERT INTO users (first_name, last_name, email, phone_number, password, department_id)
-        VALUES (%s, %s, %s, %s, %s, %s)
+        INSERT INTO users (first_name, last_name, email, phone_number, password, department_id,designation)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
         """, (data['first_name'], data.get('last_name', ''), data['email'], data.get('phone_number', ''), 
-              hashed_password, data.get('department_id', 1))
+              hashed_password, data.get('department_id', 1), data.get('designation', 'staff') )
         )
         
         connection.commit()
@@ -122,9 +122,10 @@ def create_meeting(data):
         resources_json = json.dumps(data.get('resources_id', {}))
 
         cursor.execute("""
-        INSERT INTO meetings (title, description, meeting_date, start_time, end_time, boardroom_id, department_id, resources_id)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-        """, (data['title'], data.get('description', ''), data['meeting_date'], data['start_time'], data['end_time'], data['boardroom_id'], data['department_id'], resources_json)
+        INSERT INTO meetings (title, description, meeting_date, start_time, end_time, boardroom_id, department_id, resources_id,location)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """, (data['title'], data.get('description', ''), data['meeting_date'], data['start_time'], data['end_time'],
+               data['boardroom_id'], data['department_id'], resources_json, data['location'])
         )
         connection.commit()
 
@@ -234,8 +235,8 @@ def add_attendee(data):
     connection = get_db_connection()
     cursor = connection.cursor()
     cursor.execute(
-        "INSERT INTO attendees (first_name, last_name, email, phone, department, meeting_id) VALUES (%s, %s, %s, %s, %s, %s)",
-        (data['first_name'], data['last_name'], data['email'], data['phone'], data['department'], data['meeting_id'])
+        "INSERT INTO attendees (first_name, last_name, email, phone, department, meeting_id, designation) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+        (data['first_name'], data['last_name'], data['email'], data['phone'], data['department'], data['meeting_id'], data['designation'])
     )
     connection.commit()
     cursor.close()
