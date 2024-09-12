@@ -200,6 +200,13 @@ def run_migrations():
                 ADD COLUMN location TEXT AFTER boardroom_id;
             END IF;
     """)
+    
+    # make boardroom_id nullable
+    cursor.execute("""
+    ALTER TABLE meetings
+    MODIFY COLUMN boardroom_id INT NULL;
+    """)
+
     cursor.execute("""
     SET @column_exists = (SELECT COUNT(*)
             FROM INFORMATION_SCHEMA.COLUMNS
