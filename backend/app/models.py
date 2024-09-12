@@ -2,7 +2,7 @@ from flask import current_app as app
 import MySQLdb
 from werkzeug.security import generate_password_hash
 import json
-from datetime import time, datetime
+from datetime import datetime, date, time, timedelta
 from .migrations import get_db_connection
 
 
@@ -257,7 +257,13 @@ def assign_role_to_user(user_id, role_name):
     cursor.close()
     connection.close()
 
-from datetime import datetime, date, time, timedelta
+def update_meeting_status(meeting_id, status):
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute("UPDATE meetings SET status = %s WHERE id = %s", (status, meeting_id))
+    connection.commit()
+    cursor.close()
+    connection.close()
 
 def reports_summary():
     connection = get_db_connection()
@@ -291,15 +297,20 @@ def reports_summary():
 
         if meeting_date < current_date:  
             meetings_summary['complete'] += 1
+            update_meeting_status(meeting['id'], 'complete')
         elif meeting_date == current_date:  
             if start_datetime <= current_datetime <= end_datetime:
                 meetings_summary['ongoing'] += 1
+                update_meeting_status(meeting['id'], 'ongoing')
             elif current_datetime < start_datetime:
                 meetings_summary['pending'] += 1
+                update_meeting_status(meeting['id'], 'pending')
             elif current_datetime > end_datetime:
                 meetings_summary['complete'] += 1
+                update_meeting_status(meeting['id'], 'complete')
         else:  
             meetings_summary['pending'] += 1
+            update_meeting_status(meeting['id'], 'pending')
 
     cursor.close()
     connection.close()
