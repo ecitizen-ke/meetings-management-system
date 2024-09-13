@@ -6,8 +6,24 @@ import NotFound from "./pages/NotFound";
 import Master from "./pages/Master";
 import Users from "./pages/Users";
 import AppSetting from "./pages/AppSetting";
+import Landing from "./pages/Landing";
+import QrPage from "./pages/QrPage";
+import Attendees from "./pages/Attendees";
+import Main from "./pages/Main";
 
 export const AppRouter = createBrowserRouter([
+  // landing page for the form
+  {
+    path: "/meeting/:id",
+    exact: true,
+    element: <Landing />,
+  },
+  {
+    path: "/attendance",
+    exact: true,
+    element: <QrPage />,
+  },
+
   {
     path: "/",
     exact: true,
@@ -26,8 +42,17 @@ export const AppRouter = createBrowserRouter([
     element: <Dashboard />,
     children: [
       {
+        path: "/dashboard",
+        element: <Main />,
+      },
+      {
         path: "/dashboard/meetings",
         element: <Meeting />,
+      },
+      {
+        path: "/dashboard/attendees/:id",
+        exact: true,
+        element: <Attendees />,
       },
       {
         path: "/dashboard/users",

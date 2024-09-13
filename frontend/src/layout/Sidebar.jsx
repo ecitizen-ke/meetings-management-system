@@ -14,9 +14,12 @@ import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import { Outlet, useNavigate } from "react-router";
 import {
+  Build,
   DashboardSharp,
+  Grade,
   Logout,
   MeetingRoom,
+  Room,
   Settings,
   SupervisedUserCircle,
 } from "@mui/icons-material";
@@ -71,16 +74,22 @@ const Sidebar = () => {
       slug: "meetings",
     },
     {
+      text: "Departments",
+      icon: <Build />,
+      path: "/dashboard/deparments",
+      slug: "departments",
+    },
+    {
+      text: "Board Rooms",
+      icon: <Room />,
+      path: "/dashboard/deparments",
+      slug: "departments",
+    },
+    {
       text: "Users",
       icon: <SupervisedUserCircle />,
       path: "/dashboard/users",
       slug: "users",
-    },
-    {
-      text: "Settings",
-      icon: <Settings />,
-      path: "/dashboard/settings",
-      slug: "settings",
     },
     {
       text: "Logout",
