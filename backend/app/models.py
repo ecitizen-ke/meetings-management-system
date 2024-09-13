@@ -122,10 +122,10 @@ def create_meeting(data):
         resources_json = json.dumps(data.get('resources_id', {}))
 
         cursor.execute("""
-        INSERT INTO meetings (title, description, meeting_date, start_time, end_time, boardroom_id, department_id, resources_id,location)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        INSERT INTO meetings (title, description, meeting_date, start_time, end_time, boardroom_id)
+        VALUES (%s, %s, %s, %s, %s, %s)
         """, (data['title'], data.get('description', ''), data['meeting_date'], data['start_time'], data['end_time'],
-               data['boardroom_id'], data['department_id'], resources_json, data['location'])
+               data['boardroom_id'])
         )
         connection.commit()
 
@@ -183,18 +183,18 @@ def get_meetings():
         meeting['start_time'] = str(meeting['start_time'])
         meeting['end_time'] = str(meeting['end_time'])
 
-    for meeting in meetings:
-        meeting['resources_id'] = json.loads(meeting['resources_id'])
+    # for meeting in meetings:
+    #     meeting['resources_id'] = json.loads(meeting['resources_id'])
     
     for meeting in meetings:
         cursor.execute("SELECT name FROM boardrooms WHERE id = %s", (meeting['boardroom_id'],))
         boardroom = cursor.fetchone()
         meeting['boardroom_name'] = boardroom['name']
     
-    for meeting in meetings:
-        cursor.execute("SELECT name FROM departments WHERE id = %s", (meeting['department_id'],))
-        department = cursor.fetchone()
-        meeting['department_name'] = department['name']
+    # for meeting in meetings:
+    #     cursor.execute("SELECT name FROM departments WHERE id = %s", (meeting['department_id'],))
+    #     department = cursor.fetchone()
+    #     meeting['department_name'] = department['name']
 
     cursor.close()
     connection.close()
@@ -207,13 +207,13 @@ def get_meeting_by_id(meeting_id):
     meeting = cursor.fetchone()
     meeting['start_time'] = str(meeting['start_time'])
     meeting['end_time'] = str(meeting['end_time'])
-    meeting['resources_id'] = json.loads(meeting['resources_id'])
+    # meeting['resources_id'] = json.loads(meeting['resources_id'])
     cursor.execute("SELECT name FROM boardrooms WHERE id = %s", (meeting['boardroom_id'],))
     boardroom = cursor.fetchone()
     meeting['boardroom_name'] = boardroom['name']
-    cursor.execute("SELECT name FROM departments WHERE id = %s", (meeting['department_id'],))
-    department = cursor.fetchone()
-    meeting['department_name'] = department['name']
+    # cursor.execute("SELECT name FROM departments WHERE id = %s", (meeting['department_id'],))
+    # department = cursor.fetchone()
+    # meeting['department_name'] = department['name']
     cursor.close()
     connection.close()
     return meeting

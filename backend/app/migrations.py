@@ -1,5 +1,7 @@
 from flask import current_app as app
 import MySQLdb
+from dotenv import  load_dotenv
+
 
 def get_db_connection():
     return MySQLdb.connect(
@@ -14,7 +16,7 @@ def create_migrations_table(cursor):
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS migrations (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        version TEXT NOT NULL UNIQUE,
+        version TEXT NOT NULL,
         applied_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
     """)
@@ -105,10 +107,8 @@ def run_migrations():
         start_time TIME NOT NULL,
         end_time TIME NOT NULL,
         boardroom_id INT NOT NULL,
-        department_id INT NOT NULL,
-        resources_id JSON,
+        location TEXT,
         FOREIGN KEY (boardroom_id) REFERENCES boardrooms(id),
-        FOREIGN KEY (department_id) REFERENCES departments(id),
         created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     );
@@ -122,6 +122,7 @@ def run_migrations():
         email VARCHAR(100) NOT NULL,
         phone VARCHAR(20),
         department VARCHAR(100),
+        designation VARCHAR(100),
         meeting_id INT NOT NULL,
         FOREIGN KEY (meeting_id) REFERENCES meetings(id),
         created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -188,18 +189,18 @@ def run_migrations():
             END IF;
     """)
 
-    cursor.execute("""
-    SET @column_exists = (SELECT COUNT(*)
-            FROM INFORMATION_SCHEMA.COLUMNS
-            WHERE table_name = 'meetings'
-            AND table_schema = DATABASE()
-            AND column_name = 'location');
-
-            IF @column_exists = 0 THEN
-                ALTER TABLE meetings
-                ADD COLUMN location TEXT AFTER boardroom_id;
-            END IF;
-    """)
+    # cursor.execute("""
+    # SET @column_exists = (SELECT COUNT(*)
+    #         FROM INFORMATION_SCHEMA.COLUMNS
+    #         WHERE table_name = 'meetings'
+    #         AND table_schema = DATABASE()
+    #         AND column_name = 'location');
+    #
+    #         IF @column_exists = 0 THEN
+    #             ALTER TABLE meetings
+    #             ADD COLUMN location TEXT AFTER boardroom_id;
+    #         END IF;
+    # """)
     
     # make boardroom_id nullable
     cursor.execute("""
@@ -220,18 +221,18 @@ def run_migrations():
             END IF;
     """)
 
-    cursor.execute("""
-    SET @column_exists = (SELECT COUNT(*)
-            FROM INFORMATION_SCHEMA.COLUMNS
-            WHERE table_name = 'attendees'
-            AND table_schema = DATABASE()
-            AND column_name = 'designation');
-
-            IF @column_exists = 0 THEN
-                ALTER TABLE attendees
-                ADD COLUMN designation VARCHAR(100) AFTER department;
-            END IF;
-    """)
+    # cursor.execute("""
+    # SET @column_exists = (SELECT COUNT(*)
+    #         FROM INFORMATION_SCHEMA.COLUMNS
+    #         WHERE table_name = 'attendees'
+    #         AND table_schema = DATABASE()
+    #         AND column_name = 'designation');
+    #
+    #         IF @column_exists = 0 THEN
+    #             ALTER TABLE attendees
+    #             ADD COLUMN designation VARCHAR(100) AFTER department;
+    #         END IF;
+    # """)
 
     mark_migration_as_applied(cursor, migration_version)
 

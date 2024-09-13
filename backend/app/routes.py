@@ -37,7 +37,7 @@ def get_meeting(meeting_id):
     return jsonify(meeting)
 
 
-@main_bp.route("/attendees", methods=["GET"])
+@main_bp.route("/attendees", methods=["POST"])
 def submit_attendee():
     data = request.get_json()
     add_attendee(data)

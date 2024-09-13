@@ -4,9 +4,11 @@ import os
 import pandas as pd
 from flask import url_for, current_app as app
 from .models import get_db_connection
+import MySQLdb
 
 def generate_qr_code(meeting_id):
-    url = url_for('main.get_meeting', meeting_id=meeting_id, _external=True)
+    # url = url_for('main.get_meeting', meeting_id=meeting_id, _external=True)
+    url = "http://localhost:5173/meeting/"+str(meeting_id)  #for testing purposes
     qr = qrcode.QRCode(
         version=1,
         error_correction=qrcode.constants.ERROR_CORRECT_L,
