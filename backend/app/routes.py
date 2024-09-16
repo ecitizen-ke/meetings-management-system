@@ -1,5 +1,5 @@
 # backend/app/routes.py
-from flask import Blueprint, request, jsonify, send_file, redirect, url_for
+from flask import Blueprint, request, jsonify, send_file, redirect, url_for , flash
 from .models import (
     get_meetings,
     get_attendees,
@@ -20,7 +20,10 @@ from .models import (
     delete_meeting,
     update_meeting,
 )
-from .utils import generate_qr_code, generate_excel_report
+from .utils import generate_qr_code, generate_excel_report, generate_pdf_report
+import zipfile
+import io
+import os
 
 main_bp = Blueprint("main", __name__)
 
@@ -67,6 +70,40 @@ def generate_excel(meeting_id):
     )
 
 
+@main_bp.route("/admin/generate_pdf/<int:meeting_id>", methods=["GET"])
+def generate_pdf(meeting_id):
+    pdf_path = generate_pdf_report(meeting_id)
+    return send_file(
+        pdf_path,
+        mimetype="application/pdf",
+    )
+
+
+@main_bp.route("/admin/generate_reports/<int:meeting_id>", methods=["GET"])
+def generate_reports(meeting_id):
+    # Generate the Excel and PDF reports
+    try:
+        excel_path = generate_excel_report(meeting_id)
+        pdf_path = generate_pdf_report(meeting_id)
+
+        # Create a BytesIO object to hold the zip file in memory
+        zip_buffer = io.BytesIO()
+
+        # Create a zip file in memory and add the Excel and PDF files
+        with zipfile.ZipFile(zip_buffer, "w") as zip_file:
+            zip_file.write(excel_path, os.path.basename(excel_path))
+            zip_file.write(pdf_path, os.path.basename(pdf_path))
+
+        # Reset buffer position to the beginning
+        zip_buffer.seek(0)
+
+        # Send the zip file as a response with the correct name
+        return send_file(zip_buffer, download_name=f"meeting_{meeting_id}_reports.zip", as_attachment=True)
+
+    except Exception as e:
+        flash(f"Error generating reports: {str(e)}", "danger")
+        return redirect(url_for("main.admin_dashboard"))
+    
 @main_bp.route("/departments", methods=["POST"])
 def create_department_route():
     try:
@@ -254,13 +291,7 @@ def edit_meeting(meeting_id):
         update_meeting(
             meeting_id, title, description, meeting_date, start_time, end_time, boardroom_id
         )
-        return jsonify({"msg": "Meeting updated successfully"}), 200
+        return jsonify({"message": "Meeting updated successfully"}), 200
 
     except Exception as e:
-        return jsonify({"msg": f"Error occurred: {str(e)}"}), 500
-
-
-@main_bp.route("/reports-summary", methods=["GET"])
-def reports_summary_route():
-    summary = reports_summary()
-    return jsonify(summary)
+        return jsonify({"error": str(e)}), 500
