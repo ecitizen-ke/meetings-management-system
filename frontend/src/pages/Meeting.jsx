@@ -33,6 +33,7 @@ import { setMeetingDetail, setQrLink } from "../redux/features/qr/Qr";
 import { useNavigate } from "react-router";
 import moment from "moment";
 import { getData } from "../utils/api";
+import Swal from "sweetalert2";
 
 let count = 0;
 
@@ -177,29 +178,39 @@ const Meeting = () => {
 
   // delete a meeting
   const handleDelete = (id) => {
-    if (window.confirm("Are you sure you want to delete")) {
-      fetch(`${Config.API_URL}/delete-meeting/${id}`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json", // The type of data you're sending
-        },
-      })
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error(
-              "Network response was not ok " + response.statusText
-            );
-          }
-          return response.json(); // Parse the JSON from the response
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#398e3d",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        fetch(`${Config.API_URL}/meeting/${id}`, {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json", // The type of data you're sending
+          },
         })
-        .then((res) => {
-          setOpenToast(true);
-          fetchMeetings();
-        })
-        .catch((error) => {
-          console.error("Error:", error); // Handle any errors
-        });
-    }
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error(
+                "Network response was not ok " + response.statusText
+              );
+            }
+            return response.json(); // Parse the JSON from the response
+          })
+          .then((res) => {
+            setOpenToast(true);
+            fetchMeetings();
+          })
+          .catch((error) => {
+            console.error("Error:", error); // Handle any errors
+          });
+      }
+    });
   };
 
   // navigate to edit page
@@ -262,7 +273,7 @@ const Meeting = () => {
               variant="contained"
               color="secondary"
               size="small"
-              onClick={() => handleDelete(params.row)}
+              onClick={() => handleDelete(params.row.id)}
             >
               Delete
             </Button>
