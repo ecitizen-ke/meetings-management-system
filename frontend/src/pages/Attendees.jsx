@@ -50,17 +50,31 @@ const Attendees = () => {
     { field: "department", headerName: "Department", width: 220 },
   ];
 
+  // const generateReport = () => {
+  //   fetch(`${Config.API_URL}/admin/generate_excel/${meeting.id}`)
+  //     .then((response) => response.blob())
+  //     .then((blob) => {
+  //       console.log(blob);
+  //       const url = window.URL.createObjectURL(blob);
+  //       const a = document.createElement("a");
+  //       a.href = url;
+  //       a.download = meeting.title + "_attendees_report.xlsx";
+  //       document.body.appendChild(a);
+  //       a.click();
+  //     })
+  //     .catch((error) => console.error(error));
+  // };
   const generateReport = () => {
-    fetch(`${Config.API_URL}/admin/generate_excel/${meeting.id}`)
+    fetch(`${Config.API_URL}/admin/generate_reports/${meeting.id}`)
       .then((response) => response.blob())
       .then((blob) => {
-        console.log(blob);
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = meeting.title + "_attendees_report.xlsx";
+        a.download = `${meeting.title}_reports.zip`;
         document.body.appendChild(a);
         a.click();
+        a.remove();
       })
       .catch((error) => console.error(error));
   };
