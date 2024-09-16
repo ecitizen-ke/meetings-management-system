@@ -32,8 +32,13 @@ import { useDispatch } from "react-redux";
 import { setMeetingDetail, setQrLink } from "../redux/features/qr/Qr";
 import { useNavigate } from "react-router";
 import moment from "moment";
-import { getData } from "../utils/api";
+import { getData, postData } from "../utils/api";
 import Swal from "sweetalert2";
+import {
+  hideNotification,
+  showNotification,
+} from "../redux/features/notifications/notificationSlice";
+import Notification from "../components/Notification";
 
 let count = 0;
 
@@ -115,65 +120,50 @@ const Meeting = () => {
     p: 4,
   };
 
-  // Generate QR Code
-  const generateQrCode = (data) => {
-    console.log(data);
-    fetch(`${Config.API_URL}/admin/generate_qr/${data.row.id}`)
-      .then((resp) => {
-        return resp.blob();
-      })
-      .then((resp) => {
-        // Create a URL for the Blob
-        const imageUrl = URL.createObjectURL(resp);
-        // window.open(imageUrl, "_blank").focus();
-        dispatch(
-          setQrLink({
-            qrlink: imageUrl,
-          })
-        );
+  // Navigate to qr page
+  const navigateToQrPage = (data) => {
+    sessionStorage.setItem("meeting", JSON.stringify(data.row));
 
-        dispatch(
-          setMeetingDetail({
-            meeting: data.row,
-          })
-        );
-        navigate("/attendance");
-
-        // alert(`Generated QR code for Meeting ID: ${data.row.id}`);
+    dispatch(
+      setMeetingDetail({
+        meeting: data.row,
       })
-      .catch((err) => {
-        console.log(err);
-      });
+    );
+    navigate("/attendance/" + data.row.id);
   };
 
   // create a meeting
   const onSubmit = async (data) => {
-    console.log(data);
-    data["id"] = meetings.length + 1;
-    // setMeetings([...meetings, data]);
+    const customHeaders = {
+      Authorization: "Bearer xxxxxx",
+      "Content-Type": "application/json",
+    };
 
-    fetch(Config.API_URL + `/create-meeting`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json", // The type of data you're sending
-      },
-      body: JSON.stringify(data), // The data you want to send
-    })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Network response was not ok " + response.statusText);
-        }
-        return response.json(); // Parse the JSON from the response
-      })
-      .then((res) => {
-        setOpen(false);
-        reset();
-        setOpenToast(true);
-        fetchMeetings();
-      })
-      .catch((error) => {
-        console.error("Error:", error); // Handle any errors
-      });
+    try {
+      const result = await postData(
+        `${Config.API_URL}/create-meeting`,
+        data,
+        customHeaders
+      );
+      setOpen(false);
+      reset();
+      setOpenToast(true);
+      fetchMeetings();
+      dispatch(
+        showNotification({
+          message: result.msg,
+          type: "success", // success, error, warning, info
+        })
+      );
+    } catch (error) {
+      dispatch(
+        showNotification({
+          message: error.response.data.msg,
+          type: "error", // success, error, warning, info
+        })
+      );
+      setTimeout(() => dispatch(hideNotification()), 3000);
+    }
   };
 
   // delete a meeting
@@ -227,7 +217,11 @@ const Meeting = () => {
   };
 
   const columns = [
-    { field: "id", headerName: "#", width: 70 },
+    {
+      field: "id",
+      headerName: "#",
+      width: 70,
+    },
     { field: "title", headerName: "Title", width: 220 },
     { field: "boardroom_name", headerName: "Boardroom", width: 220 },
     { field: "description", headerName: "Description", width: 220 },
@@ -279,7 +273,7 @@ const Meeting = () => {
             </Button>
 
             <Button
-              onClick={() => generateQrCode(params)}
+              onClick={() => navigateToQrPage(params)}
               variant="contained"
               color="warning"
               style={{ marginRight: 8 }}
@@ -328,7 +322,9 @@ const Meeting = () => {
           </div>
         </div>
       </div>
-
+      <br />
+      <Notification />
+      <br />
       <div style={{ width: "100%", marginTop: "35px" }}>
         <DataGrid
           rows={meetings}

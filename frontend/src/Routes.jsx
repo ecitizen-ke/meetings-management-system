@@ -22,7 +22,7 @@ export const AppRouter = createBrowserRouter([
     element: <Landing />,
   },
   {
-    path: "/attendance",
+    path: "/attendance/:id",
     exact: true,
     element: <QrPage />,
   },

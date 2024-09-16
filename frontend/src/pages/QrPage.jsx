@@ -14,8 +14,10 @@ import { Avatar, Card, CardHeader, CardMedia } from "@mui/material";
 import { red } from "@mui/material/colors";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import "../assets/landing.css";
-import { useNavigate } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import logo from "../assets/logo.svg";
+import moment from "moment";
+import { Config } from "../Config";
 
 const Search = styled("div")(({ theme }) => ({
   position: "relative",
@@ -60,11 +62,25 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
 }));
 
 export default function QrPage() {
-  const qrSelector = useSelector((state) => state.qr.qrlink);
-  const meeting = useSelector((state) => state.qr.meeting);
+  // const qrSelector = useSelector((state) => state.qr.qrlink);
+  // const meeting = useSelector((state) => state.qr.meeting);
+  const [qrLink, setQrLink] = React.useState("");
+  let meeting = JSON.parse(sessionStorage.getItem("meeting"));
   const navigate = useNavigate();
-
-  React.useEffect(() => {});
+  const params = useParams();
+  const generateQrCode = async (id) => {
+    try {
+      const result = await fetch(`${Config.API_URL}/admin/generate_qr/${id}`);
+      const blob = await result.blob();
+      const imageUrl = URL.createObjectURL(blob);
+      setQrLink(imageUrl);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+  React.useEffect(() => {
+    generateQrCode(params.id);
+  }, []);
   return (
     <Box sx={{ flexGrow: 1 }}>
       <AppBar>
@@ -116,12 +132,14 @@ export default function QrPage() {
             />
           </center>
           <CardHeader
-            action={`${meeting.meeting_date}`}
+            action={`${
+              meeting && moment(meeting.meeting_date).format("MMMM D, YYYY")
+            }`}
             title={meeting && meeting.title}
-            subheader={`Venue: ${meeting.boardroom_name}`}
+            subheader={`Venue: ${meeting && meeting.boardroom_name}`}
           />
 
-          <CardMedia component="img" image={qrSelector} alt="Paella dish" />
+          <CardMedia component="img" image={qrLink} alt="QR " />
         </Card>
       </div>
     </Box>
