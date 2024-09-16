@@ -281,6 +281,24 @@ def delete_meeting(meeting_id):
         cursor.close()
         connection.close()
 
+def update_meeting(meeting_id, title, description, date, start_time, end_time, location):
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    try:
+        cursor.execute("""
+            UPDATE meetings 
+            SET title = %s, description = %s, date = %s, start_time = %s, end_time = %s, location = %s
+            WHERE id = %s
+        """, (title, description, date, start_time, end_time, location, meeting_id))
+        connection.commit()
+
+    except Exception as e:
+        connection.rollback()  # Rollback in case of error
+        raise Exception(f"Error updating meeting: {str(e)}")
+
+    finally:
+        cursor.close()
+        connection.close()
 
 def reports_summary():
     connection = get_db_connection()
