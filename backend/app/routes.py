@@ -17,7 +17,8 @@ from .models import (
     get_roles,
     create_meeting,
     reports_summary,
-    delete_meeting
+    delete_meeting,
+    update_meeting
 )
 from .utils import generate_qr_code, generate_excel_report
 
@@ -193,6 +194,34 @@ def delete_meeting_route(meeting_id):
         # Delete the meeting
         delete_meeting(meeting_id)
         return jsonify({"msg": "Meeting deleted successfully"}), 200
+
+    except Exception as e:
+        return jsonify({"msg": f"Error occurred: {str(e)}"}), 500
+
+@main_bp.route("/meeting/<int:meeting_id>", methods=["PUT"])
+def edit_meeting(meeting_id):
+    try:
+        # Retrieve the request data
+        data = request.get_json()
+        title = data.get("title")
+        description = data.get("description")
+        date = data.get("date")
+        start_time = data.get("start_time")
+        end_time = data.get("end_time")
+        location = data.get("location")
+
+        # Check if all necessary fields are provided
+        if not all([title, description, date, start_time, end_time, location]):
+            return jsonify({"error": "Missing required fields"}), 400
+
+        # Check if the meeting exists
+        meeting = get_meeting_by_id(meeting_id)
+        if not meeting:
+            return jsonify({"error": "Meeting not found"}), 404
+
+        # Update the meeting details
+        update_meeting(meeting_id, title, description, date, start_time, end_time, location)
+        return jsonify({"msg": "Meeting updated successfully"}), 200
 
     except Exception as e:
         return jsonify({"msg": f"Error occurred: {str(e)}"}), 500
