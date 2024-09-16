@@ -16,7 +16,8 @@ from .models import (
     create_roles,
     get_roles,
     create_meeting,
-    reports_summary
+    reports_summary,
+    delete_meeting
 )
 from .utils import generate_qr_code, generate_excel_report
 
@@ -180,6 +181,22 @@ def init_meeting():
 
     create_meeting(data)
     return jsonify({"msg": "Meeting created successfully"}), 201
+
+@main_bp.route("/meeting/<int:meeting_id>", methods=["DELETE"])
+def delete_meeting_route(meeting_id):
+    try:
+        # Check if meeting exists before attempting to delete
+        meeting = get_meeting_by_id(meeting_id)
+        if not meeting:
+            return jsonify({"error": "Meeting not found"}), 404
+
+        # Delete the meeting
+        delete_meeting(meeting_id)
+        return jsonify({"msg": "Meeting deleted successfully"}), 200
+
+    except Exception as e:
+        return jsonify({"msg": f"Error occurred: {str(e)}"}), 500
+
 
 @main_bp.route("/reports-summary", methods=["GET"])
 def reports_summary_route():
