@@ -10,6 +10,8 @@ import Landing from "./pages/Landing";
 import QrPage from "./pages/QrPage";
 import Attendees from "./pages/Attendees";
 import Main from "./pages/Main";
+import Boardroom from "./pages/Boardroom";
+import Department from "./pages/Department";
 
 export const AppRouter = createBrowserRouter([
   // landing page for the form
@@ -59,8 +61,12 @@ export const AppRouter = createBrowserRouter([
         element: <Users />,
       },
       {
-        path: "/dashboard/settings",
-        element: <AppSetting />,
+        path: "/dashboard/boardrooms",
+        element: <Boardroom />,
+      },
+      {
+        path: "/dashboard/departments",
+        element: <Department />,
       },
     ],
   },

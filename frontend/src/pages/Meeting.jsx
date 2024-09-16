@@ -47,6 +47,14 @@ const Meeting = () => {
 
   const [anchorEl, setAnchorEl] = React.useState(null);
 
+  const {
+    register,
+    handleSubmit,
+    watch,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm();
+
   const fetchBoardrooms = () => {
     fetch(`${Config.API_URL}/boardrooms`)
       .then((resp) => {
@@ -88,14 +96,6 @@ const Meeting = () => {
     boxShadow: 24,
     p: 4,
   };
-
-  const {
-    register,
-    handleSubmit,
-    watch,
-    reset,
-    formState: { errors, isSubmitting },
-  } = useForm();
 
   // Generate QR Code
   const generateQrCode = (data) => {
@@ -267,6 +267,7 @@ const Meeting = () => {
       ),
     },
   ];
+
   return (
     <>
       <div className="meetings-header">

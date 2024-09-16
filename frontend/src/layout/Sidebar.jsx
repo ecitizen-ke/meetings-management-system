@@ -17,6 +17,7 @@ import {
   Build,
   DashboardSharp,
   Grade,
+  Grid3x3Sharp,
   Logout,
   MeetingRoom,
   Room,
@@ -27,6 +28,7 @@ import { Box, Container } from "@mui/material";
 import Profile from "../components/Profile";
 import { useDispatch } from "react-redux";
 import { logout } from "../redux/features/auth/authSlice";
+import Department from "../pages/Department";
 const Sidebar = () => {
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [isClosing, setIsClosing] = React.useState(false);
@@ -63,37 +65,37 @@ const Sidebar = () => {
   const menuItems = [
     {
       text: "Dashboard",
-      icon: <DashboardSharp />,
+      icon: <DashboardSharp color="primary" />,
       path: "/dashboard",
       slug: "dashboard",
     },
     {
       text: "Meetings",
-      icon: <MeetingRoom />,
+      icon: <MeetingRoom color="primary" />,
       path: "/dashboard/meetings",
       slug: "meetings",
     },
     {
-      text: "Departments",
-      icon: <Build />,
-      path: "/dashboard/deparments",
-      slug: "departments",
+      text: "Board Rooms",
+      icon: <Room color="primary" />,
+      path: "/dashboard/boardrooms",
+      slug: "boardrooms",
     },
     {
-      text: "Board Rooms",
-      icon: <Room />,
-      path: "/dashboard/deparments",
+      text: "Departments",
+      icon: <Grid3x3Sharp color="primary" />,
+      path: "/dashboard/departments",
       slug: "departments",
     },
     {
       text: "Users",
-      icon: <SupervisedUserCircle />,
+      icon: <SupervisedUserCircle color="primary" />,
       path: "/dashboard/users",
       slug: "users",
     },
     {
       text: "Logout",
-      icon: <Logout />,
+      icon: <Logout color="primary" />,
       path: "/dashboard/logout",
       slug: "logout",
     },

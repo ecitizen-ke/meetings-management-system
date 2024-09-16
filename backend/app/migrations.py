@@ -78,6 +78,7 @@ def run_migrations():
         email VARCHAR(100) NOT NULL,
         phone_number VARCHAR(30),
         password VARCHAR(255) NOT NULL,
+        designation VARCHAR(255) NOT NULL,
         department_id INT NOT NULL,
         FOREIGN KEY (department_id) REFERENCES departments(id),
         created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
