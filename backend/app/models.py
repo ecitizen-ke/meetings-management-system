@@ -266,6 +266,22 @@ def update_meeting_status(meeting_id, status):
     cursor.close()
     connection.close()
 
+def delete_meeting(meeting_id):
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    try:
+        cursor.execute("DELETE FROM meetings WHERE id = %s", (meeting_id,))
+        connection.commit()
+
+    except Exception as e:
+        connection.rollback()  # Rollback in case of error
+        raise Exception(f"Error deleting meeting: {str(e)}")
+
+    finally:
+        cursor.close()
+        connection.close()
+
+
 def reports_summary():
     connection = get_db_connection()
     cursor = connection.cursor(MySQLdb.cursors.DictCursor)
