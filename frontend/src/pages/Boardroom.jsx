@@ -12,12 +12,26 @@ import { useForm } from "react-hook-form";
 import { Config } from "../Config";
 import { DataGrid } from "@mui/x-data-grid";
 import Swal from "sweetalert2";
+import { useNavigate } from "react-router";
+import { deleteData, getData, postData } from "../utils/api";
+import {
+  hideNotification,
+  showNotification,
+} from "../redux/features/notifications/notificationSlice";
+import Notification from "../components/Notification";
+import { useDispatch } from "react-redux";
+const customHeaders = {
+  Authorization: "Bearer xxxxxx",
+  "Content-Type": "application/json",
+};
 
 const Boardroom = () => {
   const [open, setOpen] = useState(false);
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
   const [boardrooms, setBoardrooms] = useState([]);
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
   const {
     register,
     handleSubmit,
@@ -26,11 +40,22 @@ const Boardroom = () => {
     formState: { errors, isSubmitting },
   } = useForm();
 
-  const fetchBoardrooms = () => {
-    fetch(`${Config.API_URL}/boardrooms`)
-      .then((resp) => resp.json())
-      .then((resp) => setBoardrooms(resp))
-      .catch((err) => console.log(err));
+  const fetchBoardrooms = async () => {
+    try {
+      const boardrooms = await getData(
+        `${Config.API_URL}/boardrooms`,
+        customHeaders
+      );
+      setBoardrooms(boardrooms);
+    } catch (error) {
+      dispatch(
+        showNotification({
+          message: error.response.data.msg,
+          type: "error", // success, error, warning, info
+        })
+      );
+      setTimeout(() => dispatch(hideNotification()), 3000);
+    }
   };
 
   useEffect(() => {
@@ -92,9 +117,11 @@ const Boardroom = () => {
     },
   ];
 
-  const handleEdit = () => {};
+  const handleEdit = (data) => {
+    navigate("/dashboard/boardroom/" + data.id);
+  };
 
-  const handleDelete = () => {
+  const handleDelete = (id) => {
     Swal.fire({
       title: "Are you sure?",
       text: "You won't be able to revert this!",
@@ -105,26 +132,64 @@ const Boardroom = () => {
       confirmButtonText: "Yes, delete it!",
     }).then((result) => {
       if (result.isConfirmed) {
+        deleteBoardroom(id);
       }
     });
   };
 
+  const deleteBoardroom = async (id) => {
+    try {
+      const result = await deleteData(
+        `${Config.API_URL}/delete-boardroom/${id}`,
+        customHeaders
+      );
+      dispatch(
+        showNotification({
+          message: result.msg,
+          type: "success", // success, error, warning, info
+        })
+      );
+      setTimeout(() => dispatch(hideNotification()), 3000);
+    } catch (error) {
+      dispatch(
+        showNotification({
+          message: error.response.data.msg,
+          type: "error", // success, error, warning, info
+        })
+      );
+      setTimeout(() => dispatch(hideNotification()), 3000);
+    }
+  };
+
   //   create boardroom
-  const onSubmit = (data) => {
-    fetch(`${Config.API_URL}/boardrooms`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    })
-      .then((resp) => resp.json())
-      .then((resp) => {
-        reset();
-        setOpen(false);
-        console.log(resp);
-      })
-      .catch((err) => console.log(err));
+  const onSubmit = async (data) => {
+    try {
+      const result = await postData(
+        `${Config.API_URL}/boardrooms`,
+        data,
+        customHeaders
+      );
+      dispatch(
+        showNotification({
+          message: result.msg,
+          type: "success", // success, error, warning, info
+        })
+      );
+      reset();
+      setOpen(false);
+      fetchBoardrooms();
+      console.log(result);
+      setTimeout(() => dispatch(hideNotification()), 3000);
+    } catch (error) {
+      dispatch(
+        showNotification({
+          message: error.response.data.msg,
+          type: "error", // success, error, warning, info
+        })
+      );
+
+      setTimeout(() => dispatch(hideNotification()), 3000);
+    }
   };
 
   return (
@@ -153,6 +218,8 @@ const Boardroom = () => {
           </div>
         </div>
       </div>
+
+      <Notification />
 
       {/* Boardrooms Table */}
       <div style={{ width: "100%", marginTop: "35px" }}>

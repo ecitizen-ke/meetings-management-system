@@ -13,6 +13,7 @@ import Main from "./pages/Main";
 import Boardroom from "./pages/Boardroom";
 import Department from "./pages/Department";
 import EditMeeting from "./pages/EditMeeting";
+import EditBoardroom from "./pages/EditBoardroom";
 
 export const AppRouter = createBrowserRouter([
   // landing page for the form
@@ -69,6 +70,10 @@ export const AppRouter = createBrowserRouter([
       {
         path: "/dashboard/boardrooms",
         element: <Boardroom />,
+      },
+      {
+        path: "/dashboard/boardroom/:id",
+        element: <EditBoardroom />,
       },
       {
         path: "/dashboard/departments",
