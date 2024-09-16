@@ -32,6 +32,7 @@ import { useDispatch } from "react-redux";
 import { setMeetingDetail, setQrLink } from "../redux/features/qr/Qr";
 import { useNavigate } from "react-router";
 import moment from "moment";
+import { getData } from "../utils/api";
 
 let count = 0;
 
@@ -55,30 +56,46 @@ const Meeting = () => {
     formState: { errors, isSubmitting },
   } = useForm();
 
-  const fetchBoardrooms = () => {
-    fetch(`${Config.API_URL}/boardrooms`)
-      .then((resp) => {
-        return resp.json();
-      })
-      .then((resp) => {
-        setBoardrooms(resp);
-      })
-      .catch((err) => {
-        console.log(err);
-      });
+  const fetchBoardrooms = async () => {
+    try {
+      const customHeaders = {
+        Authorization: "Bearer xxxxxx",
+        "Content-Type": "application/json",
+      };
+      const result = await getData(
+        `${Config.API_URL}/boardrooms`,
+        customHeaders
+      );
+      setBoardrooms(result);
+    } catch (error) {
+      dispatch(
+        showNotification({
+          message: error.response.data.msg,
+          type: "error", // success, error, warning, info
+        })
+      );
+      setTimeout(() => dispatch(hideNotification()), 3000);
+    }
   };
 
-  const fetchMeetings = () => {
-    fetch(`${Config.API_URL}/meetings`)
-      .then((resp) => {
-        return resp.json();
-      })
-      .then((resp) => {
-        setMeetings(resp);
-      })
-      .catch((err) => {
-        console.log(err);
-      });
+  const fetchMeetings = async () => {
+    try {
+      const customHeaders = {
+        Authorization: "Bearer xxxxxx",
+        "Content-Type": "application/json",
+      };
+
+      const result = await getData(`${Config.API_URL}/meetings`, customHeaders);
+      setMeetings(result);
+    } catch (error) {
+      dispatch(
+        showNotification({
+          message: error.response.data.msg,
+          type: "error", // success, error, warning, info
+        })
+      );
+      setTimeout(() => dispatch(hideNotification()), 3000);
+    }
   };
 
   useEffect(() => {
@@ -184,6 +201,11 @@ const Meeting = () => {
         });
     }
   };
+
+  // navigate to edit page
+  const handleEdit = (id) => {
+    navigate(`/dashboard/meeting/${id}`);
+  };
   // snackbar close
   const handleToastClose = (event, reason) => {
     if (reason === "clickaway") {
@@ -201,7 +223,7 @@ const Meeting = () => {
     {
       field: "meeting_date",
       headerName: "Meeting Date",
-      width: 130,
+      width: 220,
       renderCell: (params) => (
         <div>{moment(params.row.meeting_date).format("MMMM D, YYYY")}</div>
       ),
@@ -230,7 +252,7 @@ const Meeting = () => {
               color="primary"
               size="small"
               style={{ marginRight: 8 }}
-              onClick={() => handleEdit(params.row)}
+              onClick={() => handleEdit(params.row.id)}
             >
               Edit
             </Button>

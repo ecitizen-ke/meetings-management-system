@@ -56,15 +56,6 @@ const Users = () => {
   useEffect(() => {
     fetchDepartments();
     fetchUsers();
-    // setTimeout(() => {
-    //   console.log("done");
-    //   dispatch(
-    //     showNotification({
-    //       message: "Component was mounted",
-    //       type: "success", // success, error, warning, info
-    //     })
-    //   );
-    // }, 2500);
   }, []);
 
   // fetch departments
@@ -92,7 +83,7 @@ const Users = () => {
   // create users
   const onSubmit = async (data) => {
     data["password"] = "12345678";
-    console.log(data);
+
     const customHeaders = {
       Authorization: "Bearer xxxxxx",
       "Content-Type": "application/json",

@@ -12,6 +12,7 @@ import Attendees from "./pages/Attendees";
 import Main from "./pages/Main";
 import Boardroom from "./pages/Boardroom";
 import Department from "./pages/Department";
+import EditMeeting from "./pages/EditMeeting";
 
 export const AppRouter = createBrowserRouter([
   // landing page for the form
@@ -50,6 +51,11 @@ export const AppRouter = createBrowserRouter([
       {
         path: "/dashboard/meetings",
         element: <Meeting />,
+      },
+      {
+        path: "/dashboard/meeting/:id",
+        exact: true,
+        element: <EditMeeting />,
       },
       {
         path: "/dashboard/attendees/:id",
