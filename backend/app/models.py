@@ -281,15 +281,15 @@ def delete_meeting(meeting_id):
         cursor.close()
         connection.close()
 
-def update_meeting(meeting_id, title, description, date, start_time, end_time, location):
+def update_meeting(meeting_id, title, description, meeting_date, start_time, end_time, boardroom_id):
     connection = get_db_connection()
     cursor = connection.cursor()
     try:
         cursor.execute("""
             UPDATE meetings 
-            SET title = %s, description = %s, date = %s, start_time = %s, end_time = %s, location = %s
+            SET title = %s, description = %s, meeting_date = %s, start_time = %s, end_time = %s, boardroom_id = %s
             WHERE id = %s
-        """, (title, description, date, start_time, end_time, location, meeting_id))
+        """, (title, description, meeting_date, start_time, end_time, boardroom_id, meeting_id))
         connection.commit()
 
     except Exception as e:

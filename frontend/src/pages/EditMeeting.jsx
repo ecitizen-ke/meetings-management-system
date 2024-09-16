@@ -12,13 +12,18 @@ import {
   Typography,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
-import { getData } from "../utils/api";
+import { getData, postData, putData } from "../utils/api";
 import { Config } from "../Config";
 import { useParams } from "react-router";
 import { useForm } from "react-hook-form";
 import { Edit } from "@mui/icons-material";
 import { useDispatch } from "react-redux";
 import moment from "moment";
+import {
+  hideNotification,
+  showNotification,
+} from "../redux/features/notifications/notificationSlice";
+import Notification from "../components/Notification";
 
 const EditMeeting = () => {
   const params = useParams();
@@ -82,6 +87,35 @@ const EditMeeting = () => {
   };
   const onSubmit = async (data) => {
     console.log(data);
+    const customHeaders = {
+      Authorization: "Bearer xxxxxx",
+      "Content-Type": "application/json",
+    };
+    try {
+      const result = await putData(
+        `${Config.API_URL}/meeting/${params.id}`,
+        data,
+        customHeaders
+      );
+      dispatch(
+        showNotification({
+          message: result.msg,
+          type: "success", // success, error, warning, info
+        })
+      );
+
+      setTimeout(() => dispatch(hideNotification()), 3000);
+    } catch (error) {
+      console.error("Error submitting data: ", error.response.data.error);
+      dispatch(
+        showNotification({
+          message: error.response.data.error,
+          type: "error", // success, error, warning, info
+        })
+      );
+
+      setTimeout(() => dispatch(hideNotification()), 3000);
+    }
   };
   return (
     <>
@@ -100,6 +134,8 @@ const EditMeeting = () => {
       <br />
       <Divider color="" />
       <br />
+
+      <Notification />
 
       <Grid container spacing={2}>
         <Grid item md={3} xs={12}></Grid>

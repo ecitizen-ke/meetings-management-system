@@ -13,6 +13,8 @@ import MenuIcon from "@mui/icons-material/Menu";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import { Outlet, useNavigate } from "react-router";
+import { NavLink } from "react-router-dom";
+
 import {
   Build,
   DashboardSharp,
@@ -108,12 +110,27 @@ const Sidebar = () => {
       <Divider />
       <List>
         {menuItems.map((item, index) => (
-          <ListItem onClick={() => navigateTo(item)} key={index} disablePadding>
-            <ListItemButton>
-              <ListItemIcon>{item.icon}</ListItemIcon>
-              <ListItemText primary={item.text} />
-            </ListItemButton>
-          </ListItem>
+          <NavLink
+            style={{
+              textDecoration: "none",
+              color: "#3b3b3b",
+            }}
+            className={({ isActive }) =>
+              isActive ? "active-link" : "inactive-link"
+            }
+            to={`${item.path}`}
+          >
+            <ListItem
+              onClick={() => navigateTo(item)}
+              key={index}
+              disablePadding
+            >
+              <ListItemButton>
+                <ListItemIcon>{item.icon}</ListItemIcon>
+                <ListItemText primary={item.text} />
+              </ListItemButton>
+            </ListItem>
+          </NavLink>
         ))}
       </List>
     </div>

@@ -13,8 +13,10 @@ import { Config } from "../Config";
 import { useDispatch } from "react-redux";
 import { DataGrid } from "@mui/x-data-grid";
 import moment from "moment";
+import { useNavigate } from "react-router";
 const Main = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [stats, setStats] = useState({
     complete: 0,
     ongoing: 0,
@@ -54,41 +56,12 @@ const Main = () => {
         <>
           <div>
             <Button
-              variant="contained"
-              color="primary"
-              size="small"
-              style={{ marginRight: 8 }}
-              onClick={() => handleEdit(params.row)}
-            >
-              Edit
-            </Button>
-
-            <Button
-              style={{ marginRight: 8 }}
-              variant="contained"
-              color="secondary"
-              size="small"
-              onClick={() => handleDelete(params.row)}
-            >
-              Delete
-            </Button>
-
-            <Button
-              onClick={() => generateQrCode(params)}
-              variant="contained"
-              color="warning"
-              style={{ marginRight: 8 }}
-              size="small"
-            >
-              Generate QR
-            </Button>
-            <Button
               onClick={() => navigate("/dashboard/attendees/" + params.row.id)}
               variant="contained"
               color="info"
               size="small"
             >
-              View
+              View Attendees
             </Button>
           </div>
         </>

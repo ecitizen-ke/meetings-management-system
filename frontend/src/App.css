@@ -46,6 +46,9 @@ body{
     justify-content: space-between;
     align-items: center;
 }
+.active-link{
+    color: #398e3d !important;
+}
 /* responsive */
 @media (max-width: 768px) {
     .login-page{
