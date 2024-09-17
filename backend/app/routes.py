@@ -295,3 +295,7 @@ def edit_meeting(meeting_id):
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+@main_bp.route("/reports-summary", methods=["GET"])
+def report_summary():
+        return jsonify(reports_summary())
+

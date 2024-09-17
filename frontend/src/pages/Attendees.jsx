@@ -2,13 +2,22 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { Config } from "../Config";
 import { DataGrid } from "@mui/x-data-grid";
-import { Button, IconButton } from "@mui/material";
-import { ChevronLeft, PieChart } from "@mui/icons-material";
+import { Button, IconButton, Menu, MenuItem } from "@mui/material";
+import { ChevronLeft, PieChart, Share } from "@mui/icons-material";
 
 const Attendees = () => {
   const [attendees, setAttendees] = useState([]);
   const [meeting, setMeeting] = useState(null);
   const params = useParams();
+
+  const [anchorEl, setAnchorEl] = useState(null);
+  const open = Boolean(anchorEl);
+  const handleClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
 
   //   fetch attendees from the db
   const fetchAttendees = () => {
@@ -105,13 +114,37 @@ const Attendees = () => {
         >
           <div>
             <Button
+              id="basic-button"
+              aria-controls={open ? "basic-menu" : undefined}
+              aria-haspopup="true"
+              aria-expanded={open ? "true" : undefined}
+              onClick={handleClick}
+              variant="contained"
+              endIcon={<Share />}
+            >
+              Export Report
+            </Button>
+
+            <Menu
+              id="basic-menu"
+              anchorEl={anchorEl}
+              open={open}
+              onClose={handleClose}
+              MenuListProps={{
+                "aria-labelledby": "basic-button",
+              }}
+            >
+              <MenuItem onClick={handleClose}>PDF</MenuItem>
+              <MenuItem onClick={handleClose}>Excel</MenuItem>
+            </Menu>
+            {/* <Button
               onClick={() => generateReport()}
               variant="contained"
               endIcon={<PieChart />}
               color="primary"
             >
               Generate Report
-            </Button>
+            </Button> */}
           </div>
         </div>
       </div>

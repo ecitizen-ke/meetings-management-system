@@ -1,5 +1,6 @@
 import axios from "axios";
 
+// for POST requests
 export const postData = async (url, data, headers = {}) => {
   try {
     const response = await axios.post(url, data, {
@@ -20,6 +21,8 @@ export const postData = async (url, data, headers = {}) => {
     throw error;
   }
 };
+
+// for update requests
 export const putData = async (url, data, headers = {}) => {
   try {
     const response = await axios.put(url, data, {
@@ -40,6 +43,8 @@ export const putData = async (url, data, headers = {}) => {
     throw error;
   }
 };
+
+// for GET requests
 export const getData = async (url, headers = {}) => {
   try {
     const response = await axios.get(url, {
@@ -60,6 +65,8 @@ export const getData = async (url, headers = {}) => {
     throw error;
   }
 };
+
+// for DELETE requests
 
 export const deleteData = async (url, headers = {}) => {
   try {

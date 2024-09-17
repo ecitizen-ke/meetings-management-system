@@ -15,6 +15,10 @@ import { useParams } from "react-router";
 import { useForm } from "react-hook-form";
 import { Edit } from "@mui/icons-material";
 import Notification from "../components/Notification";
+import {
+  hideNotification,
+  showNotification,
+} from "../redux/features/notifications/notificationSlice";
 
 const customHeaders = {
   Authorization: "Bearer xxxxxx",
@@ -52,8 +56,7 @@ const EditBoardroom = () => {
           type: "error", // success, error, warning, info
         })
       );
-
-      setTimeout(() => dispatch(hideNotification()), 3000);
+      setTimeout(() => dispatch(hideNotification(), 3000));
     }
   };
 

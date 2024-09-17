@@ -14,7 +14,7 @@ import {
 import React, { useEffect, useState } from "react";
 import { getData, postData, putData } from "../utils/api";
 import { Config } from "../Config";
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import { useForm } from "react-hook-form";
 import { Edit } from "@mui/icons-material";
 import { useDispatch } from "react-redux";
@@ -24,12 +24,16 @@ import {
   showNotification,
 } from "../redux/features/notifications/notificationSlice";
 import Notification from "../components/Notification";
+import { handleApiError } from "../utils/errorHandler";
+import { showMessage } from "../utils/helpers";
 
 const EditMeeting = () => {
   const params = useParams();
   const [meeting, setMeeting] = useState(null);
   const [boardrooms, setBoardrooms] = useState([]);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+
   const {
     register,
     handleSubmit,
@@ -41,6 +45,7 @@ const EditMeeting = () => {
     fetchMeeting();
     fetchBoardrooms();
   }, []);
+
   const fetchMeeting = async () => {
     const customHeaders = {
       Authorization: "Bearer xxxxxx",
@@ -51,16 +56,9 @@ const EditMeeting = () => {
         `${Config.API_URL}/meeting/${params.id}`,
         customHeaders
       );
-      console.log(result);
       setMeeting(result);
     } catch (error) {
-      dispatch(
-        showNotification({
-          message: error.response.data.msg,
-          type: "error", // success, error, warning, info
-        })
-      );
-      setTimeout(() => dispatch(hideNotification()), 3000);
+      handleApiError(error, dispatch);
     }
   };
   const fetchBoardrooms = async () => {
@@ -76,17 +74,11 @@ const EditMeeting = () => {
       );
       setBoardrooms(result);
     } catch (error) {
-      dispatch(
-        showNotification({
-          message: error.response.data.msg,
-          type: "error", // success, error, warning, info
-        })
-      );
-      setTimeout(() => dispatch(hideNotification()), 3000);
+      handleApiError(error, dispatch);
     }
   };
+
   const onSubmit = async (data) => {
-    console.log(data);
     const customHeaders = {
       Authorization: "Bearer xxxxxx",
       "Content-Type": "application/json",
@@ -97,26 +89,13 @@ const EditMeeting = () => {
         data,
         customHeaders
       );
-      dispatch(
-        showNotification({
-          message: result.msg,
-          type: "success", // success, error, warning, info
-        })
-      );
-
-      setTimeout(() => dispatch(hideNotification()), 3000);
+      showMessage(result.msg, "success", dispatch);
+      navigate("/dashboard/meetings");
     } catch (error) {
-      console.error("Error submitting data: ", error.response.data.error);
-      dispatch(
-        showNotification({
-          message: error.response.data.error,
-          type: "error", // success, error, warning, info
-        })
-      );
-
-      setTimeout(() => dispatch(hideNotification()), 3000);
+      handleApiError(error, dispatch);
     }
   };
+
   return (
     <>
       <div className="page-header">
@@ -136,6 +115,7 @@ const EditMeeting = () => {
       <br />
 
       <Notification />
+      <br />
 
       <Grid container spacing={2}>
         <Grid item md={3} xs={12}></Grid>

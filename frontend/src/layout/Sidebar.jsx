@@ -14,6 +14,7 @@ import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import { Outlet, useNavigate } from "react-router";
 import { NavLink } from "react-router-dom";
+import Swal from "sweetalert2";
 
 import {
   Build,
@@ -54,10 +55,29 @@ const Sidebar = () => {
     }
   };
 
+  // logout user
+  const handleLogout = () => {
+    Swal.fire({
+      title: "Logout",
+      text: "Are you sure youwant to log out?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#398e3d",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Logout",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // todo: logout user
+        dispatch(logout());
+        navigate("/login");
+      }
+    });
+  };
+
   const navigateTo = (item) => {
     if (item.slug === "logout") {
       // Perform logout logic here
-      dispatch(logout());
+
       navigate("/login");
     } else {
       navigate(item.path);
@@ -95,12 +115,6 @@ const Sidebar = () => {
       path: "/dashboard/users",
       slug: "users",
     },
-    {
-      text: "Logout",
-      icon: <Logout color="primary" />,
-      path: "/dashboard/logout",
-      slug: "logout",
-    },
   ];
 
   const drawer = (
@@ -111,6 +125,7 @@ const Sidebar = () => {
       <List>
         {menuItems.map((item, index) => (
           <NavLink
+            key={index}
             style={{
               textDecoration: "none",
               color: "#3b3b3b",
@@ -132,6 +147,14 @@ const Sidebar = () => {
             </ListItem>
           </NavLink>
         ))}
+        <ListItem onClick={() => handleLogout()} disablePadding>
+          <ListItemButton>
+            <ListItemIcon>
+              <Logout />
+            </ListItemIcon>
+            <ListItemText primary={`Logout`} />
+          </ListItemButton>
+        </ListItem>
       </List>
     </div>
   );

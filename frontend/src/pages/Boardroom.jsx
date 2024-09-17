@@ -232,7 +232,7 @@ const Boardroom = () => {
             },
           }}
           pageSizeOptions={[5, 10]}
-          checkboxSelection
+          // checkboxSelection
         />
       </div>
 

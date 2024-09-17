@@ -32,13 +32,15 @@ import { useDispatch } from "react-redux";
 import { setMeetingDetail, setQrLink } from "../redux/features/qr/Qr";
 import { useNavigate } from "react-router";
 import moment from "moment";
-import { getData, postData } from "../utils/api";
+import { deleteData, getData, postData } from "../utils/api";
 import Swal from "sweetalert2";
 import {
   hideNotification,
   showNotification,
 } from "../redux/features/notifications/notificationSlice";
 import Notification from "../components/Notification";
+import { handleApiError } from "../utils/errorHandler";
+import { showMessage } from "../utils/helpers";
 
 let count = 0;
 
@@ -53,6 +55,10 @@ const Meeting = () => {
   const navigate = useNavigate();
 
   const [anchorEl, setAnchorEl] = React.useState(null);
+  const customHeaders = {
+    Authorization: "Bearer xxxxxx",
+    "Content-Type": "application/json",
+  };
 
   const {
     register,
@@ -74,33 +80,16 @@ const Meeting = () => {
       );
       setBoardrooms(result);
     } catch (error) {
-      dispatch(
-        showNotification({
-          message: error.response.data.msg,
-          type: "error", // success, error, warning, info
-        })
-      );
-      setTimeout(() => dispatch(hideNotification()), 3000);
+      handleApiError(error);
     }
   };
 
   const fetchMeetings = async () => {
     try {
-      const customHeaders = {
-        Authorization: "Bearer xxxxxx",
-        "Content-Type": "application/json",
-      };
-
       const result = await getData(`${Config.API_URL}/meetings`, customHeaders);
       setMeetings(result);
     } catch (error) {
-      dispatch(
-        showNotification({
-          message: error.response.data.msg,
-          type: "error", // success, error, warning, info
-        })
-      );
-      setTimeout(() => dispatch(hideNotification()), 3000);
+      handleApiError(error);
     }
   };
 
@@ -134,11 +123,6 @@ const Meeting = () => {
 
   // create a meeting
   const onSubmit = async (data) => {
-    const customHeaders = {
-      Authorization: "Bearer xxxxxx",
-      "Content-Type": "application/json",
-    };
-
     try {
       const result = await postData(
         `${Config.API_URL}/create-meeting`,
@@ -149,20 +133,9 @@ const Meeting = () => {
       reset();
       setOpenToast(true);
       fetchMeetings();
-      dispatch(
-        showNotification({
-          message: result.msg,
-          type: "success", // success, error, warning, info
-        })
-      );
+      showMessage(result.msg, "success", dispatch);
     } catch (error) {
-      dispatch(
-        showNotification({
-          message: error.response.data.msg,
-          type: "error", // success, error, warning, info
-        })
-      );
-      setTimeout(() => dispatch(hideNotification()), 3000);
+      handleApiError(error);
     }
   };
 
@@ -175,29 +148,17 @@ const Meeting = () => {
       showCancelButton: true,
       confirmButtonColor: "#398e3d",
       cancelButtonColor: "#d33",
-      confirmButtonText: "Yes, delete it!",
+      confirmButtonText: "Yes",
     }).then((result) => {
       if (result.isConfirmed) {
-        fetch(`${Config.API_URL}/meeting/${id}`, {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json", // The type of data you're sending
-          },
-        })
-          .then((response) => {
-            if (!response.ok) {
-              throw new Error(
-                "Network response was not ok " + response.statusText
-              );
-            }
-            return response.json(); // Parse the JSON from the response
-          })
-          .then((res) => {
+        deleteData(`${Config.API_URL}/meeting/${id}`, customHeaders)
+          .then((result) => {
             setOpenToast(true);
             fetchMeetings();
+            showMessage(result.msg, "success", dispatch);
           })
           .catch((error) => {
-            console.error("Error:", error); // Handle any errors
+            handleApiError(error);
           });
       }
     });
@@ -246,7 +207,7 @@ const Meeting = () => {
     {
       field: "actions",
       headerName: "",
-      width: 350,
+      width: 430,
       sortable: false,
       filterable: false,
       renderCell: (params) => (
@@ -287,7 +248,7 @@ const Meeting = () => {
               color="info"
               size="small"
             >
-              View
+              View Attendees
             </Button>
           </div>
         </>
@@ -335,7 +296,7 @@ const Meeting = () => {
             },
           }}
           pageSizeOptions={[5, 10]}
-          checkboxSelection
+          // checkboxSelection
         />
       </div>
 

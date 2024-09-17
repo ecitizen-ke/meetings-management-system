@@ -175,7 +175,7 @@ const Department = () => {
             },
           }}
           pageSizeOptions={[5, 10]}
-          checkboxSelection
+          // checkboxSelection
         />
       </div>
 

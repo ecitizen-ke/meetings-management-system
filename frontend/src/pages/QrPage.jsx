@@ -117,7 +117,7 @@ export default function QrPage() {
       </AppBar>
 
       <div className="qr-area">
-        <Card elevation={2} sx={{ maxWidth: "55%", marginTop: 10 }}>
+        <Card elevation={2} sx={{ width: "35%", marginTop: 10 }}>
           <center
             style={{
               padding: "10px",

@@ -14,6 +14,11 @@ import { useDispatch } from "react-redux";
 import { DataGrid } from "@mui/x-data-grid";
 import moment from "moment";
 import { useNavigate } from "react-router";
+import {
+  hideNotification,
+  showNotification,
+} from "../redux/features/notifications/notificationSlice";
+import Notification from "../components/Notification";
 const Main = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -81,12 +86,14 @@ const Main = () => {
       );
       setStats(result);
     } catch (error) {
+      console.log(error);
       dispatch(
         showNotification({
-          message: error.response.data.msg,
+          message: error.message,
           type: "error", // success, error, warning, info
         })
       );
+
       setTimeout(() => dispatch(hideNotification()), 3000);
     }
   };
@@ -201,6 +208,7 @@ const Main = () => {
       </Grid>
       <br />
       <Divider />
+      <Notification />
       <br />
       <Typography variant="h3" component="div">
         Recent Meetings
