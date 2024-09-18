@@ -181,6 +181,7 @@ def create_meeting(data):
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         """, (data['title'], data.get('description', ''), data['meeting_date'], data['start_time'], data['end_time'],
             data['boardroom_id'], data['department_id'], resources_json, data.get('location', None)))
+
         connection.commit()
 
         return {"msg": "Meeting created successfully"}, 201
@@ -237,18 +238,18 @@ def get_meetings():
         meeting['start_time'] = str(meeting['start_time'])
         meeting['end_time'] = str(meeting['end_time'])
 
-    for meeting in meetings:
-        meeting['resources_id'] = json.loads(meeting['resources_id'])
+    # for meeting in meetings:
+    #     meeting['resources_id'] = json.loads(meeting['resources_id'])
     
     for meeting in meetings:
         cursor.execute("SELECT name FROM boardrooms WHERE id = %s", (meeting['boardroom_id'],))
         boardroom = cursor.fetchone()
         meeting['boardroom_name'] = boardroom['name']
     
-    for meeting in meetings:
-        cursor.execute("SELECT name FROM departments WHERE id = %s", (meeting['department_id'],))
-        department = cursor.fetchone()
-        meeting['department_name'] = department['name']
+    # for meeting in meetings:
+    #     cursor.execute("SELECT name FROM departments WHERE id = %s", (meeting['department_id'],))
+    #     department = cursor.fetchone()
+    #     meeting['department_name'] = department['name']
 
     cursor.close()
     connection.close()
@@ -261,13 +262,13 @@ def get_meeting_by_id(meeting_id):
     meeting = cursor.fetchone()
     meeting['start_time'] = str(meeting['start_time'])
     meeting['end_time'] = str(meeting['end_time'])
-    meeting['resources_id'] = json.loads(meeting['resources_id'])
+    # meeting['resources_id'] = json.loads(meeting['resources_id'])
     cursor.execute("SELECT name FROM boardrooms WHERE id = %s", (meeting['boardroom_id'],))
     boardroom = cursor.fetchone()
     meeting['boardroom_name'] = boardroom['name']
-    cursor.execute("SELECT name FROM departments WHERE id = %s", (meeting['department_id'],))
-    department = cursor.fetchone()
-    meeting['department_name'] = department['name']
+    # cursor.execute("SELECT name FROM departments WHERE id = %s", (meeting['department_id'],))
+    # department = cursor.fetchone()
+    # meeting['department_name'] = department['name']
     cursor.close()
     connection.close()
     return meeting
@@ -345,6 +346,40 @@ def update_meeting_status(meeting_id, status):
     connection.commit()
     cursor.close()
     connection.close()
+
+def delete_meeting(meeting_id):
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    try:
+        cursor.execute("DELETE FROM meetings WHERE id = %s", (meeting_id,))
+        connection.commit()
+
+    except Exception as e:
+        connection.rollback()  # Rollback in case of error
+        raise Exception(f"Error deleting meeting: {str(e)}")
+
+    finally:
+        cursor.close()
+        connection.close()
+
+def update_meeting(meeting_id, title, description, meeting_date, start_time, end_time, boardroom_id):
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    try:
+        cursor.execute("""
+            UPDATE meetings 
+            SET title = %s, description = %s, meeting_date = %s, start_time = %s, end_time = %s, boardroom_id = %s
+            WHERE id = %s
+        """, (title, description, meeting_date, start_time, end_time, boardroom_id, meeting_id))
+        connection.commit()
+
+    except Exception as e:
+        connection.rollback()  # Rollback in case of error
+        raise Exception(f"Error updating meeting: {str(e)}")
+
+    finally:
+        cursor.close()
+        connection.close()
 
 def reports_summary():
     connection = get_db_connection()

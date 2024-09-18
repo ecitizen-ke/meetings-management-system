@@ -1,20 +1,46 @@
-import { Add, Edit } from "@mui/icons-material";
+import {
+  Add,
+  ChatRounded,
+  Delete,
+  Edit,
+  PieChart,
+  QrCode,
+} from "@mui/icons-material";
 import {
   Box,
   Button,
   Divider,
+  FormControl,
   Grid,
   Input,
   InputAdornment,
+  InputLabel,
+  Menu,
+  MenuItem,
   Modal,
   Paper,
+  Select,
   TextField,
   Typography,
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import Snackbar from "@mui/material/Snackbar";
+import { Config } from "../Config";
+import { useDispatch } from "react-redux";
+import { setMeetingDetail, setQrLink } from "../redux/features/qr/Qr";
+import { useNavigate } from "react-router";
+import moment from "moment";
+import { deleteData, getData, postData } from "../utils/api";
+import Swal from "sweetalert2";
+import {
+  hideNotification,
+  showNotification,
+} from "../redux/features/notifications/notificationSlice";
+import Notification from "../components/Notification";
+import { handleApiError } from "../utils/errorHandler";
+import { showMessage } from "../utils/helpers";
 
 let count = 0;
 
@@ -24,6 +50,54 @@ const Meeting = () => {
   const handleClose = () => setOpen(false);
   const [meetings, setMeetings] = useState([]);
   const [openToast, setOpenToast] = useState(false);
+  const [boardrooms, setBoardrooms] = useState([]);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const [anchorEl, setAnchorEl] = React.useState(null);
+  const customHeaders = {
+    Authorization: "Bearer xxxxxx",
+    "Content-Type": "application/json",
+  };
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm();
+
+  const fetchBoardrooms = async () => {
+    try {
+      const customHeaders = {
+        Authorization: "Bearer xxxxxx",
+        "Content-Type": "application/json",
+      };
+      const result = await getData(
+        `${Config.API_URL}/boardrooms`,
+        customHeaders
+      );
+      setBoardrooms(result);
+    } catch (error) {
+      handleApiError(error);
+    }
+  };
+
+  const fetchMeetings = async () => {
+    try {
+      const result = await getData(`${Config.API_URL}/meetings`, customHeaders);
+      setMeetings(result);
+    } catch (error) {
+      handleApiError(error);
+    }
+  };
+
+  useEffect(() => {
+    fetchBoardrooms();
+    fetchMeetings();
+  }, []);
+
   const style = {
     position: "absolute",
     top: "50%",
@@ -35,66 +109,65 @@ const Meeting = () => {
     p: 4,
   };
 
-  const {
-    register,
-    handleSubmit,
-    watch,
-    reset,
-    formState: { errors, isSubmitting },
-  } = useForm();
+  // Navigate to qr page
+  const navigateToQrPage = (data) => {
+    sessionStorage.setItem("meeting", JSON.stringify(data.row));
 
-  const columns = [
-    { field: "id", headerName: "#", width: 70 },
-    { field: "title", headerName: "Title", width: 330 },
-    { field: "date", headerName: "Meeting Date", width: 330 },
-    {
-      field: "time",
-      headerName: "Time",
-      width: 130,
-    },
-    {
-      field: "actions",
-      headerName: "Actions",
-      width: 150,
-      sortable: false,
-      filterable: false,
-      renderCell: (params) => (
-        <div>
-          <Button
-            variant="contained"
-            color="primary"
-            size="small"
-            style={{ marginRight: 8 }}
-            onClick={() => handleEdit(params.row)}
-          >
-            Edit
-          </Button>
-          <Button
-            variant="contained"
-            color="secondary"
-            size="small"
-            onClick={() => handleDelete(params.row)}
-          >
-            Delete
-          </Button>
-        </div>
-      ),
-    },
-  ];
-
-  // const rows = [
-  //   { id: 1, title: "Kickoff Meeting", date: "28-08-2024", time: "16:30hrs" },
-  // ];
-
-  const onSubmit = async (data) => {
-    console.log(data);
-    data["id"] = ++count;
-    setMeetings([...meetings, data]);
-    setOpen(false);
-    reset();
-    setOpenToast(true);
+    dispatch(
+      setMeetingDetail({
+        meeting: data.row,
+      })
+    );
+    navigate("/attendance/" + data.row.id);
   };
 
+  // create a meeting
+  const onSubmit = async (data) => {
+    try {
+      const result = await postData(
+        `${Config.API_URL}/create-meeting`,
+        data,
+        customHeaders
+      );
+      setOpen(false);
+      reset();
+      setOpenToast(true);
+      fetchMeetings();
+      showMessage(result.msg, "success", dispatch);
+    } catch (error) {
+      handleApiError(error);
+    }
+  };
+
+  // delete a meeting
+  const handleDelete = (id) => {
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#398e3d",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        deleteData(`${Config.API_URL}/meeting/${id}`, customHeaders)
+          .then((result) => {
+            setOpenToast(true);
+            fetchMeetings();
+            showMessage(result.msg, "success", dispatch);
+          })
+          .catch((error) => {
+            handleApiError(error);
+          });
+      }
+    });
+  };
+
+  // navigate to edit page
+  const handleEdit = (id) => {
+    navigate(`/dashboard/meeting/${id}`);
+  };
   // snackbar close
   const handleToastClose = (event, reason) => {
     if (reason === "clickaway") {
@@ -104,6 +177,85 @@ const Meeting = () => {
     setOpenToast(false);
   };
 
+  const columns = [
+    {
+      field: "id",
+      headerName: "#",
+      width: 70,
+    },
+    { field: "title", headerName: "Title", width: 220 },
+    { field: "boardroom_name", headerName: "Boardroom", width: 220 },
+    { field: "description", headerName: "Description", width: 220 },
+    {
+      field: "meeting_date",
+      headerName: "Meeting Date",
+      width: 220,
+      renderCell: (params) => (
+        <div>{moment(params.row.meeting_date).format("MMMM D, YYYY")}</div>
+      ),
+    },
+    {
+      field: "start_time",
+      headerName: "Start Time",
+      width: 130,
+    },
+    {
+      field: "end_time",
+      headerName: "End Time",
+      width: 130,
+    },
+    {
+      field: "actions",
+      headerName: "",
+      width: 430,
+      sortable: false,
+      filterable: false,
+      renderCell: (params) => (
+        <>
+          <div>
+            <Button
+              variant="contained"
+              color="primary"
+              size="small"
+              style={{ marginRight: 8 }}
+              onClick={() => handleEdit(params.row.id)}
+            >
+              Edit
+            </Button>
+
+            <Button
+              style={{ marginRight: 8 }}
+              variant="contained"
+              color="secondary"
+              size="small"
+              onClick={() => handleDelete(params.row.id)}
+            >
+              Delete
+            </Button>
+
+            <Button
+              onClick={() => navigateToQrPage(params)}
+              variant="contained"
+              color="warning"
+              style={{ marginRight: 8 }}
+              size="small"
+            >
+              Generate QR
+            </Button>
+            <Button
+              onClick={() => navigate("/dashboard/attendees/" + params.row.id)}
+              variant="contained"
+              color="info"
+              size="small"
+            >
+              View Attendees
+            </Button>
+          </div>
+        </>
+      ),
+    },
+  ];
+
   return (
     <>
       <div className="meetings-header">
@@ -111,19 +263,30 @@ const Meeting = () => {
           <h3>Meetings</h3>
         </div>
 
-        <div>
-          <Button
-            onClick={handleOpen}
-            variant="contained"
-            endIcon={<Add />}
-            color="secondary"
-          >
-            Add New Meeting
-          </Button>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <div>
+            {" "}
+            <Button
+              onClick={handleOpen}
+              variant="contained"
+              endIcon={<Add />}
+              color="secondary"
+            >
+              Add New Meeting
+            </Button>
+          </div>
         </div>
       </div>
-
-      <div style={{ width: "100%" }}>
+      <br />
+      <Notification />
+      <br />
+      <div style={{ width: "100%", marginTop: "35px" }}>
         <DataGrid
           rows={meetings}
           columns={columns}
@@ -133,7 +296,7 @@ const Meeting = () => {
             },
           }}
           pageSizeOptions={[5, 10]}
-          checkboxSelection
+          // checkboxSelection
         />
       </div>
 
@@ -160,7 +323,7 @@ const Meeting = () => {
                 onClick={handleClose}
                 color="secondary"
               >
-                Cancel
+                Close
               </Button>
             </div>
           </Box>
@@ -223,47 +386,69 @@ const Meeting = () => {
               <br />
 
               <Grid container spacing={2}>
-                <Grid item md={6} xs={12}>
+                <Grid item md={4} xs={12}>
                   <TextField
                     type="date"
                     label="Meeting Date"
                     variant="outlined"
                     fullWidth={true}
                     focused
-                    {...register("date", {
+                    {...register("meeting_date", {
                       required: "This is a required field",
                     })}
-                    error={errors.date && true}
+                    error={errors.meeting_date && true}
                   />
-                  {errors.date && (
+                  {errors.meeting_date && (
                     <span
                       style={{
                         color: "crimson",
                       }}
                     >
-                      {errors.date.message}
+                      {errors.meeting_date.message}
                     </span>
                   )}
                 </Grid>
-                <Grid item md={6} xs={12}>
+                <Grid item md={4} xs={12}>
                   <TextField
                     type="time"
-                    label="Meeting Time"
+                    label="Start Time"
                     variant="outlined"
                     fullWidth={true}
                     focused
-                    {...register("time", {
+                    {...register("start_time", {
                       required: "This field is required",
                     })}
-                    error={errors.time && true}
+                    error={errors.start_time && true}
                   />
-                  {errors.time && (
+                  {errors.start_time && (
                     <span
                       style={{
                         color: "crimson",
                       }}
                     >
-                      {errors.time.message}
+                      {errors.start_time.message}
+                    </span>
+                  )}
+                </Grid>
+                <Grid item md={4} xs={12}>
+                  <TextField
+                    type="time"
+                    label="End Time"
+                    variant="outlined"
+                    fullWidth={true}
+                    focused
+                    {...register("end_time", {
+                      required: "This field is required",
+                    })}
+                    error={errors.end_time && true}
+                  />
+                  {errors.end_time && (
+                    <span
+                      style={{
+                        color: "crimson",
+                      }}
+                    >
+                      {errors.end_time.message}
                     </span>
                   )}
                 </Grid>
@@ -271,6 +456,30 @@ const Meeting = () => {
               <br />
               <br />
               <br />
+
+              <FormControl fullWidth>
+                <InputLabel id="bordroom-select-label">Boardroom</InputLabel>
+                <Select
+                  labelId="bordroom-select-label"
+                  id="bordroom-select-label"
+                  // value={age}
+                  label="Boardroom"
+                  {...register("boardroom_id", {
+                    required: "This field is required",
+                  })}
+                >
+                  {boardrooms.map((boardroom) => (
+                    <MenuItem key={boardroom.id} value={boardroom.id}>
+                      {boardroom.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              <br />
+              <br />
+              <br />
+
               <Box
                 flexDirection={`row`}
                 display={`flex`}
@@ -294,6 +503,8 @@ const Meeting = () => {
           </form>
         </Box>
       </Modal>
+
+      {/* edit meeting modal */}
 
       {/* Toastr */}
 
