@@ -61,6 +61,8 @@ def run_migrations():
         id INT AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(100) NOT NULL,
         description TEXT,
+        quantity INT NOT NULL,
+        status ENUM('available', 'unavailable') DEFAULT 'available',
         created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     );
