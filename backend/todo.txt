@@ -1,0 +1,2 @@
+Resources Validation to check if resources are available based off status and quantity
+have an update meetings module to update the status 
