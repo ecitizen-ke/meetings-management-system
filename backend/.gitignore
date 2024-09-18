@@ -1,5 +1,5 @@
 # Ignore virtual environment folder
-board/
+/board/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
