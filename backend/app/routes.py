@@ -37,12 +37,21 @@ def get_meeting(meeting_id):
     return jsonify(meeting)
 
 
-@main_bp.route("/attendees", methods=["GET"])
+@main_bp.route("/attendees", methods=["POST"])
 def submit_attendee():
     data = request.get_json()
-    add_attendee(data)
-    return jsonify({"message": "Attendee added successfully"}), 201
+    if not data or not isinstance(data, dict):
+        return jsonify({"msg": "Invalid JSON format or empty payload"}), 400
+    
+    required_fields = ['meeting_id', 'email', 'first_name', 'designation']
+    missing_fields = [field for field in required_fields if field not in data]
+    if missing_fields:
+        return jsonify({"msg": f"Missing required fields: {', '.join(missing_fields)}"}), 400
 
+    response, status_code = add_attendee(data)
+
+    return jsonify(response), status_code
+    
 
 @main_bp.route("/admin/attendees/<int:meeting_id>", methods=["GET"])
 def admin_attendees(meeting_id):

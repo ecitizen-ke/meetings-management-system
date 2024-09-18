@@ -288,13 +288,39 @@ def get_attendees(meeting_id):
 def add_attendee(data):
     connection = get_db_connection()
     cursor = connection.cursor()
+    try:
+        attendee_exists = check_attendee_exists(data)
+        if attendee_exists:
+            return {"error": "Attendee already exists"}, 400
+
+        cursor.execute("""
+        INSERT INTO attendees (first_name, last_name, email, phone, department, meeting_id, designation)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """, (data['first_name'], data['last_name'], data['email'], data['phone'], data['department'], data['meeting_id'], data['designation'])
+        )
+        connection.commit()
+
+        return {"msg": "Attendee added successfully"}, 201
+    except Exception as e:
+        connection.rollback()
+        return {"error": f"Error inserting attendee: {str(e)}"}, 500
+    
+    finally:
+        cursor.close()
+        connection.close()
+# ensure attendees to each meeting are unique
+def check_attendee_exists(data):
+    connection = get_db_connection()
+    cursor = connection.cursor()
     cursor.execute(
-        "INSERT INTO attendees (first_name, last_name, email, phone, department, meeting_id, designation) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+        "SELECT * FROM attendees WHERE first_name = %s AND last_name = %s AND email = %s AND phone = %s AND department = %s AND meeting_id = %s AND designation = %s",
         (data['first_name'], data['last_name'], data['email'], data['phone'], data['department'], data['meeting_id'], data['designation'])
     )
-    connection.commit()
+    attendee = cursor.fetchone()
     cursor.close()
     connection.close()
+    return attendee
+
 
 def assign_role_to_user(user_id, role_name):
     connection = get_db_connection()
