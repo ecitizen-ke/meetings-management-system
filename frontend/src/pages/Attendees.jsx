@@ -91,26 +91,29 @@ const Attendees = () => {
       // Set font size and center the title
       const pageWidth = doc.internal.pageSize.getWidth();
       doc.setFontSize(14);
-      doc.text("Meeting Report", pageWidth / 2, 30, {
+      doc.text("MINISTRY OF INTERIOR AND NATIONAL ADMNISTRATION", pageWidth / 2, 30, {
+        align: "center",
+      });
+      doc.text("STATE DEPARTMENT OF IMMIGRATION AND CITIZEN SERVICES", pageWidth / 2, 35, {
         align: "center",
       });
 
-      doc.text(`Title: ${meeting.title}`, 14, 50);
-      doc.text(`Venue: ${meeting.boardroom_name}`, 14, 60);
+      doc.text(`MEETING: ${meeting.title}`, 14, 45);
+      doc.text(`VENUE: ${meeting.boardroom_name}`, 14, 55);
       doc.text(
-        `Date: ${new Date(meeting.meeting_date).toLocaleDateString()}`,
+        `DATE: ${new Date(meeting.meeting_date).toLocaleDateString()}`,
         14,
-        70
+        65
       );
-      doc.text(`Start Time: ${meeting.start_time}`, 14, 80);
-      doc.text(`End Time: ${meeting.end_time}`, 14, 90);
-      doc.text(`Description:`, 14, 100);
+      doc.text(`TIME: ${meeting.start_time +' - '+meeting.end_time}`, 60, 65);
+      // doc.text(`-: ${meeting.end_time}`, 90, 60);
+      doc.text(`LIST OF ATTENDEES:`, 14, 78);
       doc.setFontSize(12);
-      doc.text(`${meeting.description}`, 14, 110, { maxWidth: 180 }); // Text wrapping
+      // doc.text(`${meeting.description}`, 14, 110, { maxWidth: 180 }); // Text wrapping
 
       // Add table
       const tableColumn = [
-        "#",
+        "S/NO",
         "Names",
         "Phone",
         "Email",
@@ -131,7 +134,7 @@ const Attendees = () => {
       doc.autoTable({
         head: [tableColumn],
         body: tableRows,
-        startY: 120, // Start table below the title and logo
+        startY: 80, // Start table below the title and logo
         headStyles: {
           fillColor: [17, 180, 73], // Set the background color of the header (RGB format)
           textColor: [255, 255, 255], // Set the text color to white
@@ -147,11 +150,11 @@ const Attendees = () => {
           valign: "middle", // Vertically align the text in the middle
         },
         columnStyles: {
-          0: { cellWidth: 10 }, // First column (index) width
+          0: { cellWidth: 20 }, // First column (index) width
           1: { cellWidth: 40 }, // Name
-          2: { cellWidth: 40 }, // phone number
-          3: { cellWidth: 40 }, // email
-          4: { cellWidth: 40 }, // designation
+          2: { cellWidth: 30 }, // phone number
+          3: { cellWidth: 50 }, // email
+          4: { cellWidth: 35 }, // designation
           5: { cellWidth: 40 }, // Department
           6: { cellWidth: 60 }, // Organization
         },

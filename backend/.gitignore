@@ -89,7 +89,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-
+bms/
 # PyCharm
 .idea/
 
@@ -117,3 +117,4 @@ $RECYCLE.BIN/
 
 # Others
 *.sqlite3
+package-lock.json

@@ -24,4 +24,6 @@ dist-ssr
 *.sw?
 .idea/*
 
+
 material_theme_project_new.xml
+package-lock.json
