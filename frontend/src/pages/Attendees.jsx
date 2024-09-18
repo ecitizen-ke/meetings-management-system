@@ -4,11 +4,18 @@ import { Config } from "../Config";
 import { DataGrid } from "@mui/x-data-grid";
 import { Button, IconButton, Menu, MenuItem } from "@mui/material";
 import { ChevronLeft, PieChart, Share } from "@mui/icons-material";
+import { handleApiError } from "../utils/errorHandler";
+import { useDispatch } from "react-redux";
+import { getData } from "../utils/api";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
+import logo from "../assets/logo.jpg";
 
 const Attendees = () => {
   const [attendees, setAttendees] = useState([]);
   const [meeting, setMeeting] = useState(null);
   const params = useParams();
+  const dispatch = useDispatch();
 
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
@@ -20,22 +27,29 @@ const Attendees = () => {
   };
 
   //   fetch attendees from the db
-  const fetchAttendees = () => {
-    fetch(`${Config.API_URL}/admin/attendees/${params.id}`)
-      .then((response) => response.json())
-      .then((data) => setAttendees(data))
-      .catch((error) => console.error(error));
+  const fetchAttendees = async () => {
+    try {
+      const result = await getData(
+        `${Config.API_URL}/admin/attendees/${params.id}`
+      );
+      console.log(result);
+      setAttendees(result);
+    } catch (error) {
+      handleApiError(error);
+    }
   };
 
   //   fetch meeting
-  const fetchMeeting = () => {
-    fetch(`${Config.API_URL}/meeting/${params.id}`)
-      .then((response) => response.json())
-      .then((response) => setMeeting(response))
-      .catch((error) => console.error(error));
+  const fetchMeeting = async () => {
+    try {
+      const result = await getData(`${Config.API_URL}/meeting/${params.id}`);
+      setMeeting(result);
+    } catch (error) {
+      handleApiError(error, dispatch);
+    }
   };
+
   useEffect(() => {
-    console.log(params.id);
     if (params.id) {
       fetchAttendees();
       fetchMeeting();
@@ -59,33 +73,111 @@ const Attendees = () => {
     { field: "department", headerName: "Department", width: 220 },
   ];
 
-  // const generateReport = () => {
-  //   fetch(`${Config.API_URL}/admin/generate_excel/${meeting.id}`)
-  //     .then((response) => response.blob())
-  //     .then((blob) => {
-  //       console.log(blob);
-  //       const url = window.URL.createObjectURL(blob);
-  //       const a = document.createElement("a");
-  //       a.href = url;
-  //       a.download = meeting.title + "_attendees_report.xlsx";
-  //       document.body.appendChild(a);
-  //       a.click();
-  //     })
-  //     .catch((error) => console.error(error));
-  // };
-  const generateReport = () => {
-    fetch(`${Config.API_URL}/admin/generate_reports/${meeting.id}`)
-      .then((response) => response.blob())
-      .then((blob) => {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `${meeting.title}_reports.zip`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-      })
-      .catch((error) => console.error(error));
+  const generatePdfReport = () => {
+    const doc = new jsPDF({
+      orientation: "l",
+    });
+
+    // Load the logo and convert to base64
+    const img = new Image();
+    img.src = logo;
+    img.onload = function () {
+      const aspectRatio = img.width / img.height;
+      const width = 50; // Desired width
+      const height = width / aspectRatio; // Adjust height based on aspect ratio
+
+      doc.addImage(img, "jpg", 120, 10, width, height);
+
+      // Set font size and center the title
+      const pageWidth = doc.internal.pageSize.getWidth();
+      doc.setFontSize(14);
+      doc.text("Meeting Report", pageWidth / 2, 30, {
+        align: "center",
+      });
+
+      doc.text(`Title: ${meeting.title}`, 14, 50);
+      doc.text(`Venue: ${meeting.boardroom_name}`, 14, 60);
+      doc.text(
+        `Date: ${new Date(meeting.meeting_date).toLocaleDateString()}`,
+        14,
+        70
+      );
+      doc.text(`Start Time: ${meeting.start_time}`, 14, 80);
+      doc.text(`End Time: ${meeting.end_time}`, 14, 90);
+      doc.text(`Description:`, 14, 100);
+      doc.setFontSize(12);
+      doc.text(`${meeting.description}`, 14, 110, { maxWidth: 180 }); // Text wrapping
+
+      // Add table
+      const tableColumn = [
+        "#",
+        "Names",
+        "Phone",
+        "Email",
+        "Designation",
+        "Department",
+        "Organization",
+      ];
+      const tableRows = attendees.map((item, index) => [
+        index + 1, // Row number (index)
+        item.first_name + " " + item.last_name,
+        item.phone,
+        item.email, // Email
+        item.designation, // Designation
+        item.department, // Department
+        item.organization,
+      ]);
+
+      doc.autoTable({
+        head: [tableColumn],
+        body: tableRows,
+        startY: 120, // Start table below the title and logo
+        headStyles: {
+          fillColor: [17, 180, 73], // Set the background color of the header (RGB format)
+          textColor: [255, 255, 255], // Set the text color to white
+          fontSize: 12, // Optional: Set the font size
+          fontStyle: "bold", // Optional: Set the font style
+        },
+        bodyStyles: {
+          lineWidth: 0.1, // Line thickness for the border of the body cells
+          lineColor: [0, 0, 0], // Border color for the body cells
+        },
+        styles: {
+          cellPadding: 3, // Padding inside each cell
+          valign: "middle", // Vertically align the text in the middle
+        },
+        columnStyles: {
+          0: { cellWidth: 10 }, // First column (index) width
+          1: { cellWidth: 40 }, // Name
+          2: { cellWidth: 40 }, // phone number
+          3: { cellWidth: 40 }, // email
+          4: { cellWidth: 40 }, // designation
+          5: { cellWidth: 40 }, // Department
+          6: { cellWidth: 60 }, // Organization
+        },
+      });
+      setAnchorEl(null);
+      // Save the generated PDF
+      doc.save(meeting.title + "-report.pdf");
+    };
+  };
+
+  const generateXcel = async () => {
+    try {
+      const result = await fetch(
+        `${Config.API_URL}/admin/generate_excel/${params.id}`
+      );
+      const blob = await result.blob();
+      const file = new File([blob], meeting.title + "-attendees.xlsx", {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const fileURL = URL.createObjectURL(file);
+      setAnchorEl(null);
+      window.open(fileURL);
+    } catch (error) {
+      setAnchorEl(null);
+      handleApiError(error);
+    }
   };
 
   return (
@@ -122,7 +214,7 @@ const Attendees = () => {
               variant="contained"
               endIcon={<Share />}
             >
-              Export Report
+              Generate Report
             </Button>
 
             <Menu
@@ -134,8 +226,8 @@ const Attendees = () => {
                 "aria-labelledby": "basic-button",
               }}
             >
-              <MenuItem onClick={handleClose}>PDF</MenuItem>
-              <MenuItem onClick={handleClose}>Excel</MenuItem>
+              <MenuItem onClick={generatePdfReport}>PDF</MenuItem>
+              <MenuItem onClick={generateXcel}>Excel</MenuItem>
             </Menu>
             {/* <Button
               onClick={() => generateReport()}

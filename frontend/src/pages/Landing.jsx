@@ -315,18 +315,18 @@ const Landing = () => {
                         {errors.designation.message}
                       </span>
                     )}
-                    {/* <div className="my-3">
-                  <label htmlFor="organization" className="form-label">
-                    Organization
-                  </label>
-                  <input
-                    type="text"
-                    className="form-control rounded-0"
-                    id="organization"
-                    name="organization"
-                    required
-                  />
-                </div> */}
+                    <div className="my-3">
+                      <label htmlFor="organization" className="form-label">
+                        Organization
+                      </label>
+                      <input
+                        type="text"
+                        className="form-control rounded-0"
+                        id="organization"
+                        name="organization"
+                        required
+                      />
+                    </div>
                     <div className="my-3">
                       <button
                         disabled={isSubmitting}
