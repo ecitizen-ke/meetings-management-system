@@ -112,7 +112,7 @@ def run_migrations():
         status ENUM('available', 'unavailable') DEFAULT 'available',
         created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    ); 
+    );
     """
     )
     # create meeting table
