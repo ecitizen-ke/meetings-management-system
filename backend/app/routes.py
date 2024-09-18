@@ -228,24 +228,16 @@ def init_meeting():
     data = request.get_json()
     if not data or not isinstance(data, dict):
         return jsonify({"msg": "Invalid JSON format or empty payload"}), 400
+    
+    required_fields = ['title', 'description', 'start_time', 'end_time']
+    missing_fields = [field for field in required_fields if field not in data]
+    if missing_fields:
+        return jsonify({"msg": f"Missing required fields: {', '.join(missing_fields)}"}), 400
 
-    if (
-        "title" not in data
-        or "description" not in data
-        or "start_time" not in data
-        or "end_time" not in data
-    ):
-        return (
-            jsonify(
-                {
-                    "msg": "'title','description','start_time' and 'end_time' fields are required"
-                }
-            ),
-            400,
-        )
+    response, status_code = create_meeting(data)
+    
+    return jsonify(response), status_code
 
-    create_meeting(data)
-    return jsonify({"msg": "Meeting created successfully"}), 201
 
 
 @main_bp.route("/meeting/<int:meeting_id>", methods=["DELETE"])

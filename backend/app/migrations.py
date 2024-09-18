@@ -63,6 +63,8 @@ def run_migrations():
         id INT AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(100) NOT NULL,
         description TEXT,
+        quantity INT NOT NULL,
+        status ENUM('available', 'unavailable') DEFAULT 'available',
         created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     );
@@ -78,7 +80,7 @@ def run_migrations():
         email VARCHAR(100) NOT NULL,
         phone_number VARCHAR(30),
         password VARCHAR(255) NOT NULL,
-        designation VARCHAR(255) NOT NULL,
+        designation VARCHAR(100),
         department_id INT NOT NULL,
         FOREIGN KEY (department_id) REFERENCES departments(id),
         created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -94,9 +96,10 @@ def run_migrations():
         capacity INT NOT NULL,
         location TEXT NOT NULL,
         description TEXT,
+        status ENUM('available', 'unavailable') DEFAULT 'available',
         created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    );
+    ); 
     """)
     # create meeting table
     cursor.execute("""
@@ -107,7 +110,10 @@ def run_migrations():
         meeting_date DATE NOT NULL,
         start_time TIME NOT NULL,
         end_time TIME NOT NULL,
-        boardroom_id INT NOT NULL,
+        boardroom_id INT,
+        department_id INT NOT NULL,
+        resources_id JSON,
+        status ENUM('draft', 'ongoing', 'complete', 'rescheduled', 'pending', 'cancelled') DEFAULT 'pending',
         location TEXT,
         FOREIGN KEY (boardroom_id) REFERENCES boardrooms(id),
         created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -176,64 +182,6 @@ def run_migrations():
         updated_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     );
     """)
-
-    cursor.execute("""
-    SET @column_exists = (SELECT COUNT(*) 
-            FROM INFORMATION_SCHEMA.COLUMNS 
-            WHERE table_name = 'meetings' 
-            AND table_schema = DATABASE() 
-            AND column_name = 'status');
-
-            IF @column_exists = 0 THEN
-                ALTER TABLE meetings
-                ADD COLUMN status ENUM('draft', 'ongoing', 'complete', 'rescheduled', 'pending', 'cancelled') DEFAULT 'pending' AFTER resources_id;
-            END IF;
-    """)
-
-    # cursor.execute("""
-    # SET @column_exists = (SELECT COUNT(*)
-    #         FROM INFORMATION_SCHEMA.COLUMNS
-    #         WHERE table_name = 'meetings'
-    #         AND table_schema = DATABASE()
-    #         AND column_name = 'location');
-    #
-    #         IF @column_exists = 0 THEN
-    #             ALTER TABLE meetings
-    #             ADD COLUMN location TEXT AFTER boardroom_id;
-    #         END IF;
-    # """)
-    
-    # make boardroom_id nullable
-    cursor.execute("""
-    ALTER TABLE meetings
-    MODIFY COLUMN boardroom_id INT NULL;
-    """)
-
-    cursor.execute("""
-    SET @column_exists = (SELECT COUNT(*)
-            FROM INFORMATION_SCHEMA.COLUMNS
-            WHERE table_name = 'users'
-            AND table_schema = DATABASE()
-            AND column_name = 'designation');
-
-            IF @column_exists = 0 THEN
-                ALTER TABLE users
-                ADD COLUMN designation VARCHAR(100) AFTER department_id;
-            END IF;
-    """)
-
-    # cursor.execute("""
-    # SET @column_exists = (SELECT COUNT(*)
-    #         FROM INFORMATION_SCHEMA.COLUMNS
-    #         WHERE table_name = 'attendees'
-    #         AND table_schema = DATABASE()
-    #         AND column_name = 'designation');
-    #
-    #         IF @column_exists = 0 THEN
-    #             ALTER TABLE attendees
-    #             ADD COLUMN designation VARCHAR(100) AFTER department;
-    #         END IF;
-    # """)
 
     mark_migration_as_applied(cursor, migration_version)
 
