@@ -1,9 +1,10 @@
-from flask import current_app as app
+from flask import current_app as app, jsonify
 import MySQLdb
 from werkzeug.security import generate_password_hash
 import json
 from datetime import datetime, date, time, timedelta
 from .migrations import get_db_connection
+
 
 
 def create_department(data):
@@ -121,17 +122,44 @@ def create_meeting(data):
     try:
         resources_json = json.dumps(data.get('resources_id', {}))
 
+        cursor.execute("SELECT status FROM boardrooms WHERE id = %s", (data['boardroom_id'],))
+        boardroom = cursor.fetchone()
+
+        if not boardroom:  
+            return {"error": "Boardroom not found"}, 404
+
+        if boardroom[0] == 'unavailable':
+            return {"error": "Boardroom is not available"}, 400
+
+        cursor.execute("SELECT start_time, end_time FROM meetings WHERE boardroom_id = %s AND (status = 'pending' OR status = 'ongoing')", (data['boardroom_id'],))
+        meetings = cursor.fetchall()
+
+        for meeting in meetings:
+            # return {"error": meeting}, 400
+            meeting_start_time = meeting[0]  # Access start_time by index
+            meeting_end_time = meeting[1]    # Access end_time by index
+
+            # Check for time conflicts
+            if data['start_time'] < meeting_start_time and data['end_time'] < meeting_start_time:
+                pass
+            elif data['start_time'] > meeting_end_time and data['end_time'] > meeting_end_time:
+                pass
+            else:
+                return {"error": "Boardroom is not available during this time"}, 400
+
+        # Insert the new meeting
         cursor.execute("""
-        INSERT INTO meetings (title, description, meeting_date, start_time, end_time, boardroom_id, department_id, resources_id,location)
+        INSERT INTO meetings (title, description, meeting_date, start_time, end_time, boardroom_id, department_id, resources_id, location)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         """, (data['title'], data.get('description', ''), data['meeting_date'], data['start_time'], data['end_time'],
-               data['boardroom_id'], data['department_id'], resources_json, data['location'])
-        )
+               data['boardroom_id'], data['department_id'], resources_json, data.get('location',None)))
         connection.commit()
+
+        return {"msg": "Meeting created successfully"}, 201
 
     except Exception as e:
         connection.rollback()  # Rollback in case of error
-        raise Exception(f"Error inserting meeting: {str(e)}")
+        return {"error": f"Error inserting meeting: {str(e)}"}, 500
 
     finally:
         cursor.close()
