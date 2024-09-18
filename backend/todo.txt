@@ -1,2 +1,6 @@
-Resources Validation to check if resources are available based off status and quantity
-have an update meetings module to update the status 
+1. Resources Validation to check if resources are available based off status and quantity
+2. have an update meetings module to update the status, time and date of a meeting etc
+3. instution to meetings and attendess
+4. meeting validation of attendees to one email per meeting
+5. capacity of meeting room while creating a meeting
+6. if get request has blank data return status code 204 no content and message
