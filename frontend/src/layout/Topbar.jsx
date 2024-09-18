@@ -14,7 +14,7 @@ const Topbar = () => {
         <MenuIcon />
       </IconButton>
       <Typography variant="h6" noWrap component="div">
-        BMS
+        Meetings Management System
       </Typography>
     </Toolbar>
   );

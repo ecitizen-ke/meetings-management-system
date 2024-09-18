@@ -8,6 +8,7 @@ import { store } from "./redux/store.js";
 import { createTheme } from "@mui/material";
 import { ThemeProvider } from "@emotion/react";
 import { green, purple, red, orange } from "@mui/material/colors";
+import Notification from "./components/Notification.jsx";
 
 const theme = createTheme({
   palette: {
@@ -50,6 +51,7 @@ const theme = createTheme({
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <Provider store={store}>
+      {/* <Notification /> */}
       <ThemeProvider theme={theme}>
         <RouterProvider router={AppRouter} />
       </ThemeProvider>

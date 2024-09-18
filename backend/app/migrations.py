@@ -1,5 +1,7 @@
 from flask import current_app as app
 import MySQLdb
+from dotenv import  load_dotenv
+
 
 def get_db_connection():
     return MySQLdb.connect(
@@ -14,7 +16,7 @@ def create_migrations_table(cursor):
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS migrations (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        version TEXT NOT NULL UNIQUE,
+        version TEXT NOT NULL,
         applied_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
     """)
@@ -114,7 +116,6 @@ def run_migrations():
         status ENUM('draft', 'ongoing', 'complete', 'rescheduled', 'pending', 'cancelled') DEFAULT 'pending',
         location TEXT,
         FOREIGN KEY (boardroom_id) REFERENCES boardrooms(id),
-        FOREIGN KEY (department_id) REFERENCES departments(id),
         created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     );
@@ -181,7 +182,6 @@ def run_migrations():
         updated_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     );
     """)
-    
 
     mark_migration_as_applied(cursor, migration_version)
 

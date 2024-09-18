@@ -1,11 +1,13 @@
 # Ignore virtual environment folder
-board/
+/board/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
+*.pyc
+
 
 # C extensions
 *.so
