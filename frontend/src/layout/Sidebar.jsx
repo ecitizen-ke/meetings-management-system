@@ -13,10 +13,17 @@ import MenuIcon from "@mui/icons-material/Menu";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import { Outlet, useNavigate } from "react-router";
+import { NavLink } from "react-router-dom";
+import Swal from "sweetalert2";
+
 import {
+  Build,
   DashboardSharp,
+  Grade,
+  Grid3x3Sharp,
   Logout,
   MeetingRoom,
+  Room,
   Settings,
   SupervisedUserCircle,
 } from "@mui/icons-material";
@@ -24,6 +31,7 @@ import { Box, Container } from "@mui/material";
 import Profile from "../components/Profile";
 import { useDispatch } from "react-redux";
 import { logout } from "../redux/features/auth/authSlice";
+import Department from "../pages/Department";
 const Sidebar = () => {
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [isClosing, setIsClosing] = React.useState(false);
@@ -47,10 +55,29 @@ const Sidebar = () => {
     }
   };
 
+  // logout user
+  const handleLogout = () => {
+    Swal.fire({
+      title: "Logout",
+      text: "Are you sure youwant to log out?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#398e3d",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Logout",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // todo: logout user
+        dispatch(logout());
+        navigate("/login");
+      }
+    });
+  };
+
   const navigateTo = (item) => {
     if (item.slug === "logout") {
       // Perform logout logic here
-      dispatch(logout());
+
       navigate("/login");
     } else {
       navigate(item.path);
@@ -60,33 +87,33 @@ const Sidebar = () => {
   const menuItems = [
     {
       text: "Dashboard",
-      icon: <DashboardSharp />,
+      icon: <DashboardSharp color="primary" />,
       path: "/dashboard",
       slug: "dashboard",
     },
     {
       text: "Meetings",
-      icon: <MeetingRoom />,
+      icon: <MeetingRoom color="primary" />,
       path: "/dashboard/meetings",
       slug: "meetings",
     },
     {
+      text: "Board Rooms",
+      icon: <Room color="primary" />,
+      path: "/dashboard/boardrooms",
+      slug: "boardrooms",
+    },
+    {
+      text: "Departments",
+      icon: <Grid3x3Sharp color="primary" />,
+      path: "/dashboard/departments",
+      slug: "departments",
+    },
+    {
       text: "Users",
-      icon: <SupervisedUserCircle />,
+      icon: <SupervisedUserCircle color="primary" />,
       path: "/dashboard/users",
       slug: "users",
-    },
-    {
-      text: "Settings",
-      icon: <Settings />,
-      path: "/dashboard/settings",
-      slug: "settings",
-    },
-    {
-      text: "Logout",
-      icon: <Logout />,
-      path: "/dashboard/logout",
-      slug: "logout",
     },
   ];
 
@@ -97,13 +124,37 @@ const Sidebar = () => {
       <Divider />
       <List>
         {menuItems.map((item, index) => (
-          <ListItem onClick={() => navigateTo(item)} key={index} disablePadding>
-            <ListItemButton>
-              <ListItemIcon>{item.icon}</ListItemIcon>
-              <ListItemText primary={item.text} />
-            </ListItemButton>
-          </ListItem>
+          <NavLink
+            key={index}
+            style={{
+              textDecoration: "none",
+              color: "#3b3b3b",
+            }}
+            className={({ isActive }) =>
+              isActive ? "active-link" : "inactive-link"
+            }
+            to={`${item.path}`}
+          >
+            <ListItem
+              onClick={() => navigateTo(item)}
+              key={index}
+              disablePadding
+            >
+              <ListItemButton>
+                <ListItemIcon>{item.icon}</ListItemIcon>
+                <ListItemText primary={item.text} />
+              </ListItemButton>
+            </ListItem>
+          </NavLink>
         ))}
+        <ListItem onClick={() => handleLogout()} disablePadding>
+          <ListItemButton>
+            <ListItemIcon>
+              <Logout />
+            </ListItemIcon>
+            <ListItemText primary={`Logout`} />
+          </ListItemButton>
+        </ListItem>
       </List>
     </div>
   );

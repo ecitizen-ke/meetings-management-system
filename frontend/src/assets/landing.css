@@ -1,0 +1,14 @@
+@import url('bootstrap');
+
+.qr-area{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.landing-page-outer{
+    margin-top: 80px;
+}
+
+input{
+    box-shadow: none !important;;
+}

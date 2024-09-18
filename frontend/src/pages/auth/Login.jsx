@@ -38,7 +38,7 @@ const Login = () => {
     const isLoggedIn = auth.isLoggedIn;
     if (isLoggedIn) {
       // Redirect to dashboard or home page
-      navigate("/");
+      navigate("/dashboard");
     }
   });
 
@@ -100,20 +100,13 @@ const Login = () => {
           >
             <h4>Login</h4>
 
-            <h3 className="login-subtitle"> Boardroom Management System</h3>
+            <h3 className="login-subtitle"> Meetings Management System</h3>
           </div>
 
           <div className="login-area">
             <form noValidate onSubmit={handleSubmit(onSubmit)} method="post">
               <div className="form-control">
                 <TextField
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Email color="primary" />
-                      </InputAdornment>
-                    ),
-                  }}
                   fullWidth={true}
                   id="outlined-basic"
                   label="Email Address"
@@ -143,11 +136,6 @@ const Login = () => {
               <div className="form-control">
                 <TextField
                   InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Lock color="primary" />
-                      </InputAdornment>
-                    ),
                     endAdornment: (
                       <InputAdornment position="end">
                         <IconButton
@@ -160,9 +148,8 @@ const Login = () => {
                             }}
                             variant="h6"
                           >
-                            Show password
+                            {!showPassword ? "Show Password" : "Hide Password"}
                           </Typography>
-                          {!showPassword ? <Visibility /> : <VisibilityOff />}
                         </IconButton>
                       </InputAdornment>
                     ),
@@ -206,7 +193,6 @@ const Login = () => {
                 variant="contained"
                 color="primary"
                 type="submit"
-                endIcon={isSubmitting ? "" : <LoginRounded />}
                 size="large"
                 style={{
                   borderRadius: "9999px",

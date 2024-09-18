@@ -48,6 +48,7 @@ function Dashboard(props) {
         }}
       >
         <Toolbar />
+
         <Outlet />
       </Box>
     </Box>
