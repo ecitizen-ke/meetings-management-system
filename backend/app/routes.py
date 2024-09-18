@@ -1,5 +1,5 @@
 # backend/app/routes.py
-from flask import Blueprint, request, jsonify, send_file, redirect, url_for , flash
+from flask import Blueprint, request, jsonify, send_file, redirect, url_for, flash
 from .models import (
     get_meetings,
     get_attendees,
@@ -98,12 +98,15 @@ def generate_reports(meeting_id):
         zip_buffer.seek(0)
 
         # Send the zip file as a response with the correct name
-        return send_file(zip_buffer, download_name=f"meeting_{meeting_id}_reports.zip", as_attachment=True)
+        return send_file(
+            zip_buffer, download_name=f"meeting_{meeting_id}_reports.zip", as_attachment=True
+        )
 
     except Exception as e:
         flash(f"Error generating reports: {str(e)}", "danger")
         return redirect(url_for("main.admin_dashboard"))
-    
+
+
 @main_bp.route("/departments", methods=["POST"])
 def create_department_route():
     try:
@@ -181,9 +184,7 @@ def register_user():
 
         if "first_name" not in data or "password" not in data or "email" not in data:
             return (
-                jsonify(
-                    {"msg": "'first_name','email' and 'password' fields are required"}
-                ),
+                jsonify({"msg": "'first_name','email' and 'password' fields are required"}),
                 400,
             )
 
@@ -228,16 +229,15 @@ def init_meeting():
     data = request.get_json()
     if not data or not isinstance(data, dict):
         return jsonify({"msg": "Invalid JSON format or empty payload"}), 400
-    
-    required_fields = ['title', 'description', 'start_time', 'end_time']
+
+    required_fields = ["title", "description", "start_time", "end_time"]
     missing_fields = [field for field in required_fields if field not in data]
     if missing_fields:
         return jsonify({"msg": f"Missing required fields: {', '.join(missing_fields)}"}), 400
 
     response, status_code = create_meeting(data)
-    
-    return jsonify(response), status_code
 
+    return jsonify(response), status_code
 
 
 @main_bp.route("/meeting/<int:meeting_id>", methods=["DELETE"])
@@ -269,9 +269,7 @@ def edit_meeting(meeting_id):
         boardroom_id = data.get("boardroom_id")
 
         # Check if all necessary fields are provided
-        if not all(
-            [title, description, meeting_date, start_time, end_time, boardroom_id]
-        ):
+        if not all([title, description, meeting_date, start_time, end_time, boardroom_id]):
             return jsonify({"error": "Missing required fields"}), 400
 
         # Check if the meeting exists
@@ -287,7 +285,8 @@ def edit_meeting(meeting_id):
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
 @main_bp.route("/reports-summary", methods=["GET"])
 def report_summary():
-        return jsonify(reports_summary())
-
+    return jsonify(reports_summary())
