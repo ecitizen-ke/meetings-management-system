@@ -192,6 +192,83 @@ def create_meeting(data):
     finally:
         cursor.close()
         connection.close()
+
+def update_meeting(meeting_id, data):
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute("SELECT id FROM meetings WHERE id = %s", (meeting_id,))
+    meeting = cursor.fetchone()
+    if not meeting:
+        return {"error": "Meeting Does not exist"}, 404
+    try:
+        resources_json = json.dumps(data.get('resources_id', {}))
+
+        cursor.execute("SELECT status FROM boardrooms WHERE id = %s", (data['boardroom_id'],))
+        boardroom = cursor.fetchone()
+
+        if not boardroom:  
+            return {"error": "Boardroom not found"}, 404
+
+        if boardroom[0] == 'unavailable':
+            return {"error": "Boardroom is not available"}, 400
+
+        cursor.execute("SELECT start_time, end_time, meeting_date FROM meetings WHERE boardroom_id = %s AND (status = 'pending' OR status = 'ongoing') AND id != %s", (data['boardroom_id'], meeting_id))
+        meetings = cursor.fetchall()
+
+        for meeting in meetings:
+            meeting_start_time = meeting[0]  # Access start_time by index
+            meeting_end_time = meeting[1]    # Access end_time by index
+            meeting_date = meeting[2]        # Access meeting_date by index
+
+            if isinstance(meeting_date, str):
+                meeting_date = datetime.strptime(meeting_date, '%Y-%m-%d').date()
+            if isinstance(meeting_start_time, str):
+                meeting_start_time = datetime.strptime(meeting_start_time, '%H:%M:%S').time()
+            if isinstance(meeting_end_time, str):
+                meeting_end_time = datetime.strptime(meeting_end_time, '%H:%M:%S').time()
+
+            if isinstance(meeting_start_time, timedelta):
+                meeting_start_time = (datetime.min + meeting_start_time).time()
+            if isinstance(meeting_end_time, timedelta):
+                meeting_end_time = (datetime.min + meeting_end_time).time()
+
+            meeting_start_datetime = datetime.combine(meeting_date, meeting_start_time)
+            meeting_end_datetime = datetime.combine(meeting_date, meeting_end_time)
+
+            if isinstance(data['meeting_date'], str):
+                data['meeting_date'] = datetime.strptime(data['meeting_date'], '%Y-%m-%d').date()
+
+            if isinstance(data['start_time'], str):
+                data['start_time'] = datetime.strptime(data['start_time'], '%H:%M:%S').time()
+            if isinstance(data['end_time'], str):
+                data['end_time'] = datetime.strptime(data['end_time'], '%H:%M:%S').time()
+
+            data_start_datetime = datetime.combine(data['meeting_date'], data['start_time'])
+            data_end_datetime = datetime.combine(data['meeting_date'], data['end_time'])
+
+            if data_start_datetime < meeting_start_datetime and data_end_datetime < meeting_start_datetime:
+                pass
+            elif data_start_datetime > meeting_end_datetime and data_end_datetime > meeting_end_datetime:
+                pass
+            else:
+                # return error and show the conflicting meeting
+                return {"error": "Boardroom is not available at this time. Conflicting meeting is being held from "+ meeting_start_datetime.strftime('%H:%M:%S') +' to '+ meeting_end_datetime.strftime('%H:%M:%S, %A,%d-%B-%Y') }, 400
+            
+        # Update the meeting
+        cursor.execute("""
+            UPDATE meetings
+            SET title = %s, description = %s, meeting_date = %s, start_time = %s, end_time = %s, boardroom_id = %s, department_id = %s, resources_id = %s, location = %s
+            WHERE id = %s
+        """, (data['title'], data.get('description', ''), data['meeting_date'], data['start_time'], data['end_time'], data['boardroom_id'], data['department_id'], resources_json, data.get('location', None), meeting_id))
+        connection.commit()
+
+        return {"msg": "Meeting updated successfully"}, 200
+    except Exception as e:
+        connection.rollback()
+        return {"error": f"Error updating meeting: {str(e)}"}, 500
+    finally:
+        cursor.close()
+        connection.close()
 def get_users():
     connection = get_db_connection()
     cursor = connection.cursor(MySQLdb.cursors.DictCursor)
@@ -362,24 +439,24 @@ def delete_meeting(meeting_id):
         cursor.close()
         connection.close()
 
-def update_meeting(meeting_id, title, description, meeting_date, start_time, end_time, boardroom_id):
-    connection = get_db_connection()
-    cursor = connection.cursor()
-    try:
-        cursor.execute("""
-            UPDATE meetings 
-            SET title = %s, description = %s, meeting_date = %s, start_time = %s, end_time = %s, boardroom_id = %s
-            WHERE id = %s
-        """, (title, description, meeting_date, start_time, end_time, boardroom_id, meeting_id))
-        connection.commit()
+# def update_meeting(meeting_id, title, description, meeting_date, start_time, end_time, boardroom_id):
+#     connection = get_db_connection()
+#     cursor = connection.cursor()
+#     try:
+#         cursor.execute("""
+#             UPDATE meetings 
+#             SET title = %s, description = %s, meeting_date = %s, start_time = %s, end_time = %s, boardroom_id = %s
+#             WHERE id = %s
+#         """, (title, description, meeting_date, start_time, end_time, boardroom_id, meeting_id))
+#         connection.commit()
 
-    except Exception as e:
-        connection.rollback()  # Rollback in case of error
-        raise Exception(f"Error updating meeting: {str(e)}")
+#     except Exception as e:
+#         connection.rollback()  # Rollback in case of error
+#         raise Exception(f"Error updating meeting: {str(e)}")
 
-    finally:
-        cursor.close()
-        connection.close()
+#     finally:
+#         cursor.close()
+#         connection.close()
 
 def reports_summary():
     connection = get_db_connection()

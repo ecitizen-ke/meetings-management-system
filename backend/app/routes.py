@@ -249,6 +249,8 @@ def init_meeting():
     return jsonify(response), status_code
 
 
+
+
 @main_bp.route("/meeting/<int:meeting_id>", methods=["DELETE"])
 def delete_meeting_route(meeting_id):
     try:
@@ -270,27 +272,17 @@ def edit_meeting(meeting_id):
     try:
         # Retrieve the request data
         data = request.get_json()
-        title = data.get("title")
-        description = data.get("description")
-        meeting_date = data.get("meeting_date")
-        start_time = data.get("start_time")
-        end_time = data.get("end_time")
-        boardroom_id = data.get("boardroom_id")
+        if not data or not isinstance(data, dict):
+            return jsonify({"msg": "Invalid JSON format or empty payload"}), 400
+        required_fields = ["title", "description", "start_time", "end_time"]
+        missing_fields = [field for field in required_fields if field not in data]
+        if missing_fields:
+            return jsonify({"msg": f"Missing required fields: {', '.join(missing_fields)}"}), 400
+        # Update the meeting
+        response,status_code =update_meeting(meeting_id, data)
+        return jsonify(response), status_code
+    
 
-        # Check if all necessary fields are provided
-        if not all([title, description, meeting_date, start_time, end_time, boardroom_id]):
-            return jsonify({"error": "Missing required fields"}), 400
-
-        # Check if the meeting exists
-        meeting = get_meeting_by_id(meeting_id)
-        if not meeting:
-            return jsonify({"error": "Meeting not found"}), 404
-
-        # Update the meeting details
-        update_meeting(
-            meeting_id, title, description, meeting_date, start_time, end_time, boardroom_id
-        )
-        return jsonify({"message": "Meeting updated successfully"}), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
