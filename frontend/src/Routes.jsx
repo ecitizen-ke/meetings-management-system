@@ -14,6 +14,23 @@ import Boardroom from "./pages/Boardroom";
 import Department from "./pages/Department";
 import EditMeeting from "./pages/EditMeeting";
 import EditBoardroom from "./pages/EditBoardroom";
+import { Suspense } from "react";
+
+function Loading() {
+  return (
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        height: "100vh",
+        zIndex: 9999999,
+      }}
+    >
+      Loading...
+    </div>
+  );
+}
 
 export const AppRouter = createBrowserRouter([
   // landing page for the form
@@ -43,7 +60,11 @@ export const AppRouter = createBrowserRouter([
   },
   {
     path: "/dashboard",
-    element: <Dashboard />,
+    element: (
+      <Suspense fallback={<Loading />}>
+        <Dashboard />
+      </Suspense>
+    ),
     children: [
       {
         path: "/dashboard",
@@ -51,7 +72,11 @@ export const AppRouter = createBrowserRouter([
       },
       {
         path: "/dashboard/meetings",
-        element: <Meeting />,
+        element: (
+          <Suspense fallback={<Loading />}>
+            <Meeting />,
+          </Suspense>
+        ),
       },
       {
         path: "/dashboard/meeting/:id",

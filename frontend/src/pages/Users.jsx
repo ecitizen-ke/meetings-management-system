@@ -1,4 +1,4 @@
-import { Add, Edit } from "@mui/icons-material";
+import { Add, ArrowForward, Edit } from "@mui/icons-material";
 import {
   Box,
   Button,
@@ -26,6 +26,7 @@ import {
 import Notification from "../components/Notification";
 import { DataGrid } from "@mui/x-data-grid";
 import Swal from "sweetalert2";
+import { Link } from "react-router-dom";
 const Users = () => {
   const [open, setOpen] = useState(false);
   const handleOpen = () => setOpen(true);
@@ -149,6 +150,8 @@ const Users = () => {
     { field: "first_name", headerName: "First Name", width: 220 },
     { field: "last_name", headerName: "Last Name", width: 220 },
     { field: "phone_number", headerName: "Phone Number", width: 220 },
+    { field: "email", headerName: "Email Address", width: 220 },
+    { field: "designation", headerName: "Designation", width: 220 },
 
     {
       field: "actions",
@@ -420,6 +423,11 @@ const Users = () => {
               {isSubmitting ? "Please wait ..." : "Save"}
             </Button>
           </form>
+          <br />
+          <Link className="text-muted" to={`/dashboard/departments`}>
+            View Departments&nbsp;
+            <ArrowForward />
+          </Link>
         </Box>
       </Modal>
 

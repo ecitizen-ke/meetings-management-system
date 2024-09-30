@@ -97,7 +97,7 @@ const Boardroom = () => {
               color="primary"
               size="small"
               style={{ marginRight: 8 }}
-              onClick={() => handleEdit(params.row)}
+              // onClick={() => handleEdit(params.row)}
             >
               Edit
             </Button>
@@ -107,7 +107,7 @@ const Boardroom = () => {
               variant="contained"
               color="secondary"
               size="small"
-              onClick={() => handleDelete(params.row)}
+              // onClick={() => handleDelete(params.row)}
             >
               Delete
             </Button>

@@ -1,5 +1,6 @@
 import {
   Add,
+  ArrowRight,
   ChatRounded,
   Delete,
   Edit,
@@ -37,6 +38,7 @@ import Swal from "sweetalert2";
 import Notification from "../components/Notification";
 import { handleApiError } from "../utils/errorHandler";
 import { showMessage } from "../utils/helpers";
+import { Link } from "react-router-dom";
 
 let count = 0;
 
@@ -526,10 +528,14 @@ const Meeting = () => {
                 >
                   {isSubmitting ? "Please wait ..." : "Save"}
                 </Button>
-
-                <br />
               </Box>
             </Box>
+            <br />
+            <br />
+            <Link className="text-muted" to={`/dashboard/boardrooms`}>
+              View Boardrooms&nbsp;
+              <ArrowRight />
+            </Link>
           </form>
         </Box>
       </Modal>
