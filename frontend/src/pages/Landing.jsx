@@ -6,12 +6,14 @@ import moment from "moment";
 import logo from "../assets/logo.svg";
 import { useForm } from "react-hook-form";
 import { Snackbar } from "@mui/material";
+import SignPad from "../components/SignPad";
 
 const Landing = () => {
   const { id } = useParams();
   const [meeting, setMeeting] = useState(null);
   const [openToast, setOpenToast] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
+
   const {
     register,
     handleSubmit,
@@ -23,6 +25,7 @@ const Landing = () => {
   const fetchMeetingDetail = async () => {
     try {
       // Fetch meeting details
+
       const resp = await fetch(`${Config.API_URL}/meeting/${id}`);
 
       // Check if the response is OK (status code 200-299)
@@ -268,6 +271,18 @@ const Landing = () => {
                       </span>
                     )}
                     <div className="my-3">
+                      <label htmlFor="organization" className="form-label">
+                        Organization
+                      </label>
+                      <input
+                        type="text"
+                        className="form-control rounded-0"
+                        id="organization"
+                        name="department"
+                        required
+                      />
+                    </div>
+                    {/* <div className="my-3">
                       <label htmlFor="department" className="form-label">
                         Department
                       </label>
@@ -290,7 +305,7 @@ const Landing = () => {
                       >
                         {errors.department.message}
                       </span>
-                    )}
+                    )} */}
                     <div className="my-3">
                       <label htmlFor="designation" className="form-label">
                         Designation
@@ -315,18 +330,19 @@ const Landing = () => {
                         {errors.designation.message}
                       </span>
                     )}
-                    <div className="my-3">
-                      <label htmlFor="organization" className="form-label">
-                        Organization
-                      </label>
-                      <input
-                        type="text"
-                        className="form-control rounded-0"
-                        id="organization"
-                        name="organization"
-                        required
-                      />
+                    <div>
+                      <label htmlFor="">Sign</label>
                     </div>
+                    <div
+                      style={{
+                        border: "2px dotted #ccc",
+                      }}
+                      className="my-3"
+                    >
+                      <br />
+                      <SignPad />
+                    </div>
+
                     <div className="my-3">
                       <button
                         disabled={isSubmitting}

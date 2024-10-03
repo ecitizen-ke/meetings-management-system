@@ -2,14 +2,23 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { Config } from "../Config";
 import { DataGrid } from "@mui/x-data-grid";
-import { Button, IconButton, Menu, MenuItem } from "@mui/material";
-import { ChevronLeft, PieChart, Share } from "@mui/icons-material";
+import { Badge, Button, IconButton, Menu, MenuItem } from "@mui/material";
+import {
+  ChevronLeft,
+  DocumentScannerSharp,
+  FileOpen,
+  PictureAsPdfSharp,
+  PieChart,
+  Share,
+  TableBarSharp,
+} from "@mui/icons-material";
 import { handleApiError } from "../utils/errorHandler";
 import { useDispatch } from "react-redux";
 import { getData } from "../utils/api";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import logo from "../assets/logo.jpg";
+import moment from "moment";
 
 const Attendees = () => {
   const [attendees, setAttendees] = useState([]);
@@ -29,9 +38,7 @@ const Attendees = () => {
   //   fetch attendees from the db
   const fetchAttendees = async () => {
     try {
-      const result = await getData(
-        `${Config.API_URL}/admin/attendees/${params.id}`
-      );
+      const result = await getData(`${Config.API_URL}/attendees/${params.id}`);
       console.log(result);
       setAttendees(result);
     } catch (error) {
@@ -67,10 +74,10 @@ const Attendees = () => {
     },
     { field: "first_name", headerName: "First Name", width: 150 },
     { field: "last_name", headerName: "Last Name", width: 150 },
-    { field: "email", headerName: "Email", width: 220 },
+    { field: "email", headerName: "Email", width: 240 },
     { field: "phone", headerName: "Phone Number", width: 220 },
     { field: "designation", headerName: "Designation", width: 220 },
-    { field: "department", headerName: "Department", width: 220 },
+    { field: "department", headerName: "Organization", width: 220 },
   ];
 
   const generatePdfReport = () => {
@@ -91,31 +98,53 @@ const Attendees = () => {
       // Set font size and center the title
       const pageWidth = doc.internal.pageSize.getWidth();
       doc.setFontSize(14);
-      doc.text("Meeting Report", pageWidth / 2, 30, {
-        align: "center",
-      });
-
-      doc.text(`Title: ${meeting.title}`, 14, 50);
-      doc.text(`Venue: ${meeting.boardroom_name}`, 14, 60);
       doc.text(
-        `Date: ${new Date(meeting.meeting_date).toLocaleDateString()}`,
+        "MINISTRY OF INTERIOR AND NATIONAL ADMNISTRATION",
+        pageWidth / 2,
+        30,
+        {
+          align: "center",
+        }
+      );
+      doc.text(
+        "STATE DEPARTMENT OF IMMIGRATION AND CITIZEN SERVICES",
+        pageWidth / 2,
+        35,
+        {
+          align: "center",
+        }
+      );
+
+      doc.text(`MEETING: ${meeting.title}`, 14, 45);
+      doc.text(`VENUE: ${meeting.boardroom_name}`, 14, 55);
+      // doc.text(`LOCATION: ${meeting.location ?? ""}`, 14, 63);todo:
+      doc.text(
+        `DATE:  ${new Date(meeting.meeting_date).toLocaleDateString()}`,
         14,
         70
       );
-      doc.text(`Start Time: ${meeting.start_time}`, 14, 80);
-      doc.text(`End Time: ${meeting.end_time}`, 14, 90);
-      doc.text(`Description:`, 14, 100);
+      doc.text(
+        `TIME: ${
+          moment(meeting.start_time, "HH:mm:ss").format("HH:mm A") +
+          " - " +
+          moment(meeting.end_time, "HH:mm:ss").format("HH:mm A")
+        }`,
+        14,
+        80
+      );
+      // doc.text(`-: ${meeting.end_time}`, 90, 60);
+      doc.text(`LIST OF ATTENDEES:`, 14, 95);
       doc.setFontSize(12);
-      doc.text(`${meeting.description}`, 14, 110, { maxWidth: 180 }); // Text wrapping
+      // doc.text(`${meeting.description}`, 14, 110, { maxWidth: 180 }); // Text wrapping
 
       // Add table
       const tableColumn = [
-        "#",
+        "S/NO",
         "Names",
         "Phone",
         "Email",
         "Designation",
-        "Department",
+        // "Department",
         "Organization",
       ];
       const tableRows = attendees.map((item, index) => [
@@ -125,13 +154,13 @@ const Attendees = () => {
         item.email, // Email
         item.designation, // Designation
         item.department, // Department
-        item.organization,
+        // item.organization,
       ]);
 
       doc.autoTable({
         head: [tableColumn],
         body: tableRows,
-        startY: 120, // Start table below the title and logo
+        startY: 100, // Start table below the title and logo
         headStyles: {
           fillColor: [17, 180, 73], // Set the background color of the header (RGB format)
           textColor: [255, 255, 255], // Set the text color to white
@@ -147,13 +176,13 @@ const Attendees = () => {
           valign: "middle", // Vertically align the text in the middle
         },
         columnStyles: {
-          0: { cellWidth: 10 }, // First column (index) width
+          0: { cellWidth: 20 }, // First column (index) width
           1: { cellWidth: 40 }, // Name
-          2: { cellWidth: 40 }, // phone number
-          3: { cellWidth: 40 }, // email
-          4: { cellWidth: 40 }, // designation
+          2: { cellWidth: 30 }, // phone number
+          3: { cellWidth: 100 }, // email
+          4: { cellWidth: 35 }, // designation
           5: { cellWidth: 40 }, // Department
-          6: { cellWidth: 60 }, // Organization
+          6: { cellWidth: 100 }, // Organization
         },
       });
       setAnchorEl(null);
@@ -165,7 +194,7 @@ const Attendees = () => {
   const generateXcel = async () => {
     try {
       const result = await fetch(
-        `${Config.API_URL}/admin/generate_excel/${params.id}`
+        `${Config.API_URL}/reports/excel/${params.id}`
       );
       const blob = await result.blob();
       const file = new File([blob], meeting.title + "-attendees.xlsx", {
@@ -194,7 +223,14 @@ const Attendees = () => {
           <IconButton size="large" onClick={() => window.history.back()}>
             <ChevronLeft />
           </IconButton>
-          <h3>Attendees</h3>
+          <h3>
+            Attendees &nbsp;
+            <Badge
+              max={10}
+              badgeContent={attendees.length}
+              color="secondary"
+            ></Badge>
+          </h3>
         </div>
 
         <div
@@ -226,8 +262,18 @@ const Attendees = () => {
                 "aria-labelledby": "basic-button",
               }}
             >
-              <MenuItem onClick={generatePdfReport}>PDF</MenuItem>
-              <MenuItem onClick={generateXcel}>Excel</MenuItem>
+              <MenuItem onClick={generatePdfReport}>
+                <PictureAsPdfSharp color="primary" />
+                &nbsp; PDF
+              </MenuItem>
+              <MenuItem onClick={generateXcel}>
+                <FileOpen color="primary" />
+                &nbsp; Excel
+              </MenuItem>
+              <MenuItem onClick={generateXcel}>
+                <DocumentScannerSharp color="primary" />
+                &nbsp; Word
+              </MenuItem>
             </Menu>
             {/* <Button
               onClick={() => generateReport()}

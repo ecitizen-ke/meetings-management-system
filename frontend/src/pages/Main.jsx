@@ -14,11 +14,9 @@ import { useDispatch } from "react-redux";
 import { DataGrid } from "@mui/x-data-grid";
 import moment from "moment";
 import { useNavigate } from "react-router";
-import {
-  hideNotification,
-  showNotification,
-} from "../redux/features/notifications/notificationSlice";
 import Notification from "../components/Notification";
+import { handleApiError } from "../utils/errorHandler";
+
 const Main = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -45,11 +43,17 @@ const Main = () => {
       field: "start_time",
       headerName: "Start Time",
       width: 130,
+      renderCell: (params) => (
+        <div>{moment(params.row.start_time, "HH:mm:ss").format("HH:mm A")}</div>
+      ),
     },
     {
       field: "end_time",
       headerName: "End Time",
       width: 130,
+      renderCell: (params) => (
+        <div>{moment(params.row.end_time, "HH:mm:ss").format("HH:mm A")}</div>
+      ),
     },
     {
       field: "actions",
@@ -86,15 +90,7 @@ const Main = () => {
       );
       setStats(result);
     } catch (error) {
-      console.log(error);
-      dispatch(
-        showNotification({
-          message: error.message,
-          type: "error", // success, error, warning, info
-        })
-      );
-
-      setTimeout(() => dispatch(hideNotification()), 3000);
+      handleApiError(error, dispatch);
     }
   };
   const fetchMeetings = async () => {
@@ -106,13 +102,7 @@ const Main = () => {
       const result = await getData(`${Config.API_URL}/meetings`, customHeaders);
       setMeetings(result);
     } catch (error) {
-      dispatch(
-        showNotification({
-          message: error.response.data.msg,
-          type: "error", // success, error, warning, info
-        })
-      );
-      setTimeout(() => dispatch(hideNotification()), 3000);
+      handleApiError(error, dispatch);
     }
   };
   useEffect(() => {
@@ -158,7 +148,7 @@ const Main = () => {
                 variant="h4"
                 component="div"
               >
-                Pending
+                Upcoming
               </Typography>
               <Typography color={`white`} variant="h5">
                 {stats.pending}

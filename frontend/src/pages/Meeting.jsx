@@ -1,5 +1,6 @@
 import {
   Add,
+  ArrowRight,
   ChatRounded,
   Delete,
   Edit,
@@ -7,6 +8,7 @@ import {
   QrCode,
 } from "@mui/icons-material";
 import {
+  Badge,
   Box,
   Button,
   Divider,
@@ -34,13 +36,10 @@ import { useNavigate } from "react-router";
 import moment from "moment";
 import { deleteData, getData, postData } from "../utils/api";
 import Swal from "sweetalert2";
-import {
-  hideNotification,
-  showNotification,
-} from "../redux/features/notifications/notificationSlice";
 import Notification from "../components/Notification";
 import { handleApiError } from "../utils/errorHandler";
 import { showMessage } from "../utils/helpers";
+import { Link } from "react-router-dom";
 
 let count = 0;
 
@@ -51,6 +50,7 @@ const Meeting = () => {
   const [meetings, setMeetings] = useState([]);
   const [openToast, setOpenToast] = useState(false);
   const [boardrooms, setBoardrooms] = useState([]);
+  const [departments, setDepartments] = useState([]);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -70,26 +70,35 @@ const Meeting = () => {
 
   const fetchBoardrooms = async () => {
     try {
-      const customHeaders = {
-        Authorization: "Bearer xxxxxx",
-        "Content-Type": "application/json",
-      };
       const result = await getData(
         `${Config.API_URL}/boardrooms`,
         customHeaders
       );
       setBoardrooms(result);
     } catch (error) {
-      handleApiError(error);
+      handleApiError(error, dispatch);
     }
   };
 
   const fetchMeetings = async () => {
     try {
       const result = await getData(`${Config.API_URL}/meetings`, customHeaders);
+      console.log(result);
       setMeetings(result);
     } catch (error) {
-      handleApiError(error);
+      handleApiError(error, dispatch);
+    }
+  };
+
+  const fetchDepartments = async () => {
+    try {
+      const result = await getData(
+        `${Config.API_URL}/departments`,
+        customHeaders
+      );
+      setDepartments(result);
+    } catch (error) {
+      handleApiError(error, dispatch);
     }
   };
 
@@ -123,9 +132,13 @@ const Meeting = () => {
 
   // create a meeting
   const onSubmit = async (data) => {
+    data["department_id"] = 1; //todo:
+    data["start_time"] = moment(data.start_time, "HH:mm:ss").format("HH:mm:ss");
+    data["end_time"] = moment(data.end_time, "HH:mm:ss").format("HH:mm:ss");
+    console.log(data);
     try {
       const result = await postData(
-        `${Config.API_URL}/create-meeting`,
+        `${Config.API_URL}/meetings`,
         data,
         customHeaders
       );
@@ -135,7 +148,8 @@ const Meeting = () => {
       fetchMeetings();
       showMessage(result.msg, "success", dispatch);
     } catch (error) {
-      handleApiError(error);
+      setOpen(false);
+      handleApiError(error, dispatch);
     }
   };
 
@@ -151,14 +165,14 @@ const Meeting = () => {
       confirmButtonText: "Yes",
     }).then((result) => {
       if (result.isConfirmed) {
-        deleteData(`${Config.API_URL}/meeting/${id}`, customHeaders)
+        deleteData(`${Config.API_URL}/meetings/${id}`, customHeaders)
           .then((result) => {
             setOpenToast(true);
             fetchMeetings();
             showMessage(result.msg, "success", dispatch);
           })
           .catch((error) => {
-            handleApiError(error);
+            handleApiError(error, dispatch);
           });
       }
     });
@@ -198,11 +212,17 @@ const Meeting = () => {
       field: "start_time",
       headerName: "Start Time",
       width: 130,
+      renderCell: (params) => (
+        <div>{moment(params.row.start_time, "HH:mm:ss").format("HH:mm A")}</div>
+      ),
     },
     {
       field: "end_time",
       headerName: "End Time",
       width: 130,
+      renderCell: (params) => (
+        <div>{moment(params.row.end_time, "HH:mm:ss").format("HH:mm A")}</div>
+      ),
     },
     {
       field: "actions",
@@ -239,6 +259,10 @@ const Meeting = () => {
               color="warning"
               style={{ marginRight: 8 }}
               size="small"
+              disabled={moment(params.row.meeting_date).isBefore(
+                moment(),
+                "day"
+              )}
             >
               Generate QR
             </Button>
@@ -260,7 +284,14 @@ const Meeting = () => {
     <>
       <div className="meetings-header">
         <div>
-          <h3>Meetings</h3>
+          <h3>
+            Meetings &nbsp;{" "}
+            <Badge
+              max={10}
+              badgeContent={meetings.length}
+              color="secondary"
+            ></Badge>
+          </h3>
         </div>
 
         <div
@@ -458,7 +489,7 @@ const Meeting = () => {
               <br />
 
               <FormControl fullWidth>
-                <InputLabel id="bordroom-select-label">Boardroom</InputLabel>
+                <InputLabel id="bordroom-select-label">Venue</InputLabel>
                 <Select
                   labelId="bordroom-select-label"
                   id="bordroom-select-label"
@@ -467,6 +498,7 @@ const Meeting = () => {
                   {...register("boardroom_id", {
                     required: "This field is required",
                   })}
+                  error={errors.boardroom_id && true}
                 >
                   {boardrooms.map((boardroom) => (
                     <MenuItem key={boardroom.id} value={boardroom.id}>
@@ -475,6 +507,15 @@ const Meeting = () => {
                   ))}
                 </Select>
               </FormControl>
+              {errors.boardroom_id && (
+                <span
+                  style={{
+                    color: "crimson",
+                  }}
+                >
+                  {errors.boardroom_id.message}
+                </span>
+              )}
 
               <br />
               <br />
@@ -496,10 +537,14 @@ const Meeting = () => {
                 >
                   {isSubmitting ? "Please wait ..." : "Save"}
                 </Button>
-
-                <br />
               </Box>
             </Box>
+            <br />
+            <br />
+            <Link className="text-muted" to={`/dashboard/venues`}>
+              View Venues&nbsp;
+              <ArrowRight />
+            </Link>
           </form>
         </Box>
       </Modal>

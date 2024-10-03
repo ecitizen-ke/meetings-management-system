@@ -9,16 +9,30 @@ import {
   TextField,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
-import { Config } from "../Config";
 import { useForm } from "react-hook-form";
+import { Config } from "../Config";
 import { DataGrid } from "@mui/x-data-grid";
 import Swal from "sweetalert2";
+import { useNavigate } from "react-router";
+import { deleteData, getData, postData } from "../utils/api";
+import {
+  hideNotification,
+  showNotification,
+} from "../redux/features/notifications/notificationSlice";
+import Notification from "../components/Notification";
+import { useDispatch } from "react-redux";
+const customHeaders = {
+  Authorization: "Bearer xxxxxx",
+  "Content-Type": "application/json",
+};
 
-const Department = () => {
+const Venue = () => {
   const [open, setOpen] = useState(false);
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
-  const [departments, setDepartments] = useState([]);
+  const [boardrooms, setBoardrooms] = useState([]);
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
   const {
     register,
     handleSubmit,
@@ -27,6 +41,27 @@ const Department = () => {
     formState: { errors, isSubmitting },
   } = useForm();
 
+  const fetchBoardrooms = async () => {
+    try {
+      const boardrooms = await getData(
+        `${Config.API_URL}/boardrooms`,
+        customHeaders
+      );
+      setBoardrooms(boardrooms);
+    } catch (error) {
+      dispatch(
+        showNotification({
+          message: error.response.data.msg,
+          type: "error", // success, error, warning, info
+        })
+      );
+      setTimeout(() => dispatch(hideNotification()), 3000);
+    }
+  };
+
+  useEffect(() => {
+    fetchBoardrooms();
+  }, []);
   const style = {
     position: "absolute",
     top: "50%",
@@ -38,71 +73,17 @@ const Department = () => {
     p: 4,
   };
 
-  //   create department
-  const onSubmit = (data) => {
-    fetch(`${Config.API_URL}/departments`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    })
-      .then((resp) => resp.json())
-      .then((resp) => {
-        fetchDepartments();
-        reset();
-        setOpen(false);
-      })
-      .catch((err) => console.log(err));
-  };
-
-  //   fetch departments
-  const fetchDepartments = () => {
-    fetch(`${Config.API_URL}/departments`)
-      .then((resp) => resp.json())
-      .then((resp) => setDepartments(resp))
-      .catch((err) => console.log(err));
-  };
-
-  useEffect(() => {
-    fetchDepartments();
-    console.log(departments);
-  }, []);
-
-  //   delete department
-  const handleDelete = (id) => {
-    Swal.fire({
-      title: "Are you sure?",
-      text: "You won't be able to revert this!",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#398e3d",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Yes, delete it!",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        fetch(`${Config.API_URL}/departments/${id}`, {
-          method: "DELETE",
-        })
-          .then((resp) => resp.json())
-          .then((resp) => {
-            console.log(resp);
-            fetchDepartments();
-          })
-          .catch((err) => console.log(err));
-      }
-    });
-  };
-
-  //   edit department
-  const handleEdit = (id, name) => {
-    // Implement edit functionality
-  };
-
   const columns = [
     { field: "id", headerName: "#", width: 70 },
     { field: "name", headerName: "Name", width: 220 },
+    { field: "location", headerName: "Location", width: 220 },
     { field: "description", headerName: "Description", width: 400 },
+    {
+      field: "capacity",
+      headerName: "Capacity",
+      width: 130,
+    },
+
     {
       field: "actions",
       headerName: "",
@@ -117,7 +98,7 @@ const Department = () => {
               color="primary"
               size="small"
               style={{ marginRight: 8 }}
-              onClick={() => handleEdit(params.row)}
+              // onClick={() => handleEdit(params.row)}
             >
               Edit
             </Button>
@@ -127,7 +108,7 @@ const Department = () => {
               variant="contained"
               color="secondary"
               size="small"
-              onClick={() => handleDelete(params.row)}
+              // onClick={() => handleDelete(params.row)}
             >
               Delete
             </Button>
@@ -137,15 +118,90 @@ const Department = () => {
     },
   ];
 
+  const handleEdit = (data) => {
+    navigate("/dashboard/venue/" + data.id);
+  };
+
+  const handleDelete = (id) => {
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#398e3d",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        deleteBoardroom(id);
+      }
+    });
+  };
+
+  const deleteBoardroom = async (id) => {
+    try {
+      const result = await deleteData(
+        `${Config.API_URL}/delete-boardroom/${id}`,
+        customHeaders
+      );
+      dispatch(
+        showNotification({
+          message: result.msg,
+          type: "success", // success, error, warning, info
+        })
+      );
+      setTimeout(() => dispatch(hideNotification()), 3000);
+    } catch (error) {
+      dispatch(
+        showNotification({
+          message: error.response.data.msg,
+          type: "error", // success, error, warning, info
+        })
+      );
+      setTimeout(() => dispatch(hideNotification()), 3000);
+    }
+  };
+
+  //   create boardroom
+  const onSubmit = async (data) => {
+    try {
+      const result = await postData(
+        `${Config.API_URL}/boardrooms`,
+        data,
+        customHeaders
+      );
+      dispatch(
+        showNotification({
+          message: result.msg,
+          type: "success", // success, error, warning, info
+        })
+      );
+      reset();
+      setOpen(false);
+      fetchBoardrooms();
+      console.log(result);
+      setTimeout(() => dispatch(hideNotification()), 3000);
+    } catch (error) {
+      dispatch(
+        showNotification({
+          message: error.response.data.msg,
+          type: "error", // success, error, warning, info
+        })
+      );
+
+      setTimeout(() => dispatch(hideNotification()), 3000);
+    }
+  };
+
   return (
     <>
       <div className="meetings-header">
         <div>
           <h3>
-            Departments &nbsp;
+            Venues &nbsp;
             <Badge
               max={10}
-              badgeContent={departments.length}
+              badgeContent={boardrooms.length}
               color="secondary"
             ></Badge>
           </h3>
@@ -165,17 +221,18 @@ const Department = () => {
               endIcon={<Add />}
               color="secondary"
             >
-              Add Department
+              Add New Venue
             </Button>
           </div>
         </div>
       </div>
 
-      {/* Department Tables */}
+      <Notification />
 
+      {/* Boardrooms Table */}
       <div style={{ width: "100%", marginTop: "35px" }}>
         <DataGrid
-          rows={departments}
+          rows={boardrooms}
           columns={columns}
           initialState={{
             pagination: {
@@ -187,7 +244,8 @@ const Department = () => {
         />
       </div>
 
-      {/* Department Modal */}
+      {/* Add boardroom modal */}
+
       <Modal
         open={open}
         onClose={handleClose}
@@ -202,7 +260,7 @@ const Department = () => {
             alignItems={`center`}
           >
             <div>
-              <h2>New Department</h2>
+              <h2>New Venue</h2>
             </div>
             <div>
               <Button
@@ -248,10 +306,55 @@ const Department = () => {
               )}
             </Box>
 
+            <br />
+            <Box className="my-2">
+              <TextField
+                fullWidth={true}
+                id="outlined-basic"
+                label="Capacity"
+                variant="outlined"
+                {...register("capacity", {
+                  required: "This field is required",
+                })}
+                error={errors.capacity && true}
+              />
+              {errors.capacity && (
+                <span
+                  style={{
+                    color: "crimson",
+                  }}
+                >
+                  {errors.capacity.message}
+                </span>
+              )}
+            </Box>
+            <br />
+            <Box className="my-2">
+              <TextField
+                fullWidth={true}
+                id="outlined-basic"
+                label="Location"
+                variant="outlined"
+                {...register("location", {
+                  required: "This field is required",
+                })}
+                error={errors.location && true}
+              />
+              {errors.location && (
+                <span
+                  style={{
+                    color: "crimson",
+                  }}
+                >
+                  {errors.location.message}
+                </span>
+              )}
+            </Box>
+            <br />
             <TextField
               multiline={true}
               minRows={5}
-              label="Meeting Description"
+              label="Venue Description"
               variant="outlined"
               fullWidth={true}
               {...register("description", {
@@ -286,4 +389,4 @@ const Department = () => {
   );
 };
 
-export default Department;
+export default Venue;

@@ -98,10 +98,10 @@ const Sidebar = () => {
       slug: "meetings",
     },
     {
-      text: "Board Rooms",
+      text: "Venues",
       icon: <Room color="primary" />,
-      path: "/dashboard/boardrooms",
-      slug: "boardrooms",
+      path: "/dashboard/venues",
+      slug: "venues",
     },
     {
       text: "Departments",

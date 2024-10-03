@@ -51,7 +51,7 @@ const Login = () => {
     console.log(e);
     const result = await new Promise((resolve, reject) => {
       setTimeout(() => {
-        if (e.email === "admin@tests.co.ke" && e.password === "linspace") {
+        if (e.email === "admin@ecitizen.go.ke" && e.password === "linspace") {
           dispatch(
             login({
               auth: {
@@ -65,7 +65,7 @@ const Login = () => {
         } else {
           reject("Auth failed");
         }
-      }, 3000);
+      }, 1500);
     });
 
     console.log(result);
@@ -111,7 +111,7 @@ const Login = () => {
                   id="outlined-basic"
                   label="Email Address"
                   variant="outlined"
-                  defaultValue={`admin@tests.co.ke`}
+                  defaultValue={`admin@ecitizen.go.ke`}
                   placeholder="Enter your email address"
                   type="email"
                   {...register("email", {
@@ -182,9 +182,18 @@ const Login = () => {
                 )}
               </div>
               <br />
-              <Link variant="secondary" underline="none" href="">
-                Forgot Password ?
-              </Link>
+              <div className="d-flex justify-content-between">
+                <div>
+                  <Link variant="secondary" underline="none" href="">
+                    Forgot Password ?
+                  </Link>
+                </div>
+                <div>
+                  <Link variant="secondary" underline="none" href="">
+                    Signup
+                  </Link>
+                </div>
+              </div>
               <br />
               <br />
               <Button
