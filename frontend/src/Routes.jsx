@@ -15,6 +15,8 @@ import EditMeeting from "./pages/EditMeeting";
 import EditVenue from "./pages/EditVenue";
 import { Suspense } from "react";
 import Venue from "./pages/Venue";
+import Organizations from "./pages/Organizations";
+import Register from "./pages/auth/Register";
 
 function Loading() {
   return (
@@ -57,6 +59,10 @@ export const AppRouter = createBrowserRouter([
   {
     path: "/login",
     element: <Login />,
+  },
+  {
+    path: "/register",
+    element: <Register />,
   },
   {
     path: "/dashboard",
@@ -103,6 +109,10 @@ export const AppRouter = createBrowserRouter([
       {
         path: "/dashboard/departments",
         element: <Department />,
+      },
+      {
+        path: "/dashboard/organizations",
+        element: <Organizations />,
       },
     ],
   },

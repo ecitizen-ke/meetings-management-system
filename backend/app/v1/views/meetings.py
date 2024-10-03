@@ -28,7 +28,8 @@ def create():
             data.get("boardroom_id"),
             data.get("organization_id"),
             # resources_json,
-            data.get("location"),
+            # data.get("location"),
+            'Nyayo House'
         )
         return jsonify({"msg": "Meeting added successfully"}), 201
     except Exception as e:

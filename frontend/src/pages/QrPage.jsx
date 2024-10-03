@@ -70,7 +70,7 @@ export default function QrPage() {
   const params = useParams();
   const generateQrCode = async (id) => {
     try {
-      const result = await fetch(`${Config.API_URL}/admin/generate_qr/${id}`);
+      const result = await fetch(`${Config.API_URL}/qr/${id}`);
       const blob = await result.blob();
       const imageUrl = URL.createObjectURL(blob);
       setQrLink(imageUrl);

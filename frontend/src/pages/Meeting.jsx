@@ -51,6 +51,7 @@ const Meeting = () => {
   const [openToast, setOpenToast] = useState(false);
   const [boardrooms, setBoardrooms] = useState([]);
   const [departments, setDepartments] = useState([]);
+  const [organizations, setOrganizations] = useState([]);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -67,6 +68,24 @@ const Meeting = () => {
     reset,
     formState: { errors, isSubmitting },
   } = useForm();
+
+  useEffect(() => {
+    fetchBoardrooms();
+    fetchMeetings();
+    fetchOrganizations();
+  }, []);
+
+  const fetchOrganizations = async () => {
+    try {
+      const result = await getData(
+        `${Config.API_URL}/organizations`,
+        customHeaders
+      );
+      setOrganizations(result);
+    } catch (error) {
+      handleApiError(error, dispatch);
+    }
+  };
 
   const fetchBoardrooms = async () => {
     try {
@@ -89,24 +108,6 @@ const Meeting = () => {
       handleApiError(error, dispatch);
     }
   };
-
-  const fetchDepartments = async () => {
-    try {
-      const result = await getData(
-        `${Config.API_URL}/departments`,
-        customHeaders
-      );
-      setDepartments(result);
-    } catch (error) {
-      handleApiError(error, dispatch);
-    }
-  };
-
-  useEffect(() => {
-    fetchBoardrooms();
-    fetchMeetings();
-  }, []);
-
   const style = {
     position: "absolute",
     top: "50%",
@@ -198,7 +199,8 @@ const Meeting = () => {
       width: 70,
     },
     { field: "title", headerName: "Title", width: 220 },
-    { field: "boardroom_name", headerName: "Boardroom", width: 220 },
+    { field: "location", headerName: "Location", width: 220 },
+    { field: "boardroom_name", headerName: "Venue", width: 220 },
     { field: "description", headerName: "Description", width: 220 },
     {
       field: "meeting_date",
@@ -487,6 +489,36 @@ const Meeting = () => {
               <br />
               <br />
               <br />
+              <FormControl fullWidth>
+                <InputLabel id="organization-select-label">
+                  Organization
+                </InputLabel>
+                <Select
+                  labelId="organization-select-label"
+                  id="organization-select-label"
+                  // value={age}
+                  label="Boardroom"
+                  {...register("organization_id", {
+                    required: "This field is required",
+                  })}
+                  error={errors.organization_id && true}
+                >
+                  {organizations.map((organization) => (
+                    <MenuItem key={organization.id} value={organization.id}>
+                      {organization.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <br />
+              <Link className="text-muted" to={`/dashboard/organizations`}>
+                <small>
+                  Create Organizations here <ArrowRight />
+                </small>
+              </Link>
+              <br />
+              <br />
+              <br />
 
               <FormControl fullWidth>
                 <InputLabel id="bordroom-select-label">Venue</InputLabel>
@@ -516,6 +548,11 @@ const Meeting = () => {
                   {errors.boardroom_id.message}
                 </span>
               )}
+              <br />
+              <Link className="text-muted" to={`/dashboard/venues`}>
+                <small>Create Venues Here&nbsp;</small>
+                <ArrowRight />
+              </Link>
 
               <br />
               <br />
@@ -540,11 +577,6 @@ const Meeting = () => {
               </Box>
             </Box>
             <br />
-            <br />
-            <Link className="text-muted" to={`/dashboard/venues`}>
-              View Venues&nbsp;
-              <ArrowRight />
-            </Link>
           </form>
         </Box>
       </Modal>

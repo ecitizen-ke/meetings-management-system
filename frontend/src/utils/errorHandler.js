@@ -9,5 +9,5 @@ export const handleApiError = (error, dispatch) => {
     error.response?.data?.error ||
     "An error occurred";
   dispatch(showNotification({ message: errorMsg, type: "error" }));
-  setTimeout(() => dispatch(hideNotification()), 30000);
+  setTimeout(() => dispatch(hideNotification()), 15000);
 };

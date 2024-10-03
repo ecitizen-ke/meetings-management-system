@@ -18,6 +18,7 @@ import Swal from "sweetalert2";
 
 import {
   Build,
+  Business,
   DashboardSharp,
   Grade,
   Grid3x3Sharp,
@@ -68,6 +69,7 @@ const Sidebar = () => {
     }).then((result) => {
       if (result.isConfirmed) {
         // todo: logout user
+        localStorage.removeItem("user");
         dispatch(logout());
         navigate("/login");
       }
@@ -108,6 +110,12 @@ const Sidebar = () => {
       icon: <Grid3x3Sharp color="primary" />,
       path: "/dashboard/departments",
       slug: "departments",
+    },
+    {
+      text: "Organizations",
+      icon: <Business color="primary" />,
+      path: "/dashboard/organizations",
+      slug: "organizations",
     },
     {
       text: "Users",

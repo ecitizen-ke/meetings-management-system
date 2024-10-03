@@ -14,12 +14,17 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import { Link as RouterLink } from "react-router-dom";
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { login } from "../../redux/features/auth/authSlice";
 import logo from "../../assets/logo.svg";
 import { useNavigate } from "react-router";
+import Notification from "../../components/Notification";
+import { handleApiError } from "../../utils/errorHandler";
+import { postData } from "../../utils/api";
+import { Config } from "../../Config";
 
 const Login = () => {
   const {
@@ -36,7 +41,8 @@ const Login = () => {
   const auth = useSelector((state) => state.auth);
   useEffect(() => {
     const isLoggedIn = auth.isLoggedIn;
-    if (isLoggedIn) {
+    const authData = localStorage.getItem("user");
+    if (isLoggedIn || authData) {
       // Redirect to dashboard or home page
       navigate("/dashboard");
     }
@@ -47,28 +53,24 @@ const Login = () => {
   };
 
   const onSubmit = async (e) => {
-    // auth simulation
-    console.log(e);
-    const result = await new Promise((resolve, reject) => {
-      setTimeout(() => {
-        if (e.email === "admin@ecitizen.go.ke" && e.password === "linspace") {
-          dispatch(
-            login({
-              auth: {
-                email: e.email,
-                name: "Admin User",
-              },
-              isLoggedIn: true,
-            })
-          );
-          resolve("user logged in successfully");
-        } else {
-          reject("Auth failed");
-        }
-      }, 1500);
-    });
-
-    console.log(result);
+    try {
+      const user = {
+        email: e.email,
+        password: e.password,
+      };
+      const result = await postData(`${Config.API_URL}/auth/login`, user);
+      const authData = {
+        auth: {
+          email: result.user.email,
+          name: `${result.user.first_name} ${result.user.last_name}`,
+        },
+        isLoggedIn: true,
+      };
+      localStorage.setItem("user", JSON.stringify(authData));
+      dispatch(login(authData));
+    } catch (error) {
+      handleApiError(error, dispatch);
+    }
   };
   return (
     <div className="login-page">
@@ -101,6 +103,8 @@ const Login = () => {
             <h4>Login</h4>
 
             <h3 className="login-subtitle"> Meetings Management System</h3>
+            <br />
+            <Notification />
           </div>
 
           <div className="login-area">
@@ -111,7 +115,6 @@ const Login = () => {
                   id="outlined-basic"
                   label="Email Address"
                   variant="outlined"
-                  defaultValue={`admin@ecitizen.go.ke`}
                   placeholder="Enter your email address"
                   type="email"
                   {...register("email", {
@@ -158,8 +161,6 @@ const Login = () => {
                   id="outlined"
                   label="Password"
                   variant="outlined"
-                  // value={`linspace`}
-                  defaultValue={`linspace`}
                   placeholder="Password"
                   type={!showPassword ? "password" : "text"}
                   {...register("password", {
@@ -184,15 +185,16 @@ const Login = () => {
               <br />
               <div className="d-flex justify-content-between">
                 <div>
-                  <Link variant="secondary" underline="none" href="">
+                  <Link
+                    variant="secondary"
+                    component={RouterLink}
+                    underline="none"
+                    to={`/forgot-password`}
+                  >
                     Forgot Password ?
                   </Link>
                 </div>
-                <div>
-                  <Link variant="secondary" underline="none" href="">
-                    Signup
-                  </Link>
-                </div>
+                <div></div>
               </div>
               <br />
               <br />
@@ -209,6 +211,18 @@ const Login = () => {
               >
                 {isSubmitting ? "Signing you in" : "Sign In"}
               </Button>
+              <br />
+              <br />
+              <div className="text-center">
+                <Link
+                  variant="secondary"
+                  component={RouterLink}
+                  underline="none"
+                  to={`/register`}
+                >
+                  Signup
+                </Link>
+              </div>
             </form>
           </div>
         </div>
