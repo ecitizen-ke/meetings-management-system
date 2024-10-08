@@ -349,3 +349,55 @@ class Report:
                 meetings_status["pending"] += 1
                 # self.meetings.update_status(meeting["id"], "pending")
         return meetings_status
+
+class Location:
+    def __init__(self):
+        self.db = Connection()
+
+    def create(self, county, town):
+        try:
+            # check if location already exists
+            location = self.db.fetchone("SELECT * FROM locations WHERE county = %s", (county,))
+            # check if town exists in the list location variable
+            if location and town in location["town"]:
+                return "Location already exists"
+            self.db.insert(
+                "INSERT INTO locations (county, town) VALUES (%s, %s)", (county, town)
+            )
+        except Exception as e:
+            self.db.rollback()
+            return e
+        finally:
+            self.db.close()
+
+    def get_all(self):
+        try:
+            return self.db.fetchmany("SELECT * FROM locations")
+        except Exception as e:
+            return e
+        finally:
+            self.db.close()
+
+    def get_by_id(self, id):
+        try:
+            return self.db.fetchone("SELECT * FROM locations WHERE id = %s", (id,))
+        except Exception as e:
+            return e
+        finally:
+            self.db.close()
+    def filter_by_county_and_search(self, county, search):
+        try:
+            query = """
+                SELECT id, town 
+                FROM locations 
+                WHERE county LIKE %s AND town LIKE %s 
+                ORDER BY town ASC 
+                LIMIT 10
+            """
+            params = (f"%{county}%", f"%{search}%")
+            return self.db.fetchmany(query, params)
+        except Exception as e:
+            print (f"Database Error: {e}")
+            return []
+        finally:
+            self.db.close()
