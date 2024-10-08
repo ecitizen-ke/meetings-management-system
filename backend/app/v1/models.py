@@ -149,7 +149,7 @@ class Meeting:
         except Exception as e:
             self.db.rollback()
             print("Database error:", e)  # Print the full error message
-            return str(e) 
+            return {"msg": f"An error occurred: {str(e)}"}, 500
         finally:
             self.db.close()
 
