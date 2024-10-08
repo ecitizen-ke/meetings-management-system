@@ -19,20 +19,28 @@ def create():
         missing_fields = [field for field in required_fields if field not in data]
         if missing_fields:
             return jsonify({"msg": f"Missing required fields: {', '.join(missing_fields)}"}), 400
-        meeting.create(
+        
+        response,status_code =  meeting.create(
             data.get("title"),
             data.get("description"),
             data.get("meeting_date"),
             data.get("start_time"),
             data.get("end_time"),
             data.get("boardroom_id"),
-            data.get("organization_id"),
+            data.get("department_id"),
             resources_json,
             data.get("location"),
+            data.get("longitude"),
+            data.get("latitude"),
+            data.get("county"),
+            data.get("town"),
         )
-        return jsonify({"msg": "Meeting added successfully"}), 201
+        #check the response  from the function in create 
+
+        return jsonify (response),status_code
+        # return jsonify({"msg": "Meeting added successfully"}), 201
     except Exception as e:
-        return e
+        return jsonify({"msg": f"An error occurred: {str(e)}"}), 500
 
 
 @meetings_blueprint.route("/api/v1/meetings", methods=["GET"])

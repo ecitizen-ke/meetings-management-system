@@ -103,10 +103,20 @@ class Meeting:
         organization_id,
         resources_id,
         location,
+        longitude,
+        latitude,
+        county,
+        town,
     ):
         try:
+            print("SQL Query: ", "INSERT INTO meetings ...")
+            print("Values: ", (
+                title, description, meeting_date, start_time, end_time, 
+                boardroom_id, organization_id, resources_id, location, 
+                longitude, latitude, county, town
+            ))
             self.db.insert(
-                "INSERT INTO meetings (title, description, meeting_date, start_time, end_time, boardroom_id, organization_id, resources_id, location) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                "INSERT INTO meetings (title, description, meeting_date, start_time, end_time, boardroom_id, department_id, resources_id, location, longitude,latitude,county,town) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                 (
                     title,
                     description,
@@ -117,11 +127,29 @@ class Meeting:
                     organization_id,
                     resources_id,
                     location,
+                    longitude,
+                    latitude,
+                    county,
+                    town,
                 ),
             )
+            try:
+                location = self.db.fetchone(
+                    "SELECT * FROM locations WHERE county = %s AND town = %s", (county, town)
+                )
+                if not location:
+                    self.db.insert(
+                        "INSERT INTO locations (county, town) VALUES (%s, %s)", (county, town)
+                    )
+            except Exception as e:
+                print("Database error:", e)
+                
+            return {"msg": "Meeting added successfully"}, 201
+
         except Exception as e:
             self.db.rollback()
-            return e
+            print("Database error:", e)  # Print the full error message
+            return str(e) 
         finally:
             self.db.close()
 
@@ -153,17 +181,23 @@ class Meeting:
             return e
 
     def update(
-        self, meeting_id, title, description, meeting_date, start_time, end_time, boardroom_id
+        self, meeting_id, title, description, meeting_date, start_time, end_time, boardroom_id, organization_id, resources_id, location, longitude, latitude, county, town
     ):
         try:
             self.db.cursor.execute(
                 """
-                UPDATE meetings SET title = %s, description = %s, meeting_date = %s, start_time = %s, end_time =%s, boardroom_id = %s
+                UPDATE meetings SET title = %s, description = %s, meeting_date = %s, start_time = %s, end_time =%s, boardroom_id = %s, organization_id = %s, resources_id = %s, location = %s, longitude = %s, latitude = %s, county = %s, town = %s
                 WHERE id = %s
             """,
-                (title, description, meeting_date, start_time, end_time, boardroom_id, meeting_id),
+                (title, description, meeting_date, start_time, end_time, boardroom_id, meeting_id, organization_id, resources_id, location, longitude, latitude, county, town),
             )
             self.db.conn.commit()
+
+            check_location = self.check_location(county, town)
+            if not check_location:
+                self.db.insert(
+                    "INSERT INTO locations (county, town) VALUES (%s, %s)", (county, town)
+                )
 
         except Exception as e:
             self.db.rollback()
@@ -349,3 +383,55 @@ class Report:
                 meetings_status["pending"] += 1
                 # self.meetings.update_status(meeting["id"], "pending")
         return meetings_status
+
+class Location:
+    def __init__(self):
+        self.db = Connection()
+
+    def create(self, county, town):
+        try:
+            # check if location already exists
+            location = self.db.fetchone("SELECT * FROM locations WHERE county = %s", (county,))
+            # check if town exists in the list location variable
+            if location and town in location["town"]:
+                return "Location already exists"
+            self.db.insert(
+                "INSERT INTO locations (county, town) VALUES (%s, %s)", (county, town)
+            )
+        except Exception as e:
+            self.db.rollback()
+            return e
+        finally:
+            self.db.close()
+
+    def get_all(self):
+        try:
+            return self.db.fetchmany("SELECT * FROM locations")
+        except Exception as e:
+            return e
+        finally:
+            self.db.close()
+
+    def get_by_id(self, id):
+        try:
+            return self.db.fetchone("SELECT * FROM locations WHERE id = %s", (id,))
+        except Exception as e:
+            return e
+        finally:
+            self.db.close()
+    def filter_by_county_and_search(self, county, search):
+        try:
+            query = """
+                SELECT id, town 
+                FROM locations 
+                WHERE county LIKE %s AND town LIKE %s 
+                ORDER BY town ASC 
+                LIMIT 10
+            """
+            params = (f"%{county}%", f"%{search}%")
+            return self.db.fetchmany(query, params)
+        except Exception as e:
+            print (f"Database Error: {e}")
+            return []
+        finally:
+            self.db.close()
