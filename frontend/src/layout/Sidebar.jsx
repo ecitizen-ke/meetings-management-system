@@ -22,6 +22,7 @@ import {
   DashboardSharp,
   Grade,
   Grid3x3Sharp,
+  LockClockSharp,
   Logout,
   MeetingRoom,
   Room,
@@ -60,7 +61,7 @@ const Sidebar = () => {
   const handleLogout = () => {
     Swal.fire({
       title: "Logout",
-      text: "Are you sure youwant to log out?",
+      text: "Are you sure you want to log out?",
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#398e3d",
@@ -122,6 +123,12 @@ const Sidebar = () => {
       icon: <SupervisedUserCircle color="primary" />,
       path: "/dashboard/users",
       slug: "users",
+    },
+    {
+      text: "Roles",
+      icon: <LockClockSharp color="primary" />,
+      path: "/dashboard/roles",
+      slug: "roles",
     },
   ];
 

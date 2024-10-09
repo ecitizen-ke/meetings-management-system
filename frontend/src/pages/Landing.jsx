@@ -7,12 +7,17 @@ import logo from "../assets/logo.svg";
 import { useForm } from "react-hook-form";
 import { Snackbar } from "@mui/material";
 import SignPad from "../components/SignPad";
+import { useSelector } from "react-redux";
+import { handleApiError } from "../utils/errorHandler";
+import { postData } from "../utils/api";
+import Swal from "sweetalert2";
 
 const Landing = () => {
   const { id } = useParams();
   const [meeting, setMeeting] = useState(null);
   const [openToast, setOpenToast] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
+  const sign = useSelector((state) => state.signature);
 
   const {
     register,
@@ -50,29 +55,37 @@ const Landing = () => {
   };
 
   useEffect(() => {
-    console.log(id);
     fetchMeetingDetail().then((data) => console.log(data));
   }, []);
 
-  const onSubmit = (data) => {
+  const onSubmit = async (data) => {
     if (!id) throw new Error("Meeting don't exist");
-
-    // add meeting id to user data
-
-    data["meeting_id"] = id;
-    fetch(`${Config.API_URL}/attendees`, {
-      method: "POST",
-      headers: {
+    if (!sign.signatureImage) {
+      Swal.fire({
+        // title: "Logout",
+        text: "Please ensure you have signed ",
+        icon: "warning",
+        // showCancelButton: true,
+        confirmButtonColor: "#398e3d",
+        // cancelButtonColor: "#d33",
+        confirmButtonText: "ok",
+      }).then((result) => {
+        if (result.isConfirmed) {
+        }
+      });
+      return;
+    }
+    try {
+      data["meeting_id"] = id;
+      data["signature"] = sign.signatureImage;
+      const result = await postData(`${Config.API_URL}/attendees`, data, {
         "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    })
-      .then((resp) => resp.json())
-      .then((data) => {
-        setOpenToast(true);
-        setIsRegistered(true);
-      })
-      .catch((error) => console.log(error));
+      });
+      setOpenToast(true);
+      setIsRegistered(true);
+    } catch (error) {
+      handleApiError(error);
+    }
   };
 
   const handleToastClose = (event, reason) => {
@@ -121,7 +134,7 @@ const Landing = () => {
                     <th scope="row">Venue</th>
                     <td></td>
                     <td></td>
-                    <td>{meeting && meeting.boardroom_name}</td>
+                    <td>{meeting && meeting.location}</td>
                   </tr>
                   <tr>
                     <th scope="row">Date</th>

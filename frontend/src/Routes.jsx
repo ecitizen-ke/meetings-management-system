@@ -17,6 +17,7 @@ import { Suspense } from "react";
 import Venue from "./pages/Venue";
 import Organizations from "./pages/Organizations";
 import Register from "./pages/auth/Register";
+import Roles from "./pages/Roles";
 
 function Loading() {
   return (
@@ -113,6 +114,10 @@ export const AppRouter = createBrowserRouter([
       {
         path: "/dashboard/organizations",
         element: <Organizations />,
+      },
+      {
+        path: "/dashboard/roles",
+        element: <Roles />,
       },
     ],
   },
