@@ -12,9 +12,9 @@ def create():
 
     try:
         data = request.get_json()
-        resources_json = json.dumps(data["resources_id"])
-        if not data or not isinstance(data, dict):
-            return jsonify({"msg": "Invalid JSON format or empty payload"}), 400
+        # resources_json = json.dumps(data["resources_id"])
+        # if not data or not isinstance(data, dict):
+        #     return jsonify({"msg": "Invalid JSON format or empty payload"}), 400
         required_fields = ["title", "description", "start_time", "end_time"]
         missing_fields = [field for field in required_fields if field not in data]
         if missing_fields:
@@ -27,12 +27,16 @@ def create():
             data.get("end_time"),
             data.get("boardroom_id"),
             data.get("organization_id"),
-            resources_json,
-            data.get("location"),
+            # resources_json,
+            # data.get("location"),
+            'Nyayo House'
         )
         return jsonify({"msg": "Meeting added successfully"}), 201
     except Exception as e:
-        return e
+
+        return jsonify({
+            "msg":"Something went wrong, "+str(e),
+        }),500
 
 
 @meetings_blueprint.route("/api/v1/meetings", methods=["GET"])

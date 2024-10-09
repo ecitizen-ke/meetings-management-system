@@ -48,7 +48,7 @@ def login():
             return jsonify({"error": "Missing required fields"}), 400
 
         if user.login(email, password):
-            return jsonify({"msg": "Login successfull!"}), 200
+            return jsonify({"msg": "Login successfull!","user":user.find_by_email(email)}), 200
         else:
             return jsonify({"msg": "Authentication failed!"}), 403
 

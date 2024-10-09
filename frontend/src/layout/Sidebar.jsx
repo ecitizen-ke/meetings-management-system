@@ -18,9 +18,11 @@ import Swal from "sweetalert2";
 
 import {
   Build,
+  Business,
   DashboardSharp,
   Grade,
   Grid3x3Sharp,
+  LockClockSharp,
   Logout,
   MeetingRoom,
   Room,
@@ -59,7 +61,7 @@ const Sidebar = () => {
   const handleLogout = () => {
     Swal.fire({
       title: "Logout",
-      text: "Are you sure youwant to log out?",
+      text: "Are you sure you want to log out?",
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#398e3d",
@@ -68,6 +70,7 @@ const Sidebar = () => {
     }).then((result) => {
       if (result.isConfirmed) {
         // todo: logout user
+        localStorage.removeItem("user");
         dispatch(logout());
         navigate("/login");
       }
@@ -98,10 +101,10 @@ const Sidebar = () => {
       slug: "meetings",
     },
     {
-      text: "Board Rooms",
+      text: "Venues",
       icon: <Room color="primary" />,
-      path: "/dashboard/boardrooms",
-      slug: "boardrooms",
+      path: "/dashboard/venues",
+      slug: "venues",
     },
     {
       text: "Departments",
@@ -110,10 +113,22 @@ const Sidebar = () => {
       slug: "departments",
     },
     {
+      text: "Organizations",
+      icon: <Business color="primary" />,
+      path: "/dashboard/organizations",
+      slug: "organizations",
+    },
+    {
       text: "Users",
       icon: <SupervisedUserCircle color="primary" />,
       path: "/dashboard/users",
       slug: "users",
+    },
+    {
+      text: "Roles",
+      icon: <LockClockSharp color="primary" />,
+      path: "/dashboard/roles",
+      slug: "roles",
     },
   ];
 

@@ -1,6 +1,5 @@
 import { Add, Edit } from "@mui/icons-material";
 import {
-  Badge,
   Box,
   Button,
   Divider,
@@ -9,16 +8,23 @@ import {
   TextField,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
-import { Config } from "../Config";
 import { useForm } from "react-hook-form";
+import { getData, postData } from "../utils/api";
+import { Config } from "../Config";
+import { handleApiError } from "../utils/errorHandler";
+import { useDispatch } from "react-redux";
 import { DataGrid } from "@mui/x-data-grid";
-import Swal from "sweetalert2";
+const customHeaders = {
+  Authorization: "Bearer xxxxxx",
+  "Content-Type": "application/json",
+};
 
-const Department = () => {
+const Roles = () => {
   const [open, setOpen] = useState(false);
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
-  const [departments, setDepartments] = useState([]);
+  const [roles, setRoles] = useState([]);
+  const dispatch = useDispatch();
   const {
     register,
     handleSubmit,
@@ -26,7 +32,6 @@ const Department = () => {
     reset,
     formState: { errors, isSubmitting },
   } = useForm();
-
   const style = {
     position: "absolute",
     top: "50%",
@@ -38,66 +43,33 @@ const Department = () => {
     p: 4,
   };
 
-  //   create department
-  const onSubmit = (data) => {
-    fetch(`${Config.API_URL}/departments`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    })
-      .then((resp) => resp.json())
-      .then((resp) => {
-        fetchDepartments();
-        reset();
-        setOpen(false);
-      })
-      .catch((err) => console.log(err));
+  const onSubmit = async (data) => {
+    try {
+      const result = await postData(
+        `${Config.API_URL}/roles`,
+        data,
+        customHeaders
+      );
+      fetchRoles();
+      reset();
+      setOpen(false);
+    } catch (error) {
+      handleApiError(error, dispatch);
+    }
   };
 
-  //   fetch departments
-  const fetchDepartments = () => {
-    fetch(`${Config.API_URL}/departments`)
-      .then((resp) => resp.json())
-      .then((resp) => setDepartments(resp))
-      .catch((err) => console.log(err));
+  const fetchRoles = async () => {
+    // Fetch roles data from API
+    try {
+      const result = await getData(`${Config.API_URL}/roles`, customHeaders);
+      setRoles(result);
+    } catch (error) {
+      console.error(error);
+    }
   };
-
   useEffect(() => {
-    fetchDepartments();
-    console.log(departments);
+    fetchRoles();
   }, []);
-
-  //   delete department
-  const handleDelete = (id) => {
-    Swal.fire({
-      title: "Are you sure?",
-      text: "You won't be able to revert this!",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#398e3d",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Yes, delete it!",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        fetch(`${Config.API_URL}/departments/${id}`, {
-          method: "DELETE",
-        })
-          .then((resp) => resp.json())
-          .then((resp) => {
-            console.log(resp);
-            fetchDepartments();
-          })
-          .catch((err) => console.log(err));
-      }
-    });
-  };
-
-  //   edit department
-  const handleEdit = (id, name) => {
-    // Implement edit functionality
-  };
 
   const columns = [
     { field: "id", headerName: "#", width: 70 },
@@ -117,7 +89,6 @@ const Department = () => {
               color="primary"
               size="small"
               style={{ marginRight: 8 }}
-              onClick={() => handleEdit(params.row)}
             >
               Edit
             </Button>
@@ -127,7 +98,6 @@ const Department = () => {
               variant="contained"
               color="secondary"
               size="small"
-              onClick={() => handleDelete(params.row)}
             >
               Delete
             </Button>
@@ -141,14 +111,7 @@ const Department = () => {
     <>
       <div className="meetings-header">
         <div>
-          <h3>
-            Departments &nbsp;
-            <Badge
-              max={10}
-              badgeContent={departments.length}
-              color="secondary"
-            ></Badge>
-          </h3>
+          <h3>Roles &nbsp; </h3>
         </div>
 
         <div
@@ -159,23 +122,25 @@ const Department = () => {
           }}
         >
           <div>
+            {" "}
             <Button
               onClick={handleOpen}
               variant="contained"
               endIcon={<Add />}
               color="secondary"
             >
-              Add Department
+              Add New Role
             </Button>
           </div>
         </div>
       </div>
+      <br />
+      <Divider />
 
-      {/* Department Tables */}
-
+      {/* Roles List */}
       <div style={{ width: "100%", marginTop: "35px" }}>
         <DataGrid
-          rows={departments}
+          rows={roles}
           columns={columns}
           initialState={{
             pagination: {
@@ -187,7 +152,7 @@ const Department = () => {
         />
       </div>
 
-      {/* Department Modal */}
+      {/* roles modal */}
       <Modal
         open={open}
         onClose={handleClose}
@@ -202,7 +167,7 @@ const Department = () => {
             alignItems={`center`}
           >
             <div>
-              <h2>New Department</h2>
+              <h2>New Role</h2>
             </div>
             <div>
               <Button
@@ -218,6 +183,7 @@ const Department = () => {
           <Divider />
           <br />
           <br />
+
           <form onSubmit={handleSubmit(onSubmit)} action="" method="post">
             <Box className="my-2">
               <TextField
@@ -247,11 +213,13 @@ const Department = () => {
                 </span>
               )}
             </Box>
+            <br />
+            <br />
 
             <TextField
               multiline={true}
               minRows={5}
-              label="Meeting Description"
+              label="Description"
               variant="outlined"
               fullWidth={true}
               {...register("description", {
@@ -270,6 +238,7 @@ const Department = () => {
             )}
             <br />
             <br />
+
             <Button
               disabled={isSubmitting}
               fullWidth={true}
@@ -286,4 +255,4 @@ const Department = () => {
   );
 };
 
-export default Department;
+export default Roles;

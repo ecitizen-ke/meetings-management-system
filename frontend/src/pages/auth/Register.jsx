@@ -1,23 +1,23 @@
 import React, { useEffect, useState } from "react";
-import "../assets/landing.css";
-import { Config } from "../Config";
-import { useParams } from "react-router";
+import "../../assets/landing.css";
+import { Config } from "../../Config";
+import { useNavigate, useParams } from "react-router";
 import moment from "moment";
-import logo from "../assets/logo.svg";
+import logo from "../../assets/logo.svg";
 import { useForm } from "react-hook-form";
-import { Snackbar } from "@mui/material";
-import SignPad from "../components/SignPad";
-import { useSelector } from "react-redux";
-import { handleApiError } from "../utils/errorHandler";
-import { postData } from "../utils/api";
-import Swal from "sweetalert2";
+import { Button, Snackbar } from "@mui/material";
+import { Link } from "react-router-dom";
+import { handleApiError } from "../../utils/errorHandler";
+import { useDispatch } from "react-redux";
+import Notification from "../../components/Notification";
+import { postData } from "../../utils/api";
+import { showMessage } from "../../utils/helpers";
 
-const Landing = () => {
-  const { id } = useParams();
-  const [meeting, setMeeting] = useState(null);
+const Register = () => {
+  const dispatch = useDispatch();
   const [openToast, setOpenToast] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
-  const sign = useSelector((state) => state.signature);
+  const navigate = useNavigate();
 
   const {
     register,
@@ -27,64 +27,16 @@ const Landing = () => {
     formState: { errors, isSubmitting },
   } = useForm();
 
-  const fetchMeetingDetail = async () => {
-    try {
-      // Fetch meeting details
-
-      const resp = await fetch(`${Config.API_URL}/meetings/${id}`);
-
-      // Check if the response is OK (status code 200-299)
-      if (resp.ok) {
-        const data = await resp.json(); // Parse the response as JSON
-        console.log(data);
-        setMeeting(data); // Set meeting details
-      } else {
-        console.error(
-          "Error fetching meeting details:",
-          resp.status,
-          resp.statusText
-        );
-        // Handle non-OK response status
-        throw new Error("Failed to fetch meeting details");
-      }
-    } catch (error) {
-      console.error("An error occurred:", error.message);
-      // Handle network errors or other exceptions
-      throw error;
-    }
-  };
-
-  useEffect(() => {
-    fetchMeetingDetail().then((data) => console.log(data));
-  }, []);
+  useEffect(() => {}, []);
 
   const onSubmit = async (data) => {
-    if (!id) throw new Error("Meeting don't exist");
-    if (!sign.signatureImage) {
-      Swal.fire({
-        // title: "Logout",
-        text: "Please ensure you have signed ",
-        icon: "warning",
-        // showCancelButton: true,
-        confirmButtonColor: "#398e3d",
-        // cancelButtonColor: "#d33",
-        confirmButtonText: "ok",
-      }).then((result) => {
-        if (result.isConfirmed) {
-        }
-      });
-      return;
-    }
     try {
-      data["meeting_id"] = id;
-      data["signature"] = sign.signatureImage;
-      const result = await postData(`${Config.API_URL}/attendees`, data, {
-        "Content-Type": "application/json",
-      });
-      setOpenToast(true);
+      const result = await postData(`${Config.API_URL}/auth/register`, data);
       setIsRegistered(true);
+      showMessage(result.msg, "success", dispatch);
+      navigate("/login");
     } catch (error) {
-      handleApiError(error);
+      handleApiError(error, dispatch);
     }
   };
 
@@ -95,6 +47,7 @@ const Landing = () => {
 
     setOpenToast(false);
   };
+  const passwordValue = watch("password");
 
   return (
     <div
@@ -104,9 +57,9 @@ const Landing = () => {
     >
       <nav className="navbar fixed-top navbar-expand-lg shadow-sm bg-body-tertiary">
         <div className="container">
-          <a className="navbar-brand" href="#">
+          <Link to={`/login`} className="navbar-brand" href="#">
             <img src={logo} alt="logo" height="55" />
-          </a>
+          </Link>
           <button className="navbar-toggler" type="button">
             <span className="navbar-toggler-icon"></span>
           </button>
@@ -125,52 +78,30 @@ const Landing = () => {
         <div className="landing-page-inner row p-3  borderd-0">
           <div className="col-lg-3 m-2"></div>
           <div className="registration-form card col-lg-6 m-2">
+            <div className="card-header">
+              <Button
+                onClick={() => window.history.back()}
+                variant="text"
+                color="primary"
+              >
+                Go Back
+              </Button>
+            </div>
             <div className="card-body">
-              <h3 className="text-muted">{meeting && meeting.title}</h3>
-              <br />
-              <table className="table table-striped">
-                <tbody>
-                  <tr>
-                    <th scope="row">Venue</th>
-                    <td></td>
-                    <td></td>
-                    <td>{meeting && meeting.location}</td>
-                  </tr>
-                  <tr>
-                    <th scope="row">Date</th>
-                    <td></td>
-                    <td></td>
-                    <td>
-                      {meeting &&
-                        moment(meeting.meeting_date).format("MMMM D, YYYY")}
-                    </td>
-                  </tr>
-                  <tr>
-                    <th scope="row">Time</th>
-                    <td></td>
-                    <td></td>
-                    <td>
-                      {meeting &&
-                        moment(meeting.start_time, "HH:mm").format(
-                          "hh:mm A"
-                        )}{" "}
-                      to{" "}
-                      {meeting &&
-                        moment(meeting.end_time, "HH:mm").format("hh:mm A")}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
               {isRegistered && (
                 <div className="alert alert-success" role="alert">
-                  You have successfully registered for the meeting.
+                  You have successfully registered
                 </div>
               )}
+              <Notification />
               {!isRegistered && (
                 <div>
-                  <br />
-                  <br />
-                  <h3 className="text-muted">Registration</h3>
+                  <div className="d-flex align-items-center">
+                    <div className="mr-3"></div>
+                    <div>
+                      <h3 className="text-muted">Register</h3>
+                    </div>
+                  </div>
 
                   {/* Registration form */}
                   <form
@@ -291,34 +222,23 @@ const Landing = () => {
                         type="text"
                         className="form-control rounded-0"
                         id="organization"
-                        name="department"
+                        name="organization"
                         required
-                      />
-                    </div>
-                    {/* <div className="my-3">
-                      <label htmlFor="department" className="form-label">
-                        Department
-                      </label>
-                      <input
-                        type="text"
-                        className="form-control rounded-0"
-                        id="department"
-                        {...register("department", {
+                        {...register("organization", {
                           required: "This field is required",
                         })}
-                        name="department"
-                        required
                       />
+                      {errors.organization && (
+                        <span
+                          style={{
+                            color: "crimson",
+                          }}
+                        >
+                          {errors.organization.message}
+                        </span>
+                      )}
                     </div>
-                    {errors.department && (
-                      <span
-                        style={{
-                          color: "crimson",
-                        }}
-                      >
-                        {errors.department.message}
-                      </span>
-                    )} */}
+
                     <div className="my-3">
                       <label htmlFor="designation" className="form-label">
                         Designation
@@ -343,17 +263,60 @@ const Landing = () => {
                         {errors.designation.message}
                       </span>
                     )}
-                    <div>
-                      <label htmlFor="">Sign</label>
+
+                    <div className="mb-3">
+                      <label>Password</label>
+                      <input
+                        name="password"
+                        className="form-control"
+                        type="password"
+                        {...register("password", {
+                          required: "Password is required",
+                          minLength: {
+                            value: 8,
+                            message: "Password must be at least 8 characters",
+                          },
+                          pattern: {
+                            value:
+                              /(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9])/,
+                            message:
+                              "Password must include uppercase, lowercase, number, and special character",
+                          },
+                        })}
+                      />
+                      {errors.password && (
+                        <span
+                          style={{
+                            color: "crimson",
+                          }}
+                        >
+                          {errors.password.message}
+                        </span>
+                      )}
                     </div>
-                    <div
-                      style={{
-                        border: "2px dotted #ccc",
-                      }}
-                      className="my-3"
-                    >
-                      <br />
-                      <SignPad />
+
+                    {/* Confirm Password Input */}
+                    <div className="mb-3">
+                      <label>Confirm Password</label>
+                      <input
+                        className="form-control"
+                        name="password_confirmation"
+                        type="password"
+                        {...register("confirmPassword", {
+                          required: "Please confirm your password",
+                          validate: (value) =>
+                            value === passwordValue || "Passwords do not match",
+                        })}
+                      />
+                      {errors.confirmPassword && (
+                        <span
+                          style={{
+                            color: "crimson",
+                          }}
+                        >
+                          {errors.confirmPassword.message}
+                        </span>
+                      )}
                     </div>
 
                     <div className="my-3">
@@ -377,10 +340,10 @@ const Landing = () => {
         open={openToast}
         autoHideDuration={6000}
         onClose={handleToastClose}
-        message="Attendance recorded successfully"
+        message="Registered successfully"
       />
     </div>
   );
 };
 
-export default Landing;
+export default Register;

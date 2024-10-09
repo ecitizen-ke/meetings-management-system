@@ -49,6 +49,18 @@ body{
 .active-link{
     color: #398e3d !important;
 }
+.page-not-found {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.page-not-found-inner{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
 /* responsive */
 @media (max-width: 768px) {
     .login-page{

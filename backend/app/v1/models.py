@@ -101,12 +101,12 @@ class Meeting:
         end_time,
         boardroom_id,
         organization_id,
-        resources_id,
+        # resources_id,
         location,
     ):
         try:
             self.db.insert(
-                "INSERT INTO meetings (title, description, meeting_date, start_time, end_time, boardroom_id, organization_id, resources_id, location) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                "INSERT INTO meetings (title, description, meeting_date, start_time, end_time, boardroom_id, organization_id, location) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
                 (
                     title,
                     description,
@@ -115,7 +115,7 @@ class Meeting:
                     end_time,
                     boardroom_id,
                     organization_id,
-                    resources_id,
+                    # resources_id,
                     location,
                 ),
             )

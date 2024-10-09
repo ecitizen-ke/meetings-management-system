@@ -1,4 +1,3 @@
-import { Add, Edit } from "@mui/icons-material";
 import {
   Badge,
   Box,
@@ -6,19 +5,28 @@ import {
   Divider,
   InputAdornment,
   Modal,
+  Snackbar,
   TextField,
+  Typography,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
-import { Config } from "../Config";
+import Notification from "../components/Notification";
+import { Add, Edit } from "@mui/icons-material";
 import { useForm } from "react-hook-form";
 import { DataGrid } from "@mui/x-data-grid";
 import Swal from "sweetalert2";
+import { getData, postData } from "../utils/api";
+import { Config } from "../Config";
+import { handleApiError } from "../utils/errorHandler";
+import { useDispatch } from "react-redux";
 
-const Department = () => {
+const Organizations = () => {
+  const [organizations, setOrganizations] = useState([]);
   const [open, setOpen] = useState(false);
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
-  const [departments, setDepartments] = useState([]);
+  const [openToast, setOpenToast] = useState(false);
+  const dispatch = useDispatch();
   const {
     register,
     handleSubmit,
@@ -26,7 +34,6 @@ const Department = () => {
     reset,
     formState: { errors, isSubmitting },
   } = useForm();
-
   const style = {
     position: "absolute",
     top: "50%",
@@ -37,39 +44,31 @@ const Department = () => {
     boxShadow: 24,
     p: 4,
   };
-
-  //   create department
-  const onSubmit = (data) => {
-    fetch(`${Config.API_URL}/departments`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    })
-      .then((resp) => resp.json())
-      .then((resp) => {
-        fetchDepartments();
-        reset();
-        setOpen(false);
-      })
-      .catch((err) => console.log(err));
-  };
-
-  //   fetch departments
-  const fetchDepartments = () => {
-    fetch(`${Config.API_URL}/departments`)
-      .then((resp) => resp.json())
-      .then((resp) => setDepartments(resp))
-      .catch((err) => console.log(err));
+  const customHeaders = {
+    Authorization: "Bearer xxxxxx",
+    "Content-Type": "application/json",
   };
 
   useEffect(() => {
-    fetchDepartments();
-    console.log(departments);
+    fetchOrganizations();
   }, []);
 
-  //   delete department
+  const fetchOrganizations = async () => {
+    try {
+      const result = await getData(
+        `${Config.API_URL}/organizations`,
+        customHeaders
+      );
+      setOrganizations(result);
+      console.log(result);
+    } catch (error) {
+      handleApiError(error, dispatch);
+    }
+  };
+  //   edit department
+  const handleEdit = (id, name) => {
+    // Implement edit functionality
+  };
   const handleDelete = (id) => {
     Swal.fire({
       title: "Are you sure?",
@@ -81,27 +80,39 @@ const Department = () => {
       confirmButtonText: "Yes, delete it!",
     }).then((result) => {
       if (result.isConfirmed) {
-        fetch(`${Config.API_URL}/departments/${id}`, {
-          method: "DELETE",
-        })
-          .then((resp) => resp.json())
-          .then((resp) => {
-            console.log(resp);
-            fetchDepartments();
-          })
-          .catch((err) => console.log(err));
       }
     });
   };
-
-  //   edit department
-  const handleEdit = (id, name) => {
-    // Implement edit functionality
+  const onSubmit = async (data) => {
+    try {
+      const result = await postData(
+        `${Config.API_URL}/organizations`,
+        data,
+        customHeaders
+      );
+      setOpen(false);
+      reset();
+      setOpenToast(true);
+      fetchOrganizations();
+      showMessage(result.msg, "success", dispatch);
+    } catch (error) {
+      handleApiError(error, dispatch);
+    }
   };
+
+  const handleToastClose = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+
+    setOpenToast(false);
+  };
+
+  //   columns
 
   const columns = [
     { field: "id", headerName: "#", width: 70 },
-    { field: "name", headerName: "Name", width: 220 },
+    { field: "name", headerName: "Name", width: 350 },
     { field: "description", headerName: "Description", width: 400 },
     {
       field: "actions",
@@ -142,10 +153,10 @@ const Department = () => {
       <div className="meetings-header">
         <div>
           <h3>
-            Departments &nbsp;
+            Organizations &nbsp;
             <Badge
               max={10}
-              badgeContent={departments.length}
+              badgeContent={organizations.length}
               color="secondary"
             ></Badge>
           </h3>
@@ -165,17 +176,22 @@ const Department = () => {
               endIcon={<Add />}
               color="secondary"
             >
-              Add Department
+              Add Organization
             </Button>
           </div>
         </div>
       </div>
+      <br />
+      <Divider color="" />
+      <br />
+      <Notification />
+      <br />
 
-      {/* Department Tables */}
+      {/* List of organizations  */}
 
       <div style={{ width: "100%", marginTop: "35px" }}>
         <DataGrid
-          rows={departments}
+          rows={organizations}
           columns={columns}
           initialState={{
             pagination: {
@@ -187,7 +203,7 @@ const Department = () => {
         />
       </div>
 
-      {/* Department Modal */}
+      {/* Add Organization Modal */}
       <Modal
         open={open}
         onClose={handleClose}
@@ -202,7 +218,7 @@ const Department = () => {
             alignItems={`center`}
           >
             <div>
-              <h2>New Department</h2>
+              <h2>New Organization</h2>
             </div>
             <div>
               <Button
@@ -248,10 +264,13 @@ const Department = () => {
               )}
             </Box>
 
+            <br />
+            <br />
+
             <TextField
               multiline={true}
               minRows={5}
-              label="Meeting Description"
+              label="Description"
               variant="outlined"
               fullWidth={true}
               {...register("description", {
@@ -270,6 +289,7 @@ const Department = () => {
             )}
             <br />
             <br />
+
             <Button
               disabled={isSubmitting}
               fullWidth={true}
@@ -282,8 +302,17 @@ const Department = () => {
           </form>
         </Box>
       </Modal>
+
+      {/* toast notification */}
+
+      <Snackbar
+        open={openToast}
+        autoHideDuration={6000}
+        onClose={handleToastClose}
+        message="Organization added successfully"
+      />
     </>
   );
 };
 
-export default Department;
+export default Organizations;

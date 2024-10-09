@@ -8,19 +8,34 @@ import Topbar from "../layout/Topbar";
 import Sidebar from "../layout/Sidebar";
 import { Toolbar } from "@mui/material";
 import { Outlet, useNavigate } from "react-router";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { login } from "../redux/features/auth/authSlice";
 const drawerWidth = 240;
 
 function Dashboard(props) {
   const auth = useSelector((state) => state.auth);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   React.useEffect(() => {
-    const isLoggedIn = auth.isLoggedIn;
-    if (!isLoggedIn) {
+    const authData = localStorage.getItem("user");
+    if (!authData) {
       // Redirect to dashboard or home page
       navigate("/login");
+    } else {
+      const user = JSON.parse(authData);
+      if (user.isLoggedIn) {
+        dispatch(
+          login({
+            auth: {
+              email: user.auth.email,
+              name: user.auth.name,
+            },
+            isLoggedIn: user.isLoggedIn,
+          })
+        );
+      }
     }
-  });
+  }, []);
   return (
     <Box sx={{ display: "flex" }}>
       <CssBaseline />

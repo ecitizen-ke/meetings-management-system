@@ -25,7 +25,7 @@ const customHeaders = {
   "Content-Type": "application/json",
 };
 
-const EditBoardroom = () => {
+const EditVenue = () => {
   const [boardroom, setBoardroom] = useState();
   const dispatch = useDispatch();
   const params = useParams();
@@ -45,7 +45,7 @@ const EditBoardroom = () => {
     // Fetch boardroom data from API
     try {
       const result = await getData(
-        `${Config.API_URL}/boardrooms/${id}`,
+        `${Config.API_URL}/boardroom/${id}`,
         customHeaders
       );
       setBoardroom(result);
@@ -225,4 +225,4 @@ const EditBoardroom = () => {
   );
 };
 
-export default EditBoardroom;
+export default EditVenue;

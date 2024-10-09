@@ -53,7 +53,7 @@ const EditMeeting = () => {
     };
     try {
       const result = await getData(
-        `${Config.API_URL}/meeting/${params.id}`,
+        `${Config.API_URL}/meetings/${params.id}`,
         customHeaders
       );
       setMeeting(result);
