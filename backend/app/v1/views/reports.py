@@ -1,7 +1,8 @@
-from flask import Blueprint, jsonify, send_file
+from flask import Blueprint, send_file
 from utils import generate_excel_file, generate_pdf_file
 from ..models import Attendee, Meeting
-
+from utils.exception import DatabaseException
+from utils.responses import response
 
 reports_blueprint = Blueprint("reports_blueprint", __name__)
 
@@ -15,8 +16,8 @@ def generate_excel_reports(id):
             file,
             mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
-    except Exception as e:
-        return jsonify({"msg": f"Error occurred: {str(e)}"}), 500
+    except DatabaseException as e:
+        return response("Something went wrong, " + str(e), 400)
 
 
 @reports_blueprint.route("/api/v1/reports/pdf/<int:id>", methods=["GET"])
@@ -29,5 +30,5 @@ def generate_pdf_reports(id):
             file,
             mimetype="application/pdf",
         )
-    except Exception as e:
-        return jsonify({"msg": f"Error occurred: {str(e)}"}), 500
+    except DatabaseException as e:
+        return response("Something went wrong, " + str(e), 400)
