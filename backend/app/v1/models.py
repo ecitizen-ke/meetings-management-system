@@ -13,6 +13,8 @@ class Organization:
                 "INSERT INTO organizations (name, description) VALUES (%s, %s)",
                 (name, description),
             )
+            if self.db.insert_success():
+                self.db.commit()
         except Exception as e:
             self.db.rollback()
             return e
@@ -39,6 +41,8 @@ class Boardroom:
                 "INSERT INTO boardrooms (name, capacity, location, description) VALUES (%s, %s, %s, %s)",
                 (name, capacity, location, description),
             )
+            if self.db.insert_success():
+                self.db.commit()
         except Exception as e:
             self.db.rollback()
             return e
@@ -73,6 +77,8 @@ class Resource:
                 "INSERT INTO resources (name, description, quantity) VALUES (%s, %s, %s)",
                 (name, description, quantity),
             )
+            if self.db.insert_success():
+                self.db.commit()
         except Exception as e:
             self.db.rollback()
             return e
@@ -101,10 +107,10 @@ class Meeting:
         end_time,
         boardroom_id,
         organization_id,
-        # resources_id,
         location,
     ):
         try:
+
             self.db.insert(
                 "INSERT INTO meetings (title, description, meeting_date, start_time, end_time, boardroom_id, organization_id, location) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
                 (
@@ -115,10 +121,13 @@ class Meeting:
                     end_time,
                     boardroom_id,
                     organization_id,
-                    # resources_id,
                     location,
                 ),
             )
+
+            if self.db.insert_success():
+                self.db.commit()
+
         except Exception as e:
             self.db.rollback()
             return e
@@ -128,6 +137,7 @@ class Meeting:
     def get_all(self):
         try:
             meetings = self.db.fetchmany("SELECT * FROM meetings")
+
             for meeting in meetings:
                 meeting["start_time"] = str(meeting["start_time"])
                 meeting["end_time"] = str(meeting["end_time"])
@@ -202,6 +212,8 @@ class Attendee:
             statement = "INSERT INTO attendees (first_name, last_name, organization, designation, email, phone,meeting_id)VALUES (%s, %s, %s, %s, %s, %s, %s)"
             data = (first_name, last_name, organization, designation, email, phone, meeting_id)
             self.db.insert(statement, data)
+            if self.db.insert_success():
+                self.db.commit()
         except Exception as e:
             self.db.rollback()
             return e
@@ -243,6 +255,8 @@ class Role:
             statement = "INSERT INTO roles (name, description)VALUES (%s, %s)"
             data = (name, description)
             self.db.insert(statement, data)
+            if self.db.insert_success():
+                self.db.commit()
         except Exception:
             self.db.rollback()
         finally:
@@ -268,6 +282,8 @@ class User:
                 "INSERT INTO users (first_name, last_name, organization, designation, email, phone, password) VALUES (%s, %s, %s, %s, %s, %s, %s)",
                 (first_name, last_name, organization, designation, email, phone, password),
             )
+            if self.db.insert_success():
+                self.db.commit()
         except Exception as e:
             self.db.rollback()
             return e
