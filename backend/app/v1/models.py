@@ -352,7 +352,7 @@ class Report:
                 meetings_status["complete"] += 1
                 # Meeting().update_status(meeting["id"], "complete")
             elif meeting_date == current_date:
-                if start_date_time <= current_date <= end_date_time:
+                if start_date_time <= current_date_time <= end_date_time:
                     meetings_status["ongoing"] += 1
                     # Meeting().update_status(meeting["id"], "ongoing")
                 elif current_date_time < start_date_time:
