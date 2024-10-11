@@ -4,7 +4,7 @@ import {
   LoginRounded,
   Visibility,
   VisibilityOff,
-} from "@mui/icons-material";
+} from '@mui/icons-material';
 import {
   Button,
   Card,
@@ -13,18 +13,18 @@ import {
   Link,
   TextField,
   Typography,
-} from "@mui/material";
-import { Link as RouterLink } from "react-router-dom";
-import React, { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { useDispatch, useSelector } from "react-redux";
-import { login } from "../../redux/features/auth/authSlice";
-import logo from "../../assets/logo.svg";
-import { useNavigate } from "react-router";
-import Notification from "../../components/Notification";
-import { handleApiError } from "../../utils/errorHandler";
-import { postData } from "../../utils/api";
-import { Config } from "../../Config";
+} from '@mui/material';
+import { Link as RouterLink } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { useDispatch, useSelector } from 'react-redux';
+import { login } from '../../redux/features/auth/authSlice';
+import logo from '../../assets/logo.svg';
+import { useNavigate } from 'react-router';
+import Notification from '../../components/Notification';
+import { handleApiError } from '../../utils/errorHandler';
+import { postData } from '../../utils/api';
+import { Config } from '../../Config';
 
 const Login = () => {
   const {
@@ -41,10 +41,10 @@ const Login = () => {
   const auth = useSelector((state) => state.auth);
   useEffect(() => {
     const isLoggedIn = auth.isLoggedIn;
-    const authData = localStorage.getItem("user");
+    const authData = localStorage.getItem('user');
     if (isLoggedIn || authData) {
       // Redirect to dashboard or home page
-      navigate("/dashboard");
+      navigate('/dashboard');
     }
   });
 
@@ -58,29 +58,31 @@ const Login = () => {
         email: e.email,
         password: e.password,
       };
-      const result = await postData(`${Config.API_URL}/auth/login`, user);
+      const {
+        data: { email, first_name, last_name },
+      } = await postData(`${Config.API_URL}/auth/login`, user);
       const authData = {
         auth: {
-          email: result.user.email,
-          name: `${result.user.first_name} ${result.user.last_name}`,
+          email,
+          name: `${first_name} ${last_name}`,
         },
         isLoggedIn: true,
       };
-      localStorage.setItem("user", JSON.stringify(authData));
+      localStorage.setItem('user', JSON.stringify(authData));
       dispatch(login(authData));
     } catch (error) {
       handleApiError(error, dispatch);
     }
   };
   return (
-    <div className="login-page">
-      <div className="login-form">
+    <div className='login-page'>
+      <div className='login-form'>
         <div>
           <div
             style={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
               marginBottom: 20,
             }}
           >
@@ -88,40 +90,40 @@ const Login = () => {
               style={{
                 maxHeight: 55,
               }}
-              className="logo"
+              className='logo'
               src={logo}
-              alt="Logo"
+              alt='Logo'
             />
           </div>
           <br />
           <div
             style={{
-              textAlign: "center",
+              textAlign: 'center',
             }}
-            className="login-title"
+            className='login-title'
           >
             <h4>Login</h4>
 
-            <h3 className="login-subtitle"> Meetings Management System</h3>
+            <h3 className='login-subtitle'> Meetings Management System</h3>
             <br />
             <Notification />
           </div>
 
-          <div className="login-area">
-            <form noValidate onSubmit={handleSubmit(onSubmit)} method="post">
-              <div className="form-control">
+          <div className='login-area'>
+            <form noValidate onSubmit={handleSubmit(onSubmit)} method='post'>
+              <div className='form-control'>
                 <TextField
                   fullWidth={true}
-                  id="outlined-basic"
-                  label="Email Address"
-                  variant="outlined"
-                  placeholder="Enter your email address"
-                  type="email"
-                  {...register("email", {
-                    required: "This field is required",
+                  id='outlined-basic'
+                  label='Email Address'
+                  variant='outlined'
+                  placeholder='Enter your email address'
+                  type='email'
+                  {...register('email', {
+                    required: 'This field is required',
                     pattern: {
                       value: /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/,
-                      message: "Please enter a valid email address",
+                      message: 'Please enter a valid email address',
                     },
                   })}
                   error={errors.email && true}
@@ -129,45 +131,45 @@ const Login = () => {
                 {errors.email && (
                   <span
                     style={{
-                      color: "crimson",
+                      color: 'crimson',
                     }}
                   >
                     {errors.email.message}
                   </span>
                 )}
               </div>
-              <div className="form-control">
+              <div className='form-control'>
                 <TextField
                   InputProps={{
                     endAdornment: (
-                      <InputAdornment position="end">
+                      <InputAdornment position='end'>
                         <IconButton
                           onClick={handleClickShowPassword}
-                          aria-label="Show Password"
+                          aria-label='Show Password'
                         >
                           <Typography
                             style={{
                               fontSize: 14,
                             }}
-                            variant="h6"
+                            variant='h6'
                           >
-                            {!showPassword ? "Show Password" : "Hide Password"}
+                            {!showPassword ? 'Show Password' : 'Hide Password'}
                           </Typography>
                         </IconButton>
                       </InputAdornment>
                     ),
                   }}
                   fullWidth={true}
-                  id="outlined"
-                  label="Password"
-                  variant="outlined"
-                  placeholder="Password"
-                  type={!showPassword ? "password" : "text"}
-                  {...register("password", {
-                    required: "This field is required",
+                  id='outlined'
+                  label='Password'
+                  variant='outlined'
+                  placeholder='Password'
+                  type={!showPassword ? 'password' : 'text'}
+                  {...register('password', {
+                    required: 'This field is required',
                     minLength: {
                       value: 6,
-                      message: "Password must be at least 6 characters long",
+                      message: 'Password must be at least 6 characters long',
                     },
                   })}
                   error={errors.password && true}
@@ -175,7 +177,7 @@ const Login = () => {
                 {errors.password && (
                   <span
                     style={{
-                      color: "crimson",
+                      color: 'crimson',
                     }}
                   >
                     {errors.password.message}
@@ -183,12 +185,12 @@ const Login = () => {
                 )}
               </div>
               <br />
-              <div className="d-flex justify-content-between">
+              <div className='d-flex justify-content-between'>
                 <div>
                   <Link
-                    variant="secondary"
+                    variant='secondary'
                     component={RouterLink}
-                    underline="none"
+                    underline='none'
                     to={`/forgot-password`}
                   >
                     Forgot Password ?
@@ -201,23 +203,23 @@ const Login = () => {
               <Button
                 disabled={isSubmitting}
                 fullWidth={true}
-                variant="contained"
-                color="primary"
-                type="submit"
-                size="large"
+                variant='contained'
+                color='primary'
+                type='submit'
+                size='large'
                 style={{
-                  borderRadius: "9999px",
+                  borderRadius: '9999px',
                 }}
               >
-                {isSubmitting ? "Signing you in" : "Sign In"}
+                {isSubmitting ? 'Signing you in' : 'Sign In'}
               </Button>
               <br />
               <br />
-              <div className="text-center">
+              <div className='text-center'>
                 <Link
-                  variant="secondary"
+                  variant='secondary'
                   component={RouterLink}
-                  underline="none"
+                  underline='none'
                   to={`/register`}
                 >
                   Signup
