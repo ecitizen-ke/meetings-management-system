@@ -8,17 +8,17 @@ import {
   Snackbar,
   TextField,
   Typography,
-} from "@mui/material";
-import React, { useEffect, useState } from "react";
-import Notification from "../components/Notification";
-import { Add, Edit } from "@mui/icons-material";
-import { useForm } from "react-hook-form";
-import { DataGrid } from "@mui/x-data-grid";
-import Swal from "sweetalert2";
-import { getData, postData } from "../utils/api";
-import { Config } from "../Config";
-import { handleApiError } from "../utils/errorHandler";
-import { useDispatch } from "react-redux";
+} from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import Notification from '../components/Notification';
+import { Add, Edit } from '@mui/icons-material';
+import { useForm } from 'react-hook-form';
+import { DataGrid } from '@mui/x-data-grid';
+import Swal from 'sweetalert2';
+import { getData, postData } from '../utils/api';
+import { Config } from '../Config';
+import { handleApiError } from '../utils/errorHandler';
+import { useDispatch } from 'react-redux';
 
 const Organizations = () => {
   const [organizations, setOrganizations] = useState([]);
@@ -35,18 +35,18 @@ const Organizations = () => {
     formState: { errors, isSubmitting },
   } = useForm();
   const style = {
-    position: "absolute",
-    top: "50%",
-    left: "50%",
-    transform: "translate(-50%, -50%)",
-    width: "45%",
-    bgcolor: "background.paper",
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: '45%',
+    bgcolor: 'background.paper',
     boxShadow: 24,
     p: 4,
   };
   const customHeaders = {
-    Authorization: "Bearer xxxxxx",
-    "Content-Type": "application/json",
+    Authorization: 'Bearer xxxxxx',
+    'Content-Type': 'application/json',
   };
 
   useEffect(() => {
@@ -55,12 +55,11 @@ const Organizations = () => {
 
   const fetchOrganizations = async () => {
     try {
-      const result = await getData(
+      const { data } = await getData(
         `${Config.API_URL}/organizations`,
         customHeaders
       );
-      setOrganizations(result);
-      console.log(result);
+      setOrganizations(data);
     } catch (error) {
       handleApiError(error, dispatch);
     }
@@ -71,13 +70,13 @@ const Organizations = () => {
   };
   const handleDelete = (id) => {
     Swal.fire({
-      title: "Are you sure?",
+      title: 'Are you sure?',
       text: "You won't be able to revert this!",
-      icon: "warning",
+      icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: "#398e3d",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Yes, delete it!",
+      confirmButtonColor: '#398e3d',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, delete it!',
     }).then((result) => {
       if (result.isConfirmed) {
       }
@@ -94,14 +93,14 @@ const Organizations = () => {
       reset();
       setOpenToast(true);
       fetchOrganizations();
-      showMessage(result.msg, "success", dispatch);
+      showMessage(result.message, 'success', dispatch);
     } catch (error) {
       handleApiError(error, dispatch);
     }
   };
 
   const handleToastClose = (event, reason) => {
-    if (reason === "clickaway") {
+    if (reason === 'clickaway') {
       return;
     }
 
@@ -111,12 +110,12 @@ const Organizations = () => {
   //   columns
 
   const columns = [
-    { field: "id", headerName: "#", width: 70 },
-    { field: "name", headerName: "Name", width: 350 },
-    { field: "description", headerName: "Description", width: 400 },
+    { field: 'id', headerName: '#', width: 70 },
+    { field: 'name', headerName: 'Name', width: 350 },
+    { field: 'description', headerName: 'Description', width: 400 },
     {
-      field: "actions",
-      headerName: "",
+      field: 'actions',
+      headerName: '',
       width: 350,
       sortable: false,
       filterable: false,
@@ -124,9 +123,9 @@ const Organizations = () => {
         <>
           <div>
             <Button
-              variant="contained"
-              color="primary"
-              size="small"
+              variant='contained'
+              color='primary'
+              size='small'
               style={{ marginRight: 8 }}
               onClick={() => handleEdit(params.row)}
             >
@@ -135,9 +134,9 @@ const Organizations = () => {
 
             <Button
               style={{ marginRight: 8 }}
-              variant="contained"
-              color="secondary"
-              size="small"
+              variant='contained'
+              color='secondary'
+              size='small'
               onClick={() => handleDelete(params.row)}
             >
               Delete
@@ -150,31 +149,31 @@ const Organizations = () => {
 
   return (
     <>
-      <div className="meetings-header">
+      <div className='meetings-header'>
         <div>
           <h3>
             Organizations &nbsp;
             <Badge
               max={10}
               badgeContent={organizations.length}
-              color="secondary"
+              color='secondary'
             ></Badge>
           </h3>
         </div>
 
         <div
           style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
           }}
         >
           <div>
             <Button
               onClick={handleOpen}
-              variant="contained"
+              variant='contained'
               endIcon={<Add />}
-              color="secondary"
+              color='secondary'
             >
               Add Organization
             </Button>
@@ -182,14 +181,14 @@ const Organizations = () => {
         </div>
       </div>
       <br />
-      <Divider color="" />
+      <Divider color='' />
       <br />
       <Notification />
       <br />
 
       {/* List of organizations  */}
 
-      <div style={{ width: "100%", marginTop: "35px" }}>
+      <div style={{ width: '100%', marginTop: '35px' }}>
         <DataGrid
           rows={organizations}
           columns={columns}
@@ -207,8 +206,8 @@ const Organizations = () => {
       <Modal
         open={open}
         onClose={handleClose}
-        aria-labelledby="modal-modal-title"
-        aria-describedby="modal-modal-description"
+        aria-labelledby='modal-modal-title'
+        aria-describedby='modal-modal-description'
       >
         <Box sx={style}>
           <Box
@@ -222,9 +221,9 @@ const Organizations = () => {
             </div>
             <div>
               <Button
-                variant="contained"
+                variant='contained'
                 onClick={handleClose}
-                color="secondary"
+                color='secondary'
               >
                 Close
               </Button>
@@ -234,29 +233,29 @@ const Organizations = () => {
           <Divider />
           <br />
           <br />
-          <form onSubmit={handleSubmit(onSubmit)} action="" method="post">
-            <Box className="my-2">
+          <form onSubmit={handleSubmit(onSubmit)} action='' method='post'>
+            <Box className='my-2'>
               <TextField
                 InputProps={{
                   startAdornment: (
-                    <InputAdornment position="start">
+                    <InputAdornment position='start'>
                       <Edit />
                     </InputAdornment>
                   ),
                 }}
                 fullWidth={true}
-                id="outlined-basic"
-                label="Name"
-                variant="outlined"
-                {...register("name", {
-                  required: "This field is required",
+                id='outlined-basic'
+                label='Name'
+                variant='outlined'
+                {...register('name', {
+                  required: 'This field is required',
                 })}
                 error={errors.name && true}
               />
               {errors.name && (
                 <span
                   style={{
-                    color: "crimson",
+                    color: 'crimson',
                   }}
                 >
                   {errors.name.message}
@@ -270,18 +269,18 @@ const Organizations = () => {
             <TextField
               multiline={true}
               minRows={5}
-              label="Description"
-              variant="outlined"
+              label='Description'
+              variant='outlined'
               fullWidth={true}
-              {...register("description", {
-                required: "This field is required",
+              {...register('description', {
+                required: 'This field is required',
               })}
               error={errors.description && true}
             />
             {errors.description && (
               <span
                 style={{
-                  color: "crimson",
+                  color: 'crimson',
                 }}
               >
                 {errors.description.message}
@@ -293,11 +292,11 @@ const Organizations = () => {
             <Button
               disabled={isSubmitting}
               fullWidth={true}
-              variant="contained"
-              color="primary"
-              type="submit"
+              variant='contained'
+              color='primary'
+              type='submit'
             >
-              {isSubmitting ? "Please wait ..." : "Save"}
+              {isSubmitting ? 'Please wait ...' : 'Save'}
             </Button>
           </form>
         </Box>
@@ -309,7 +308,7 @@ const Organizations = () => {
         open={openToast}
         autoHideDuration={6000}
         onClose={handleToastClose}
-        message="Organization added successfully"
+        message='Organization added successfully'
       />
     </>
   );

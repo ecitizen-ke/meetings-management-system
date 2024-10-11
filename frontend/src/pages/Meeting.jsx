@@ -6,7 +6,7 @@ import {
   Edit,
   PieChart,
   QrCode,
-} from "@mui/icons-material";
+} from '@mui/icons-material';
 import {
   Badge,
   Box,
@@ -24,22 +24,22 @@ import {
   Select,
   TextField,
   Typography,
-} from "@mui/material";
-import { DataGrid } from "@mui/x-data-grid";
-import React, { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import Snackbar from "@mui/material/Snackbar";
-import { Config } from "../Config";
-import { useDispatch } from "react-redux";
-import { setMeetingDetail, setQrLink } from "../redux/features/qr/Qr";
-import { useNavigate } from "react-router";
-import moment from "moment";
-import { deleteData, getData, postData } from "../utils/api";
-import Swal from "sweetalert2";
-import Notification from "../components/Notification";
-import { handleApiError } from "../utils/errorHandler";
-import { showMessage } from "../utils/helpers";
-import { Link } from "react-router-dom";
+} from '@mui/material';
+import { DataGrid } from '@mui/x-data-grid';
+import React, { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import Snackbar from '@mui/material/Snackbar';
+import { Config } from '../Config';
+import { useDispatch } from 'react-redux';
+import { setMeetingDetail, setQrLink } from '../redux/features/qr/Qr';
+import { useNavigate } from 'react-router';
+import moment from 'moment';
+import { deleteData, getData, postData } from '../utils/api';
+import Swal from 'sweetalert2';
+import Notification from '../components/Notification';
+import { handleApiError } from '../utils/errorHandler';
+import { showMessage } from '../utils/helpers';
+import { Link } from 'react-router-dom';
 
 let count = 0;
 
@@ -57,8 +57,8 @@ const Meeting = () => {
 
   const [anchorEl, setAnchorEl] = React.useState(null);
   const customHeaders = {
-    Authorization: "Bearer xxxxxx",
-    "Content-Type": "application/json",
+    Authorization: 'Bearer xxxxxx',
+    'Content-Type': 'application/json',
   };
 
   const {
@@ -77,11 +77,11 @@ const Meeting = () => {
 
   const fetchOrganizations = async () => {
     try {
-      const result = await getData(
+      const { data } = await getData(
         `${Config.API_URL}/organizations`,
         customHeaders
       );
-      setOrganizations(result);
+      setOrganizations(data);
     } catch (error) {
       handleApiError(error, dispatch);
     }
@@ -89,11 +89,11 @@ const Meeting = () => {
 
   const fetchBoardrooms = async () => {
     try {
-      const result = await getData(
+      const { data } = await getData(
         `${Config.API_URL}/boardrooms`,
         customHeaders
       );
-      setBoardrooms(result);
+      setBoardrooms(data);
     } catch (error) {
       handleApiError(error, dispatch);
     }
@@ -101,41 +101,43 @@ const Meeting = () => {
 
   const fetchMeetings = async () => {
     try {
-      const result = await getData(`${Config.API_URL}/meetings`, customHeaders);
-      console.log(result);
-      setMeetings(result);
+      const { data } = await getData(
+        `${Config.API_URL}/meetings`,
+        customHeaders
+      );
+      setMeetings(data);
     } catch (error) {
       handleApiError(error, dispatch);
     }
   };
   const style = {
-    position: "absolute",
-    top: "50%",
-    left: "50%",
-    transform: "translate(-50%, -50%)",
-    width: "45%",
-    bgcolor: "background.paper",
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: '45%',
+    bgcolor: 'background.paper',
     boxShadow: 24,
     p: 4,
   };
 
   // Navigate to qr page
   const navigateToQrPage = (data) => {
-    sessionStorage.setItem("meeting", JSON.stringify(data.row));
+    sessionStorage.setItem('meeting', JSON.stringify(data.row));
 
     dispatch(
       setMeetingDetail({
         meeting: data.row,
       })
     );
-    navigate("/attendance/" + data.row.id);
+    navigate('/attendance/' + data.row.id);
   };
 
   // create a meeting
   const onSubmit = async (data) => {
-    data["department_id"] = 1; //todo:
-    data["start_time"] = moment(data.start_time, "HH:mm:ss").format("HH:mm:ss");
-    data["end_time"] = moment(data.end_time, "HH:mm:ss").format("HH:mm:ss");
+    data['department_id'] = 1; //todo:
+    data['start_time'] = moment(data.start_time, 'HH:mm:ss').format('HH:mm:ss');
+    data['end_time'] = moment(data.end_time, 'HH:mm:ss').format('HH:mm:ss');
     console.log(data);
     try {
       const result = await postData(
@@ -147,7 +149,7 @@ const Meeting = () => {
       reset();
       setOpenToast(true);
       fetchMeetings();
-      showMessage(result.msg, "success", dispatch);
+      showMessage(result.message, 'success', dispatch);
     } catch (error) {
       setOpen(false);
       handleApiError(error, dispatch);
@@ -157,20 +159,20 @@ const Meeting = () => {
   // delete a meeting
   const handleDelete = (id) => {
     Swal.fire({
-      title: "Are you sure?",
+      title: 'Are you sure?',
       text: "You won't be able to revert this!",
-      icon: "warning",
+      icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: "#398e3d",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Yes",
+      confirmButtonColor: '#398e3d',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes',
     }).then((result) => {
       if (result.isConfirmed) {
         deleteData(`${Config.API_URL}/meetings/${id}`, customHeaders)
           .then((result) => {
             setOpenToast(true);
             fetchMeetings();
-            showMessage(result.msg, "success", dispatch);
+            showMessage(result.message, 'success', dispatch);
           })
           .catch((error) => {
             handleApiError(error, dispatch);
@@ -185,7 +187,7 @@ const Meeting = () => {
   };
   // snackbar close
   const handleToastClose = (event, reason) => {
-    if (reason === "clickaway") {
+    if (reason === 'clickaway') {
       return;
     }
 
@@ -194,41 +196,41 @@ const Meeting = () => {
 
   const columns = [
     {
-      field: "id",
-      headerName: "#",
+      field: 'id',
+      headerName: '#',
       width: 70,
     },
-    { field: "title", headerName: "Title", width: 220 },
-    { field: "location", headerName: "Location", width: 220 },
-    { field: "boardroom_name", headerName: "Venue", width: 220 },
-    { field: "description", headerName: "Description", width: 220 },
+    { field: 'title', headerName: 'Title', width: 220 },
+    { field: 'location', headerName: 'Location', width: 220 },
+    { field: 'boardroom_name', headerName: 'Venue', width: 220 },
+    { field: 'description', headerName: 'Description', width: 220 },
     {
-      field: "meeting_date",
-      headerName: "Meeting Date",
+      field: 'meeting_date',
+      headerName: 'Meeting Date',
       width: 220,
       renderCell: (params) => (
-        <div>{moment(params.row.meeting_date).format("MMMM D, YYYY")}</div>
+        <div>{moment(params.row.meeting_date).format('MMMM D, YYYY')}</div>
       ),
     },
     {
-      field: "start_time",
-      headerName: "Start Time",
+      field: 'start_time',
+      headerName: 'Start Time',
       width: 130,
       renderCell: (params) => (
-        <div>{moment(params.row.start_time, "HH:mm:ss").format("HH:mm A")}</div>
+        <div>{moment(params.row.start_time, 'HH:mm:ss').format('HH:mm A')}</div>
       ),
     },
     {
-      field: "end_time",
-      headerName: "End Time",
+      field: 'end_time',
+      headerName: 'End Time',
       width: 130,
       renderCell: (params) => (
-        <div>{moment(params.row.end_time, "HH:mm:ss").format("HH:mm A")}</div>
+        <div>{moment(params.row.end_time, 'HH:mm:ss').format('HH:mm A')}</div>
       ),
     },
     {
-      field: "actions",
-      headerName: "",
+      field: 'actions',
+      headerName: '',
       width: 430,
       sortable: false,
       filterable: false,
@@ -236,9 +238,9 @@ const Meeting = () => {
         <>
           <div>
             <Button
-              variant="contained"
-              color="primary"
-              size="small"
+              variant='contained'
+              color='primary'
+              size='small'
               style={{ marginRight: 8 }}
               onClick={() => handleEdit(params.row.id)}
             >
@@ -247,9 +249,9 @@ const Meeting = () => {
 
             <Button
               style={{ marginRight: 8 }}
-              variant="contained"
-              color="secondary"
-              size="small"
+              variant='contained'
+              color='secondary'
+              size='small'
               onClick={() => handleDelete(params.row.id)}
             >
               Delete
@@ -257,22 +259,22 @@ const Meeting = () => {
 
             <Button
               onClick={() => navigateToQrPage(params)}
-              variant="contained"
-              color="warning"
+              variant='contained'
+              color='warning'
               style={{ marginRight: 8 }}
-              size="small"
+              size='small'
               disabled={moment(params.row.meeting_date).isBefore(
                 moment(),
-                "day"
+                'day'
               )}
             >
               Generate QR
             </Button>
             <Button
-              onClick={() => navigate("/dashboard/attendees/" + params.row.id)}
-              variant="contained"
-              color="info"
-              size="small"
+              onClick={() => navigate('/dashboard/attendees/' + params.row.id)}
+              variant='contained'
+              color='info'
+              size='small'
             >
               View Attendees
             </Button>
@@ -284,32 +286,32 @@ const Meeting = () => {
 
   return (
     <>
-      <div className="meetings-header">
+      <div className='meetings-header'>
         <div>
           <h3>
-            Meetings &nbsp;{" "}
+            Meetings &nbsp;{' '}
             <Badge
               max={10}
               badgeContent={meetings.length}
-              color="secondary"
+              color='secondary'
             ></Badge>
           </h3>
         </div>
 
         <div
           style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
           }}
         >
           <div>
-            {" "}
+            {' '}
             <Button
               onClick={handleOpen}
-              variant="contained"
+              variant='contained'
               endIcon={<Add />}
-              color="secondary"
+              color='secondary'
             >
               Add New Meeting
             </Button>
@@ -319,7 +321,7 @@ const Meeting = () => {
       <br />
       <Notification />
       <br />
-      <div style={{ width: "100%", marginTop: "35px" }}>
+      <div style={{ width: '100%', marginTop: '35px' }}>
         <DataGrid
           rows={meetings}
           columns={columns}
@@ -337,8 +339,8 @@ const Meeting = () => {
       <Modal
         open={open}
         onClose={handleClose}
-        aria-labelledby="modal-modal-title"
-        aria-describedby="modal-modal-description"
+        aria-labelledby='modal-modal-title'
+        aria-describedby='modal-modal-description'
       >
         <Box sx={style}>
           <Box
@@ -352,9 +354,9 @@ const Meeting = () => {
             </div>
             <div>
               <Button
-                variant="contained"
+                variant='contained'
                 onClick={handleClose}
-                color="secondary"
+                color='secondary'
               >
                 Close
               </Button>
@@ -363,29 +365,29 @@ const Meeting = () => {
           <Divider />
           <br />
           <br />
-          <form onSubmit={handleSubmit(onSubmit)} action="" method="post">
-            <Box className="my-2">
+          <form onSubmit={handleSubmit(onSubmit)} action='' method='post'>
+            <Box className='my-2'>
               <TextField
                 InputProps={{
                   startAdornment: (
-                    <InputAdornment position="start">
+                    <InputAdornment position='start'>
                       <Edit />
                     </InputAdornment>
                   ),
                 }}
                 fullWidth={true}
-                id="outlined-basic"
-                label="Meeting Title"
-                variant="outlined"
-                {...register("title", {
-                  required: "This field is required",
+                id='outlined-basic'
+                label='Meeting Title'
+                variant='outlined'
+                {...register('title', {
+                  required: 'This field is required',
                 })}
                 error={errors.title && true}
               />
               {errors.title && (
                 <span
                   style={{
-                    color: "crimson",
+                    color: 'crimson',
                   }}
                 >
                   {errors.title.message}
@@ -393,22 +395,21 @@ const Meeting = () => {
               )}
               <br />
               <br />
-              <br />
               <TextField
                 multiline={true}
                 minRows={5}
-                label="Meeting Description"
-                variant="outlined"
+                label='Meeting Description'
+                variant='outlined'
                 fullWidth={true}
-                {...register("description", {
-                  required: "This field is required",
+                {...register('description', {
+                  required: 'This field is required',
                 })}
                 error={errors.description && true}
               />
               {errors.description && (
                 <span
                   style={{
-                    color: "crimson",
+                    color: 'crimson',
                   }}
                 >
                   {errors.description.message}
@@ -416,25 +417,23 @@ const Meeting = () => {
               )}
               <br />
               <br />
-              <br />
-
               <Grid container spacing={2}>
                 <Grid item md={4} xs={12}>
                   <TextField
-                    type="date"
-                    label="Meeting Date"
-                    variant="outlined"
+                    type='date'
+                    label='Meeting Date'
+                    variant='outlined'
                     fullWidth={true}
                     focused
-                    {...register("meeting_date", {
-                      required: "This is a required field",
+                    {...register('meeting_date', {
+                      required: 'This is a required field',
                     })}
                     error={errors.meeting_date && true}
                   />
                   {errors.meeting_date && (
                     <span
                       style={{
-                        color: "crimson",
+                        color: 'crimson',
                       }}
                     >
                       {errors.meeting_date.message}
@@ -443,20 +442,20 @@ const Meeting = () => {
                 </Grid>
                 <Grid item md={4} xs={12}>
                   <TextField
-                    type="time"
-                    label="Start Time"
-                    variant="outlined"
+                    type='time'
+                    label='Start Time'
+                    variant='outlined'
                     fullWidth={true}
                     focused
-                    {...register("start_time", {
-                      required: "This field is required",
+                    {...register('start_time', {
+                      required: 'This field is required',
                     })}
                     error={errors.start_time && true}
                   />
                   {errors.start_time && (
                     <span
                       style={{
-                        color: "crimson",
+                        color: 'crimson',
                       }}
                     >
                       {errors.start_time.message}
@@ -465,20 +464,20 @@ const Meeting = () => {
                 </Grid>
                 <Grid item md={4} xs={12}>
                   <TextField
-                    type="time"
-                    label="End Time"
-                    variant="outlined"
+                    type='time'
+                    label='End Time'
+                    variant='outlined'
                     fullWidth={true}
                     focused
-                    {...register("end_time", {
-                      required: "This field is required",
+                    {...register('end_time', {
+                      required: 'This field is required',
                     })}
                     error={errors.end_time && true}
                   />
                   {errors.end_time && (
                     <span
                       style={{
-                        color: "crimson",
+                        color: 'crimson',
                       }}
                     >
                       {errors.end_time.message}
@@ -488,18 +487,17 @@ const Meeting = () => {
               </Grid>
               <br />
               <br />
-              <br />
               <FormControl fullWidth>
-                <InputLabel id="organization-select-label">
+                <InputLabel id='organization-select-label'>
                   Organization
                 </InputLabel>
                 <Select
-                  labelId="organization-select-label"
-                  id="organization-select-label"
+                  labelId='organization-select-label'
+                  id='organization-select-label'
                   // value={age}
-                  label="Boardroom"
-                  {...register("organization_id", {
-                    required: "This field is required",
+                  label='Boardroom'
+                  {...register('organization_id', {
+                    required: 'This field is required',
                   })}
                   error={errors.organization_id && true}
                 >
@@ -511,24 +509,44 @@ const Meeting = () => {
                 </Select>
               </FormControl>
               <br />
-              <Link className="text-muted" to={`/dashboard/organizations`}>
+              <Link className='text-muted' to={`/dashboard/organizations`}>
                 <small>
                   Create Organizations here <ArrowRight />
                 </small>
               </Link>
               <br />
               <br />
+              <TextField
+                type='text'
+                label='Location'
+                variant='outlined'
+                fullWidth={true}
+                focused
+                {...register('location', {
+                  required: 'This field is required',
+                })}
+                error={errors.location && true}
+              />
+              {errors.location && (
+                <span
+                  style={{
+                    color: 'crimson',
+                  }}
+                >
+                  {errors.location.message}
+                </span>
+              )}
               <br />
-
+              <br />
               <FormControl fullWidth>
-                <InputLabel id="bordroom-select-label">Venue</InputLabel>
+                <InputLabel id='bordroom-select-label'>Venue</InputLabel>
                 <Select
-                  labelId="bordroom-select-label"
-                  id="bordroom-select-label"
+                  labelId='bordroom-select-label'
+                  id='bordroom-select-label'
                   // value={age}
-                  label="Boardroom"
-                  {...register("boardroom_id", {
-                    required: "This field is required",
+                  label='Boardroom'
+                  {...register('boardroom_id', {
+                    required: 'This field is required',
                   })}
                   error={errors.boardroom_id && true}
                 >
@@ -542,22 +560,19 @@ const Meeting = () => {
               {errors.boardroom_id && (
                 <span
                   style={{
-                    color: "crimson",
+                    color: 'crimson',
                   }}
                 >
                   {errors.boardroom_id.message}
                 </span>
               )}
               <br />
-              <Link className="text-muted" to={`/dashboard/venues`}>
+              <Link className='text-muted' to={`/dashboard/venues`}>
                 <small>Create Venues Here&nbsp;</small>
                 <ArrowRight />
               </Link>
-
               <br />
               <br />
-              <br />
-
               <Box
                 flexDirection={`row`}
                 display={`flex`}
@@ -568,11 +583,11 @@ const Meeting = () => {
                 <Button
                   disabled={isSubmitting}
                   fullWidth={true}
-                  variant="contained"
-                  color="primary"
-                  type="submit"
+                  variant='contained'
+                  color='primary'
+                  type='submit'
                 >
-                  {isSubmitting ? "Please wait ..." : "Save"}
+                  {isSubmitting ? 'Please wait ...' : 'Save'}
                 </Button>
               </Box>
             </Box>
@@ -589,7 +604,7 @@ const Meeting = () => {
         open={openToast}
         autoHideDuration={6000}
         onClose={handleToastClose}
-        message="Meeting was saved successfully"
+        message='Meeting was saved successfully'
       />
     </>
   );

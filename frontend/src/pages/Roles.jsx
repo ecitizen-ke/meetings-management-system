@@ -1,4 +1,4 @@
-import { Add, Edit } from "@mui/icons-material";
+import { Add, Edit } from '@mui/icons-material';
 import {
   Box,
   Button,
@@ -6,17 +6,17 @@ import {
   InputAdornment,
   Modal,
   TextField,
-} from "@mui/material";
-import React, { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { getData, postData } from "../utils/api";
-import { Config } from "../Config";
-import { handleApiError } from "../utils/errorHandler";
-import { useDispatch } from "react-redux";
-import { DataGrid } from "@mui/x-data-grid";
+} from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { getData, postData } from '../utils/api';
+import { Config } from '../Config';
+import { handleApiError } from '../utils/errorHandler';
+import { useDispatch } from 'react-redux';
+import { DataGrid } from '@mui/x-data-grid';
 const customHeaders = {
-  Authorization: "Bearer xxxxxx",
-  "Content-Type": "application/json",
+  Authorization: 'Bearer xxxxxx',
+  'Content-Type': 'application/json',
 };
 
 const Roles = () => {
@@ -33,12 +33,12 @@ const Roles = () => {
     formState: { errors, isSubmitting },
   } = useForm();
   const style = {
-    position: "absolute",
-    top: "50%",
-    left: "50%",
-    transform: "translate(-50%, -50%)",
-    width: "45%",
-    bgcolor: "background.paper",
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: '45%',
+    bgcolor: 'background.paper',
     boxShadow: 24,
     p: 4,
   };
@@ -61,8 +61,8 @@ const Roles = () => {
   const fetchRoles = async () => {
     // Fetch roles data from API
     try {
-      const result = await getData(`${Config.API_URL}/roles`, customHeaders);
-      setRoles(result);
+      const { data } = await getData(`${Config.API_URL}/roles`, customHeaders);
+      setRoles(data);
     } catch (error) {
       console.error(error);
     }
@@ -72,12 +72,12 @@ const Roles = () => {
   }, []);
 
   const columns = [
-    { field: "id", headerName: "#", width: 70 },
-    { field: "name", headerName: "Name", width: 220 },
-    { field: "description", headerName: "Description", width: 400 },
+    { field: 'id', headerName: '#', width: 70 },
+    { field: 'name', headerName: 'Name', width: 220 },
+    { field: 'description', headerName: 'Description', width: 400 },
     {
-      field: "actions",
-      headerName: "",
+      field: 'actions',
+      headerName: '',
       width: 350,
       sortable: false,
       filterable: false,
@@ -85,9 +85,9 @@ const Roles = () => {
         <>
           <div>
             <Button
-              variant="contained"
-              color="primary"
-              size="small"
+              variant='contained'
+              color='primary'
+              size='small'
               style={{ marginRight: 8 }}
             >
               Edit
@@ -95,9 +95,9 @@ const Roles = () => {
 
             <Button
               style={{ marginRight: 8 }}
-              variant="contained"
-              color="secondary"
-              size="small"
+              variant='contained'
+              color='secondary'
+              size='small'
             >
               Delete
             </Button>
@@ -109,25 +109,25 @@ const Roles = () => {
 
   return (
     <>
-      <div className="meetings-header">
+      <div className='meetings-header'>
         <div>
           <h3>Roles &nbsp; </h3>
         </div>
 
         <div
           style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
           }}
         >
           <div>
-            {" "}
+            {' '}
             <Button
               onClick={handleOpen}
-              variant="contained"
+              variant='contained'
               endIcon={<Add />}
-              color="secondary"
+              color='secondary'
             >
               Add New Role
             </Button>
@@ -138,7 +138,7 @@ const Roles = () => {
       <Divider />
 
       {/* Roles List */}
-      <div style={{ width: "100%", marginTop: "35px" }}>
+      <div style={{ width: '100%', marginTop: '35px' }}>
         <DataGrid
           rows={roles}
           columns={columns}
@@ -156,8 +156,8 @@ const Roles = () => {
       <Modal
         open={open}
         onClose={handleClose}
-        aria-labelledby="modal-modal-title"
-        aria-describedby="modal-modal-description"
+        aria-labelledby='modal-modal-title'
+        aria-describedby='modal-modal-description'
       >
         <Box sx={style}>
           <Box
@@ -171,9 +171,9 @@ const Roles = () => {
             </div>
             <div>
               <Button
-                variant="contained"
+                variant='contained'
                 onClick={handleClose}
-                color="secondary"
+                color='secondary'
               >
                 Close
               </Button>
@@ -184,29 +184,29 @@ const Roles = () => {
           <br />
           <br />
 
-          <form onSubmit={handleSubmit(onSubmit)} action="" method="post">
-            <Box className="my-2">
+          <form onSubmit={handleSubmit(onSubmit)} action='' method='post'>
+            <Box className='my-2'>
               <TextField
                 InputProps={{
                   startAdornment: (
-                    <InputAdornment position="start">
+                    <InputAdornment position='start'>
                       <Edit />
                     </InputAdornment>
                   ),
                 }}
                 fullWidth={true}
-                id="outlined-basic"
-                label="Name"
-                variant="outlined"
-                {...register("name", {
-                  required: "This field is required",
+                id='outlined-basic'
+                label='Name'
+                variant='outlined'
+                {...register('name', {
+                  required: 'This field is required',
                 })}
                 error={errors.name && true}
               />
               {errors.name && (
                 <span
                   style={{
-                    color: "crimson",
+                    color: 'crimson',
                   }}
                 >
                   {errors.name.message}
@@ -219,18 +219,18 @@ const Roles = () => {
             <TextField
               multiline={true}
               minRows={5}
-              label="Description"
-              variant="outlined"
+              label='Description'
+              variant='outlined'
               fullWidth={true}
-              {...register("description", {
-                required: "This field is required",
+              {...register('description', {
+                required: 'This field is required',
               })}
               error={errors.description && true}
             />
             {errors.description && (
               <span
                 style={{
-                  color: "crimson",
+                  color: 'crimson',
                 }}
               >
                 {errors.description.message}
@@ -242,11 +242,11 @@ const Roles = () => {
             <Button
               disabled={isSubmitting}
               fullWidth={true}
-              variant="contained"
-              color="primary"
-              type="submit"
+              variant='contained'
+              color='primary'
+              type='submit'
             >
-              {isSubmitting ? "Please wait ..." : "Save"}
+              {isSubmitting ? 'Please wait ...' : 'Save'}
             </Button>
           </form>
         </Box>

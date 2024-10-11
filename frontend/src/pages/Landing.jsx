@@ -1,16 +1,16 @@
-import React, { useEffect, useState } from "react";
-import "../assets/landing.css";
-import { Config } from "../Config";
-import { useParams } from "react-router";
-import moment from "moment";
-import logo from "../assets/logo.svg";
-import { useForm } from "react-hook-form";
-import { Snackbar } from "@mui/material";
-import SignPad from "../components/SignPad";
-import { useSelector } from "react-redux";
-import { handleApiError } from "../utils/errorHandler";
-import { postData } from "../utils/api";
-import Swal from "sweetalert2";
+import React, { useEffect, useState } from 'react';
+import '../assets/landing.css';
+import { Config } from '../Config';
+import { useParams } from 'react-router';
+import moment from 'moment';
+import logo from '../assets/logo.svg';
+import { useForm } from 'react-hook-form';
+import { Snackbar } from '@mui/material';
+import SignPad from '../components/SignPad';
+import { useDispatch, useSelector } from 'react-redux';
+import { handleApiError } from '../utils/errorHandler';
+import { postData } from '../utils/api';
+import Swal from 'sweetalert2';
 
 const Landing = () => {
   const { id } = useParams();
@@ -18,6 +18,7 @@ const Landing = () => {
   const [openToast, setOpenToast] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
   const sign = useSelector((state) => state.signature);
+  const dispatch = useDispatch();
 
   const {
     register,
@@ -35,27 +36,27 @@ const Landing = () => {
 
       // Check if the response is OK (status code 200-299)
       if (resp.ok) {
-        const data = await resp.json(); // Parse the response as JSON
+        const { data } = await resp.json(); // Parse the response as JSON
         console.log(data);
         setMeeting(data); // Set meeting details
       } else {
         console.error(
-          "Error fetching meeting details:",
+          'Error fetching meeting details:',
           resp.status,
           resp.statusText
         );
         // Handle non-OK response status
-        throw new Error("Failed to fetch meeting details");
+        throw new Error('Failed to fetch meeting details');
       }
     } catch (error) {
-      console.error("An error occurred:", error.message);
+      console.error('An error occurred:', error.message);
       // Handle network errors or other exceptions
       throw error;
     }
   };
 
   useEffect(() => {
-    fetchMeetingDetail().then((data) => console.log(data));
+    fetchMeetingDetail();
   }, []);
 
   const onSubmit = async (data) => {
@@ -63,12 +64,12 @@ const Landing = () => {
     if (!sign.signatureImage) {
       Swal.fire({
         // title: "Logout",
-        text: "Please ensure you have signed ",
-        icon: "warning",
+        text: 'Please ensure you have signed ',
+        icon: 'warning',
         // showCancelButton: true,
-        confirmButtonColor: "#398e3d",
+        confirmButtonColor: '#398e3d',
         // cancelButtonColor: "#d33",
-        confirmButtonText: "ok",
+        confirmButtonText: 'ok',
       }).then((result) => {
         if (result.isConfirmed) {
         }
@@ -76,20 +77,21 @@ const Landing = () => {
       return;
     }
     try {
-      data["meeting_id"] = id;
-      data["signature"] = sign.signatureImage;
+      data['meeting_id'] = id;
+      data['signature'] = sign.signatureImage;
+      console.log(data);
       const result = await postData(`${Config.API_URL}/attendees`, data, {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       });
       setOpenToast(true);
       setIsRegistered(true);
     } catch (error) {
-      handleApiError(error);
+      handleApiError(error, dispatch);
     }
   };
 
   const handleToastClose = (event, reason) => {
-    if (reason === "clickaway") {
+    if (reason === 'clickaway') {
       return;
     }
 
@@ -99,19 +101,19 @@ const Landing = () => {
   return (
     <div
       style={{
-        backgroundColor: "#efefef",
+        backgroundColor: '#efefef',
       }}
     >
-      <nav className="navbar fixed-top navbar-expand-lg shadow-sm bg-body-tertiary">
-        <div className="container">
-          <a className="navbar-brand" href="#">
-            <img src={logo} alt="logo" height="55" />
+      <nav className='navbar fixed-top navbar-expand-lg shadow-sm bg-body-tertiary'>
+        <div className='container'>
+          <a className='navbar-brand' href='#'>
+            <img src={logo} alt='logo' height='55' />
           </a>
-          <button className="navbar-toggler" type="button">
-            <span className="navbar-toggler-icon"></span>
+          <button className='navbar-toggler' type='button'>
+            <span className='navbar-toggler-icon'></span>
           </button>
-          <div className="collapse navbar-collapse" id="navbarNav">
-            <ul className="navbar-nav">
+          <div className='collapse navbar-collapse' id='navbarNav'>
+            <ul className='navbar-nav'>
               {/* <li className="nav-item">
                 <a className="nav-link active" aria-current="page" href="#">
                   Home
@@ -121,48 +123,48 @@ const Landing = () => {
           </div>
         </div>
       </nav>
-      <div className="landing-page-outer container-fluid">
-        <div className="landing-page-inner row p-3  borderd-0">
-          <div className="col-lg-3 m-2"></div>
-          <div className="registration-form card col-lg-6 m-2">
-            <div className="card-body">
-              <h3 className="text-muted">{meeting && meeting.title}</h3>
+      <div className='landing-page-outer container-fluid'>
+        <div className='landing-page-inner row p-3  borderd-0'>
+          <div className='col-lg-3 m-2'></div>
+          <div className='registration-form card col-lg-6 m-2'>
+            <div className='card-body'>
+              <h3 className='text-muted'>{meeting && meeting.title}</h3>
               <br />
-              <table className="table table-striped">
+              <table className='table table-striped'>
                 <tbody>
                   <tr>
-                    <th scope="row">Venue</th>
+                    <th scope='row'>Venue</th>
                     <td></td>
                     <td></td>
                     <td>{meeting && meeting.location}</td>
                   </tr>
                   <tr>
-                    <th scope="row">Date</th>
+                    <th scope='row'>Date</th>
                     <td></td>
                     <td></td>
                     <td>
                       {meeting &&
-                        moment(meeting.meeting_date).format("MMMM D, YYYY")}
+                        moment(meeting.meeting_date).format('MMMM D, YYYY')}
                     </td>
                   </tr>
                   <tr>
-                    <th scope="row">Time</th>
+                    <th scope='row'>Time</th>
                     <td></td>
                     <td></td>
                     <td>
                       {meeting &&
-                        moment(meeting.start_time, "HH:mm").format(
-                          "hh:mm A"
-                        )}{" "}
-                      to{" "}
+                        moment(meeting.start_time, 'HH:mm').format(
+                          'hh:mm A'
+                        )}{' '}
+                      to{' '}
                       {meeting &&
-                        moment(meeting.end_time, "HH:mm").format("hh:mm A")}
+                        moment(meeting.end_time, 'HH:mm').format('hh:mm A')}
                     </td>
                   </tr>
                 </tbody>
               </table>
               {isRegistered && (
-                <div className="alert alert-success" role="alert">
+                <div className='alert alert-success' role='alert'>
                   You have successfully registered for the meeting.
                 </div>
               )}
@@ -170,35 +172,35 @@ const Landing = () => {
                 <div>
                   <br />
                   <br />
-                  <h3 className="text-muted">Registration</h3>
+                  <h3 className='text-muted'>Registration</h3>
 
                   {/* Registration form */}
                   <form
                     noValidate
                     onSubmit={handleSubmit(onSubmit)}
-                    action=""
-                    method="post"
+                    action=''
+                    method='post'
                   >
-                    <div className="row">
-                      <div className="col-lg-6">
-                        <div className="my-3">
-                          <label htmlFor="name" className="form-label">
+                    <div className='row'>
+                      <div className='col-lg-6'>
+                        <div className='my-3'>
+                          <label htmlFor='name' className='form-label'>
                             First Name
                           </label>
                           <input
-                            type="text"
-                            className="form-control rounded-0"
-                            id="first_name"
-                            {...register("first_name", {
-                              required: "This field is required",
+                            type='text'
+                            className='form-control rounded-0'
+                            id='first_name'
+                            {...register('first_name', {
+                              required: 'This field is required',
                             })}
-                            name="first_name"
+                            name='first_name'
                             required
                           />
                           {errors.first_name && (
                             <span
                               style={{
-                                color: "crimson",
+                                color: 'crimson',
                               }}
                             >
                               {errors.first_name.message}
@@ -206,25 +208,25 @@ const Landing = () => {
                           )}
                         </div>
                       </div>
-                      <div className="col-lg-6">
-                        <div className="my-3">
-                          <label htmlFor="l_name" className="form-label">
+                      <div className='col-lg-6'>
+                        <div className='my-3'>
+                          <label htmlFor='l_name' className='form-label'>
                             Last Name
                           </label>
                           <input
-                            type="text"
-                            className="form-control rounded-0"
-                            id="l_name"
-                            name="l_name"
-                            {...register("last_name", {
-                              required: "This field is required",
+                            type='text'
+                            className='form-control rounded-0'
+                            id='l_name'
+                            name='l_name'
+                            {...register('last_name', {
+                              required: 'This field is required',
                             })}
                             required
                           />
                           {errors.last_name && (
                             <span
                               style={{
-                                color: "crimson",
+                                color: 'crimson',
                               }}
                             >
                               {errors.last_name.message}
@@ -233,43 +235,43 @@ const Landing = () => {
                         </div>
                       </div>
                     </div>
-                    <div className="my-3">
-                      <label htmlFor="email" className="form-label">
+                    <div className='my-3'>
+                      <label htmlFor='email' className='form-label'>
                         Email Address
                       </label>
                       <input
-                        type="email"
-                        className="form-control rounded-0"
-                        id="email"
-                        {...register("email", {
-                          required: "This field is required",
+                        type='email'
+                        className='form-control rounded-0'
+                        id='email'
+                        {...register('email', {
+                          required: 'This field is required',
                           pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                          message: "Please enter a valid email address",
+                          message: 'Please enter a valid email address',
                         })}
-                        name="email"
+                        name='email'
                         required
                       />
                     </div>
                     {errors.email && (
                       <span
                         style={{
-                          color: "crimson",
+                          color: 'crimson',
                         }}
                       >
                         {errors.email.message}
                       </span>
                     )}
-                    <div className="my-3">
-                      <label htmlFor="phone" className="form-label">
+                    <div className='my-3'>
+                      <label htmlFor='phone' className='form-label'>
                         Phone Number
                       </label>
                       <input
-                        type="tel"
-                        className="form-control rounded-0"
-                        id="phone"
-                        name="phone"
-                        {...register("phone", {
-                          required: "This field is required",
+                        type='tel'
+                        className='form-control rounded-0'
+                        id='phone'
+                        name='phone'
+                        {...register('phone', {
+                          required: 'This field is required',
                         })}
                         required
                       />
@@ -277,21 +279,24 @@ const Landing = () => {
                     {errors.phone && (
                       <span
                         style={{
-                          color: "crimson",
+                          color: 'crimson',
                         }}
                       >
                         {errors.phone.message}
                       </span>
                     )}
-                    <div className="my-3">
-                      <label htmlFor="organization" className="form-label">
+                    <div className='my-3'>
+                      <label htmlFor='organization' className='form-label'>
                         Organization
                       </label>
                       <input
-                        type="text"
-                        className="form-control rounded-0"
-                        id="organization"
-                        name="department"
+                        type='text'
+                        className='form-control rounded-0'
+                        id='organization'
+                        name='organization'
+                        {...register('organization', {
+                          required: 'This field is required',
+                        })}
                         required
                       />
                     </div>
@@ -319,49 +324,49 @@ const Landing = () => {
                         {errors.department.message}
                       </span>
                     )} */}
-                    <div className="my-3">
-                      <label htmlFor="designation" className="form-label">
+                    <div className='my-3'>
+                      <label htmlFor='designation' className='form-label'>
                         Designation
                       </label>
                       <input
-                        type="text"
-                        className="form-control rounded-0"
-                        id="designation"
-                        {...register("designation", {
-                          required: "This field is required",
+                        type='text'
+                        className='form-control rounded-0'
+                        id='designation'
+                        {...register('designation', {
+                          required: 'This field is required',
                         })}
-                        name="designation"
+                        name='designation'
                         required
                       />
                     </div>
                     {errors.designation && (
                       <span
                         style={{
-                          color: "crimson",
+                          color: 'crimson',
                         }}
                       >
                         {errors.designation.message}
                       </span>
                     )}
                     <div>
-                      <label htmlFor="">Sign</label>
+                      <label htmlFor=''>Sign</label>
                     </div>
                     <div
                       style={{
-                        border: "2px dotted #ccc",
+                        border: '2px dotted #ccc',
                       }}
-                      className="my-3"
+                      className='my-3'
                     >
                       <br />
                       <SignPad />
                     </div>
 
-                    <div className="my-3">
+                    <div className='my-3'>
                       <button
                         disabled={isSubmitting}
-                        className="btn btn-success w-100 rounded-0 btn-large"
+                        className='btn btn-success w-100 rounded-0 btn-large'
                       >
-                        {isSubmitting ? "Please wait ..." : "Register"}
+                        {isSubmitting ? 'Please wait ...' : 'Register'}
                       </button>
                     </div>
                   </form>
@@ -369,7 +374,7 @@ const Landing = () => {
               )}
             </div>
           </div>
-          <div className="col-lg-3"></div>
+          <div className='col-lg-3'></div>
         </div>
       </div>
 
@@ -377,7 +382,7 @@ const Landing = () => {
         open={openToast}
         autoHideDuration={6000}
         onClose={handleToastClose}
-        message="Attendance recorded successfully"
+        message='Attendance recorded successfully'
       />
     </div>
   );

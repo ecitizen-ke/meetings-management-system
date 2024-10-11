@@ -1,4 +1,4 @@
-import { Add, Edit } from "@mui/icons-material";
+import { Add, Edit } from '@mui/icons-material';
 import {
   Badge,
   Box,
@@ -7,23 +7,23 @@ import {
   InputAdornment,
   Modal,
   TextField,
-} from "@mui/material";
-import React, { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { Config } from "../Config";
-import { DataGrid } from "@mui/x-data-grid";
-import Swal from "sweetalert2";
-import { useNavigate } from "react-router";
-import { deleteData, getData, postData } from "../utils/api";
+} from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { Config } from '../Config';
+import { DataGrid } from '@mui/x-data-grid';
+import Swal from 'sweetalert2';
+import { useNavigate } from 'react-router';
+import { deleteData, getData, postData } from '../utils/api';
 import {
   hideNotification,
   showNotification,
-} from "../redux/features/notifications/notificationSlice";
-import Notification from "../components/Notification";
-import { useDispatch } from "react-redux";
+} from '../redux/features/notifications/notificationSlice';
+import Notification from '../components/Notification';
+import { useDispatch } from 'react-redux';
 const customHeaders = {
-  Authorization: "Bearer xxxxxx",
-  "Content-Type": "application/json",
+  Authorization: 'Bearer xxxxxx',
+  'Content-Type': 'application/json',
 };
 
 const Venue = () => {
@@ -43,16 +43,16 @@ const Venue = () => {
 
   const fetchBoardrooms = async () => {
     try {
-      const boardrooms = await getData(
+      const { data } = await getData(
         `${Config.API_URL}/boardrooms`,
         customHeaders
       );
-      setBoardrooms(boardrooms);
+      setBoardrooms(data);
     } catch (error) {
       dispatch(
         showNotification({
-          message: error.response.data.msg,
-          type: "error", // success, error, warning, info
+          message: error.response.data.message,
+          type: 'error', // success, error, warning, info
         })
       );
       setTimeout(() => dispatch(hideNotification()), 3000);
@@ -63,30 +63,30 @@ const Venue = () => {
     fetchBoardrooms();
   }, []);
   const style = {
-    position: "absolute",
-    top: "50%",
-    left: "50%",
-    transform: "translate(-50%, -50%)",
-    width: "45%",
-    bgcolor: "background.paper",
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: '45%',
+    bgcolor: 'background.paper',
     boxShadow: 24,
     p: 4,
   };
 
   const columns = [
-    { field: "id", headerName: "#", width: 70 },
-    { field: "name", headerName: "Name", width: 220 },
-    { field: "location", headerName: "Location", width: 220 },
-    { field: "description", headerName: "Description", width: 400 },
+    { field: 'id', headerName: '#', width: 70 },
+    { field: 'name', headerName: 'Name', width: 220 },
+    { field: 'location', headerName: 'Location', width: 220 },
+    { field: 'description', headerName: 'Description', width: 400 },
     {
-      field: "capacity",
-      headerName: "Capacity",
+      field: 'capacity',
+      headerName: 'Capacity',
       width: 130,
     },
 
     {
-      field: "actions",
-      headerName: "",
+      field: 'actions',
+      headerName: '',
       width: 350,
       sortable: false,
       filterable: false,
@@ -94,9 +94,9 @@ const Venue = () => {
         <>
           <div>
             <Button
-              variant="contained"
-              color="primary"
-              size="small"
+              variant='contained'
+              color='primary'
+              size='small'
               style={{ marginRight: 8 }}
               // onClick={() => handleEdit(params.row)}
             >
@@ -105,9 +105,9 @@ const Venue = () => {
 
             <Button
               style={{ marginRight: 8 }}
-              variant="contained"
-              color="secondary"
-              size="small"
+              variant='contained'
+              color='secondary'
+              size='small'
               // onClick={() => handleDelete(params.row)}
             >
               Delete
@@ -119,18 +119,18 @@ const Venue = () => {
   ];
 
   const handleEdit = (data) => {
-    navigate("/dashboard/venue/" + data.id);
+    navigate('/dashboard/venue/' + data.id);
   };
 
   const handleDelete = (id) => {
     Swal.fire({
-      title: "Are you sure?",
+      title: 'Are you sure?',
       text: "You won't be able to revert this!",
-      icon: "warning",
+      icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: "#398e3d",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Yes, delete it!",
+      confirmButtonColor: '#398e3d',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, delete it!',
     }).then((result) => {
       if (result.isConfirmed) {
         deleteBoardroom(id);
@@ -146,16 +146,16 @@ const Venue = () => {
       );
       dispatch(
         showNotification({
-          message: result.msg,
-          type: "success", // success, error, warning, info
+          message: result.message,
+          type: 'success', // success, error, warning, info
         })
       );
       setTimeout(() => dispatch(hideNotification()), 3000);
     } catch (error) {
       dispatch(
         showNotification({
-          message: error.response.data.msg,
-          type: "error", // success, error, warning, info
+          message: error.response.data.message,
+          type: 'error', // success, error, warning, info
         })
       );
       setTimeout(() => dispatch(hideNotification()), 3000);
@@ -172,8 +172,8 @@ const Venue = () => {
       );
       dispatch(
         showNotification({
-          message: result.msg,
-          type: "success", // success, error, warning, info
+          message: result.message,
+          type: 'success', // success, error, warning, info
         })
       );
       reset();
@@ -184,8 +184,8 @@ const Venue = () => {
     } catch (error) {
       dispatch(
         showNotification({
-          message: error.response.data.msg,
-          type: "error", // success, error, warning, info
+          message: error.response.data.message,
+          type: 'error', // success, error, warning, info
         })
       );
 
@@ -195,31 +195,31 @@ const Venue = () => {
 
   return (
     <>
-      <div className="meetings-header">
+      <div className='meetings-header'>
         <div>
           <h3>
             Venues &nbsp;
             <Badge
               max={10}
               badgeContent={boardrooms.length}
-              color="secondary"
+              color='secondary'
             ></Badge>
           </h3>
         </div>
 
         <div
           style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
           }}
         >
           <div>
             <Button
               onClick={handleOpen}
-              variant="contained"
+              variant='contained'
               endIcon={<Add />}
-              color="secondary"
+              color='secondary'
             >
               Add New Venue
             </Button>
@@ -230,7 +230,7 @@ const Venue = () => {
       <Notification />
 
       {/* Boardrooms Table */}
-      <div style={{ width: "100%", marginTop: "35px" }}>
+      <div style={{ width: '100%', marginTop: '35px' }}>
         <DataGrid
           rows={boardrooms}
           columns={columns}
@@ -249,8 +249,8 @@ const Venue = () => {
       <Modal
         open={open}
         onClose={handleClose}
-        aria-labelledby="modal-modal-title"
-        aria-describedby="modal-modal-description"
+        aria-labelledby='modal-modal-title'
+        aria-describedby='modal-modal-description'
       >
         <Box sx={style}>
           <Box
@@ -264,9 +264,9 @@ const Venue = () => {
             </div>
             <div>
               <Button
-                variant="contained"
+                variant='contained'
                 onClick={handleClose}
-                color="secondary"
+                color='secondary'
               >
                 Close
               </Button>
@@ -276,29 +276,29 @@ const Venue = () => {
           <Divider />
           <br />
           <br />
-          <form onSubmit={handleSubmit(onSubmit)} action="" method="post">
-            <Box className="my-2">
+          <form onSubmit={handleSubmit(onSubmit)} action='' method='post'>
+            <Box className='my-2'>
               <TextField
                 InputProps={{
                   startAdornment: (
-                    <InputAdornment position="start">
+                    <InputAdornment position='start'>
                       <Edit />
                     </InputAdornment>
                   ),
                 }}
                 fullWidth={true}
-                id="outlined-basic"
-                label="Name"
-                variant="outlined"
-                {...register("name", {
-                  required: "This field is required",
+                id='outlined-basic'
+                label='Name'
+                variant='outlined'
+                {...register('name', {
+                  required: 'This field is required',
                 })}
                 error={errors.name && true}
               />
               {errors.name && (
                 <span
                   style={{
-                    color: "crimson",
+                    color: 'crimson',
                   }}
                 >
                   {errors.name.message}
@@ -307,21 +307,21 @@ const Venue = () => {
             </Box>
 
             <br />
-            <Box className="my-2">
+            <Box className='my-2'>
               <TextField
                 fullWidth={true}
-                id="outlined-basic"
-                label="Capacity"
-                variant="outlined"
-                {...register("capacity", {
-                  required: "This field is required",
+                id='outlined-basic'
+                label='Capacity'
+                variant='outlined'
+                {...register('capacity', {
+                  required: 'This field is required',
                 })}
                 error={errors.capacity && true}
               />
               {errors.capacity && (
                 <span
                   style={{
-                    color: "crimson",
+                    color: 'crimson',
                   }}
                 >
                   {errors.capacity.message}
@@ -329,21 +329,21 @@ const Venue = () => {
               )}
             </Box>
             <br />
-            <Box className="my-2">
+            <Box className='my-2'>
               <TextField
                 fullWidth={true}
-                id="outlined-basic"
-                label="Location"
-                variant="outlined"
-                {...register("location", {
-                  required: "This field is required",
+                id='outlined-basic'
+                label='Location'
+                variant='outlined'
+                {...register('location', {
+                  required: 'This field is required',
                 })}
                 error={errors.location && true}
               />
               {errors.location && (
                 <span
                   style={{
-                    color: "crimson",
+                    color: 'crimson',
                   }}
                 >
                   {errors.location.message}
@@ -354,18 +354,18 @@ const Venue = () => {
             <TextField
               multiline={true}
               minRows={5}
-              label="Venue Description"
-              variant="outlined"
+              label='Venue Description'
+              variant='outlined'
               fullWidth={true}
-              {...register("description", {
-                required: "This field is required",
+              {...register('description', {
+                required: 'This field is required',
               })}
               error={errors.description && true}
             />
             {errors.description && (
               <span
                 style={{
-                  color: "crimson",
+                  color: 'crimson',
                 }}
               >
                 {errors.description.message}
@@ -376,11 +376,11 @@ const Venue = () => {
             <Button
               disabled={isSubmitting}
               fullWidth={true}
-              variant="contained"
-              color="primary"
-              type="submit"
+              variant='contained'
+              color='primary'
+              type='submit'
             >
-              {isSubmitting ? "Please wait ..." : "Save"}
+              {isSubmitting ? 'Please wait ...' : 'Save'}
             </Button>
           </form>
         </Box>
