@@ -53,8 +53,10 @@ def login():
         if not all([email, password]):
             return response("Missing required fields", 400)
 
-        if user.login(email, password):
-            return response("Login successfull!", 200)
+        result = user.login(email, password)
+
+        if result:
+            return response_with_data("OK", result, 200)
         else:
             return response("Authentication failed!", 401)
 
