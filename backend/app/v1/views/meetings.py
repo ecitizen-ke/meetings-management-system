@@ -27,7 +27,7 @@ def create():
             data.get("start_time"),
             data.get("end_time"),
             data.get("boardroom_id"),
-            data.get("department_id"),
+            data.get("organization_id"),
             resources_json,
             data.get("location"),
             data.get("longitude"),
@@ -40,19 +40,27 @@ def create():
         return jsonify (response),status_code
         # return jsonify({"msg": "Meeting added successfully"}), 201
     except Exception as e:
-        return jsonify({"msg": f"An error occurred: {str(e)}"}), 500
+        return jsonify (response),status_code
 
 
 @meetings_blueprint.route("/api/v1/meetings", methods=["GET"])
 def fetchall():
     meetings = Meeting()
-    return jsonify(meetings.get_all())
+    try:
+        response,status_code = meetings.get_all()
+        return jsonify(response),status_code
+    except Exception as e:
+        return jsonify({"msg": f"Error occurred: {str(e)}"}), 500
 
 
 @meetings_blueprint.route("/api/v1/meetings/<int:id>", methods=["GET"])
 def fetchone(id):
     meetings = Meeting()
-    return jsonify(meetings.get_by_id(id))
+    try:
+        response,status_code = meetings.get_by_id(id)
+        return jsonify(response),status_code
+    except Exception as e:
+        return jsonify({"msg": f"Error occurred: {str(e)}"}), 500
 
 
 @meetings_blueprint.route("/api/v1/meetings/<int:meeting_id>", methods=["PUT"])
@@ -68,6 +76,13 @@ def update(meeting_id):
         start_time = data["start_time"]
         end_time = data["end_time"]
         boardroom_id = data["boardroom_id"]
+        resources_id = json.dumps(data["resources_id"])
+        organization_id = data["organization_id"]
+        location = data.get("location")
+        longitude = data.get("longitude")
+        latitude = data.get("latitude")
+        county = data.get("county")
+        town = data.get("town")
 
         # Check if all necessary fields are provided
         if not all([title, description, meeting_date, start_time, end_time, boardroom_id]):
@@ -76,11 +91,10 @@ def update(meeting_id):
         if not meeting.get_by_id(meeting_id):
             return jsonify({"error": "Meeting not found"}), 404
 
-        meeting.update(
-            meeting_id, title, description, meeting_date, start_time, end_time, boardroom_id
+        response,status_code= meeting.update(
+            meeting_id, title, description, meeting_date, start_time, end_time, boardroom_id, organization_id, resources_id, location, longitude, latitude, county, town
         )
-
-        return jsonify({"message": "Meeting updated successfully"}), 200
+        return jsonify(response),status_code
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -100,8 +114,8 @@ def update_status(meeting_id):
         if not meeting.get_by_id(meeting_id):
             print(meeting.get_by_id(meeting_id))
             return jsonify({"error": "Meeting not found"}), 404
-        meeting.update_status(meeting_id, status)
-        return jsonify({"message": "Meeting status updated successfully"}), 200
+        response,status_code = meeting.update_status(meeting_id, status)
+        return jsonify(response),status_code
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -110,10 +124,10 @@ def update_status(meeting_id):
 def delete(id):
     meeting = Meeting()
     try:
-        if not meeting.get_by_id(id):
+        if meeting.get_by_id(id) is None:
             return jsonify({"error": "Meeting not found"}), 404
-        meeting.delete(id)
-        return jsonify({"msg": "Meeting deleted successfully"}), 200
+        response,status_code =  meeting.delete(id)
+        return jsonify(response),status_code
     except Exception as e:
         return jsonify({"msg": f"Error occurred: {str(e)}"}), 500
 

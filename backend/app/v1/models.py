@@ -109,14 +109,9 @@ class Meeting:
         town,
     ):
         try:
-            print("SQL Query: ", "INSERT INTO meetings ...")
-            print("Values: ", (
-                title, description, meeting_date, start_time, end_time, 
-                boardroom_id, organization_id, resources_id, location, 
-                longitude, latitude, county, town
-            ))
+            
             self.db.insert(
-                "INSERT INTO meetings (title, description, meeting_date, start_time, end_time, boardroom_id, department_id, resources_id, location, longitude,latitude,county,town) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                "INSERT INTO meetings (title, description, meeting_date, start_time, end_time, boardroom_id, organization_id, resources_id, location, longitude,latitude,county,town) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                 (
                     title,
                     description,
@@ -133,6 +128,21 @@ class Meeting:
                     town,
                 ),
             )
+            meeting_id = self.db.cursor.lastrowid
+           
+            meeting = self.db.fetchone("SELECT * FROM meetings WHERE id = %s", (meeting_id,))
+            meeting["start_time"] = str(meeting["start_time"])
+            meeting["end_time"] = str(meeting["end_time"])
+            if meeting["organization_id"]:
+                organization = self.db.fetchone(
+                    "SELECT * FROM organizations WHERE id = %s", (meeting["organization_id"],)
+                )
+                meeting["organization"] = organization
+            if meeting["boardroom_id"]:
+                boardroom = self.db.fetchone(
+                    "SELECT * FROM boardrooms WHERE id = %s", (meeting["boardroom_id"],)
+                )
+                meeting["boardroom"] = boardroom
             try:
                 location = self.db.fetchone(
                     "SELECT * FROM locations WHERE county = %s AND town = %s", (county, town)
@@ -143,8 +153,8 @@ class Meeting:
                     )
             except Exception as e:
                 print("Database error:", e)
-                
-            return {"msg": "Meeting added successfully"}, 201
+
+            return {"msg": "Meeting added successfully","data":meeting}, 201
 
         except Exception as e:
             self.db.rollback()
@@ -159,14 +169,20 @@ class Meeting:
             for meeting in meetings:
                 meeting["start_time"] = str(meeting["start_time"])
                 meeting["end_time"] = str(meeting["end_time"])
-                self.db.cursor.execute(
-                    "SELECT name FROM boardrooms WHERE id = %s", (meeting["boardroom_id"],)
-                )
-                boardroom = self.db.cursor.fetchone()
-                meeting["boardroom_name"] = boardroom["name"]
-            return meetings
+                if meeting["organization_id"]:
+                    organization = self.db.fetchone(
+                        "SELECT * FROM organizations WHERE id = %s", (meeting["organization_id"],)
+                    )
+                    meeting["organization"] = organization
+                if meeting["boardroom_id"]:
+                    boardroom = self.db.fetchone(
+                        "SELECT * FROM boardrooms WHERE id = %s", (meeting["boardroom_id"],)
+                    )
+                    meeting["boardroom"] = boardroom
+
+            return {"data": meetings, "msg": "Meetings fetched successfully"}, 200
         except Exception as e:
-            return e
+            return {"error": str(e)}, 500
         finally:
             self.db.close()
 
@@ -174,11 +190,25 @@ class Meeting:
         try:
             self.db.cursor.execute("SELECT * FROM meetings WHERE id = %s", (id,))
             meeting = self.db.cursor.fetchone()
+            if not meeting:
+                return None
+
             meeting["start_time"] = str(meeting["start_time"])
             meeting["end_time"] = str(meeting["end_time"])
-            return meeting
+
+            if meeting["organization_id"]:
+                organization = self.db.fetchone(
+                    "SELECT * FROM organizations WHERE id = %s", (meeting["organization_id"],)
+                )
+                meeting["organization"] = organization
+            if meeting["boardroom_id"]:
+                boardroom = self.db.fetchone(
+                    "SELECT * FROM boardrooms WHERE id = %s", (meeting["boardroom_id"],)
+                )
+                meeting["boardroom"] = boardroom
+            return {"data": meeting, "msg": "Meeting fetched successfully"}, 200
         except Exception as e:
-            return e
+            return {"error": str(e)}, 500
 
     def update(
         self, meeting_id, title, description, meeting_date, start_time, end_time, boardroom_id, organization_id, resources_id, location, longitude, latitude, county, town
@@ -188,20 +218,42 @@ class Meeting:
                 """
                 UPDATE meetings SET title = %s, description = %s, meeting_date = %s, start_time = %s, end_time =%s, boardroom_id = %s, organization_id = %s, resources_id = %s, location = %s, longitude = %s, latitude = %s, county = %s, town = %s
                 WHERE id = %s
-            """,
-                (title, description, meeting_date, start_time, end_time, boardroom_id, meeting_id, organization_id, resources_id, location, longitude, latitude, county, town),
+                """,
+                (title, description, meeting_date, start_time, end_time, boardroom_id, organization_id, resources_id, location, longitude, latitude, county, town, meeting_id)  
             )
             self.db.conn.commit()
-
-            check_location = self.check_location(county, town)
-            if not check_location:
-                self.db.insert(
-                    "INSERT INTO locations (county, town) VALUES (%s, %s)", (county, town)
+            try:
+                location = self.db.fetchone(
+                    "SELECT * FROM locations WHERE county = %s AND town = %s", (county, town)
                 )
+                if not location:
+                    self.db.insert(
+                        "INSERT INTO locations (county, town) VALUES (%s, %s)", (county, town)
+                    )
+            except Exception as e:
+                print("Database error:", e)
+
+            
+            meeting = self.db.fetchone("SELECT * FROM meetings WHERE id = %s", (meeting_id,))
+            meeting["start_time"] = str(meeting["start_time"])
+            meeting["end_time"] = str(meeting["end_time"])
+            if meeting["organization_id"]:
+                organization = self.db.fetchone(
+                    "SELECT * FROM organizations WHERE id = %s", (meeting["organization_id"],)
+                )
+                meeting["organization"] = organization
+            if meeting["boardroom_id"]:
+                boardroom = self.db.fetchone(
+                    "SELECT * FROM boardrooms WHERE id = %s", (meeting["boardroom_id"],)
+                )
+                meeting["boardroom"] = boardroom
+
+            return {"msg": "Meeting updated successfully","data":meeting}, 200
+        
 
         except Exception as e:
             self.db.rollback()
-            return e
+            return {"msg": f"An error occurred: {str(e)}"}, 500
 
     def update_status(self, meeting_id, status):
         try:
@@ -211,18 +263,22 @@ class Meeting:
                 (status, meeting_id),
             )
             self.db.conn.commit()
+            return {"msg": "Meeting status updated successfully"}, 200
         except Exception as e:
             self.db.rollback()
-            return e
+            return {"msg": f"An error occurred: {str(e)}"}, 500
 
     def delete(self, id):
         try:
             self.db.cursor.execute("DELETE FROM meetings WHERE id = %s", (id,))
+            if not self.db.cursor.rowcount:
+                return {"msg": "Meeting not found"}, 404
             self.db.conn.commit()
+            return {"msg": "Meeting Deleted successfully"}, 200
         except Exception as e:
             print(str(e))
             self.db.rollback()
-            return e
+            return {"msg": f"An error occurred: {str(e)}"}, 500
         finally:
             self.db.close()
 
