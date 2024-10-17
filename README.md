@@ -38,7 +38,7 @@ Create the database `your-development-db` in the host machine
 ```
 MYSQL_HOST = "localhost"
 MYSQL_USER = "root"
-MYSQL_PASSWORD = "you-password"
+MYSQL_PASSWORD = "your-password"
 MYSQL_DB = "your-development-db"
 SECRET_KEY = "your-secret-key"
 SERVER = "http://localhost:5173"
@@ -47,19 +47,18 @@ SERVER = "http://localhost:5173"
 
 `$ python3 run.py`
 
-## Version 1 API Endpoints
+## v1 API Endpoints
 
-#### Auth Endpoints
-
-| Method | Endpoint | Functionality |
+| Method | Endpoint            | Functionality |
 | ------ | ------------------------------- | ------------------------------------------- |
-| `POST` | `/api/v1/auth/register` | `User Registration:` Creates a new user |
-| `POST` | `/api/v1/attendees` | `User Authentication:` Authenticates a user |
-| `GET` | `/api/v1/boardrooms` | `Index Page:` The landing page route |
-| `GET` | `/api/v1/meetings/<int:id>` | `User Logout:` Revokes user access |
-| `POST` | `/api/v1/organizations` | `Refresh:` Regenerates user access tokens |
-| `GET` | `//api/v1/reports/excel/<int:id` | `Refresh:` Regenerates user access tokens |
-| `POST` | `/api/v1/roles` | `Refresh:` Regenerates user access tokens |
+| `POST` | `/api/v1/auth/register` | Creates a new user |
+| `POST` | `/api/v1/attendees` | Creates a new attendee |
+| `GET` | `/api/v1/boardrooms` | Creates a new boardroom |
+| `POST` | `/api/v1/meetings` | Creates a new meeting |
+| `POST` | `/api/v1/organizations` | Creates a new organization |
+| `GET` | `/api/v1/reports/excel/<int:id` | Regenerates reports in excel form |
+| `GET` | `/api/v1/reports/pdf/<int:id` | Regenerates reports in pdf form |
+| `POST` | `/api/v1/roles` | Creates a new role |
 
 ##### Sample user registration success response body
 
