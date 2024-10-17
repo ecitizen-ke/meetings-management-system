@@ -117,3 +117,5 @@ $RECYCLE.BIN/
 
 # Others
 *.sqlite3
+.venv/
+bms/

@@ -19,6 +19,7 @@ import { getData, postData } from '../utils/api';
 import { Config } from '../Config';
 import { handleApiError } from '../utils/errorHandler';
 import { useDispatch } from 'react-redux';
+import { showMessage } from '../utils/helpers';
 
 const Organizations = () => {
   const [organizations, setOrganizations] = useState([]);
@@ -93,8 +94,10 @@ const Organizations = () => {
       reset();
       setOpenToast(true);
       fetchOrganizations();
+      
       showMessage(result.message, 'success', dispatch);
     } catch (error) {
+      console.log(error)
       handleApiError(error, dispatch);
     }
   };
