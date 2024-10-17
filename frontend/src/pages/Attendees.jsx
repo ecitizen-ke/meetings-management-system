@@ -117,12 +117,12 @@ const Attendees = () => {
       );
 
       doc.text(`MEETING: ${meeting.title}`, 14, 45);
-      doc.text(`VENUE: ${meeting.boardroom_name}`, 14, 55);
+      doc.text(`VENUE: ${meeting.location}`, 14, 50);
       // doc.text(`LOCATION: ${meeting.location ?? ""}`, 14, 63);todo:
       doc.text(
         `DATE:  ${new Date(meeting.meeting_date).toLocaleDateString()}`,
         14,
-        70
+        60
       );
       doc.text(
         `TIME: ${
@@ -131,11 +131,11 @@ const Attendees = () => {
           moment(meeting.end_time, 'HH:mm:ss').format('HH:mm A')
         }`,
         14,
-        80
+        65
       );
       // doc.text(`-: ${meeting.end_time}`, 90, 60);
-      doc.text(`LIST OF ATTENDEES:`, 14, 95);
-      doc.setFontSize(12);
+      doc.text(`LIST OF ATTENDEES:`, 14, 72);
+      doc.setFontSize(10);
       // doc.text(`${meeting.description}`, 14, 110, { maxWidth: 180 }); // Text wrapping
 
       // Add table
@@ -144,24 +144,25 @@ const Attendees = () => {
         'Names',
         'Phone',
         'Email',
-        'Designation',
+        //'Designation',
         // "Department",
         'Organization',
+        'Signature'
       ];
       const tableRows = attendees.map((item, index) => [
         index + 1, // Row number (index)
         item.first_name + ' ' + item.last_name,
         item.phone,
         item.email, // Email
-        item.designation, // Designation
-        item.department, // Department
-        // item.organization,
+        //item.designation, // Designation
+        //item.department, // Department
+        item.organization,
       ]);
 
       doc.autoTable({
         head: [tableColumn],
         body: tableRows,
-        startY: 100, // Start table below the title and logo
+        startY: 75, // Start table below the title and logo
         headStyles: {
           fillColor: [17, 180, 73], // Set the background color of the header (RGB format)
           textColor: [255, 255, 255], // Set the text color to white
@@ -178,12 +179,12 @@ const Attendees = () => {
         },
         columnStyles: {
           0: { cellWidth: 20 }, // First column (index) width
-          1: { cellWidth: 40 }, // Name
+          1: { cellWidth: 45 }, // Name
           2: { cellWidth: 30 }, // phone number
-          3: { cellWidth: 100 }, // email
-          4: { cellWidth: 35 }, // designation
-          5: { cellWidth: 40 }, // Department
-          6: { cellWidth: 100 }, // Organization
+          3: { cellWidth: 65 }, // email
+          4: { cellWidth: 55 }, // Organization
+          5: { cellWidth: 40 }, // signature
+          //6: { cellWidth: 100 }, // Organization
         },
       });
       setAnchorEl(null);
