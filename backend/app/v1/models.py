@@ -289,39 +289,54 @@ class Attendee:
 
     def create(self, first_name, last_name, organization, designation, email, phone, meeting_id):
         try:
+            # check if meeting exists
+            meeting = self.db.fetchone("SELECT * FROM meetings WHERE id = %s", (meeting_id,))
+            if not meeting:
+                return {"msg": "Meeting not found"}, 404
             statement = "INSERT INTO attendees (first_name, last_name, organization, designation, email, phone,meeting_id)VALUES (%s, %s, %s, %s, %s, %s, %s)"
             data = (first_name, last_name, organization, designation, email, phone, meeting_id)
             self.db.insert(statement, data)
+            self.db.conn.commit()
+            return {"msg": "Attendee added successfully"}, 201
         except Exception as e:
             self.db.rollback()
-            return e
+            return {"msg": f"An error occurred: {str(e)}"}, 500
         finally:
             self.db.close()
 
     def get_all(self):
         try:
-            return self.db.fetchmany("SELECT * FROM attendees")
+            attendees = self.db.fetchmany("SELECT * FROM attendees")
+            return {"data": attendees, "msg": "Attendees fetched successfully"}, 200
+
         except Exception:
-            pass
+            return {"msg": "An error occurred"}, 500
         finally:
             self.db.close()
 
     def get_by_meeting_id(self, id):
-        try:
-            return self.db.fetchandfilter("SELECT * FROM attendees WHERE meeting_id = %s", (id,))
+        try:    
+            # check if meeting exists
+            meeting = self.db.fetchone("SELECT * FROM meetings WHERE id = %s", (id,))
+            if not meeting:
+                return {"msg": "Meeting not found"}, 404
+            attendees = self.db.fetchandfilter("SELECT * FROM attendees WHERE meeting_id = %s", (id,))
+            return {"data": attendees, "msg": "Attendees fetched successfully"}, 200
         except Exception as e:
-            return e
+            return {"msg": f"An error occurred: {str(e)}"}, 500
         finally:
             self.db.close()
 
     def check_attendance(self, email, meeting_id):
         try:
-            if self.db.fetchone(
+            attendee = self.db.fetchone(
                 "SELECT * FROM attendees WHERE email = %s AND meeting_id = %s", (email, meeting_id)
-            ):
-                return True
+            )
+            # If attendee exists, return True, else return False
+            return attendee is not None
         except Exception as e:
-            return e
+            return {"msg": f"An error occurred: {str(e)}"}, 500
+
 
 
 class Role:
