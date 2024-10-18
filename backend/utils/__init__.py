@@ -188,4 +188,5 @@ statements = {
     "users_roles": "CREATE TABLE IF NOT EXISTS users_roles (user_id INT NOT NULL,role_id INT NOT NULL,PRIMARY KEY (user_id, role_id),FOREIGN KEY (user_id) REFERENCES users(id),FOREIGN KEY (role_id) REFERENCES roles(id),created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,updated_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP );",
     "permissions": "CREATE TABLE IF NOT EXISTS permissions (id INT AUTO_INCREMENT PRIMARY KEY,name VARCHAR(50) NOT NULL UNIQUE,created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,updated_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP);",
     "roles_permissions": "CREATE TABLE IF NOT EXISTS roles_permissions (role_id INT NOT NULL,permission_id INT NOT NULL,PRIMARY KEY (role_id, permission_id),FOREIGN KEY (role_id) REFERENCES roles(id),FOREIGN KEY (permission_id) REFERENCES permissions(id),created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,updated_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP);",
+    "alter_boardroom":"ALTER TABLE boardrooms ADD CONSTRAINT unique_boardroom_name UNIQUE (name);"
 }
