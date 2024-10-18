@@ -1,7 +1,6 @@
 from flask import Flask
 from config import Config
 
-
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
@@ -31,6 +30,7 @@ def register_blueprints(app):
     from .v1.views.auth import auth_blueprint
     from .v1.views.qr import qr_blueprint
     from .v1.views.reports import reports_blueprint
+    from .v1.views.locations import locations_blueprint
 
     app.register_blueprint(organizations_blueprint)
     app.register_blueprint(boardroom_blueprint)
@@ -41,3 +41,4 @@ def register_blueprints(app):
     app.register_blueprint(auth_blueprint)
     app.register_blueprint(qr_blueprint)
     app.register_blueprint(reports_blueprint)
+    app.register_blueprint(locations_blueprint)

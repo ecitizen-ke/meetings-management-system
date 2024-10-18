@@ -19,16 +19,20 @@ def add():
         phone = data.get("phone")
         meeting_id = data.get("meeting_id")
 
-        if not all([first_name, last_name, organization, designation, email, phone, meeting_id]):
-            return jsonify({"error": "Missing required fields"}), 400
-
-        if not attendee.check_attendance(email, meeting_id):
-            attendee.create(
-                first_name, last_name, organization, designation, email, phone, meeting_id
-            )
-            return jsonify({"msg": "Attendee added successfully"}), 201
-        else:
+        required_fields = ["first_name", "last_name", "organization", "designation", "email", "phone", "meeting_id"]
+        missing_fields = [field for field in required_fields if field not in data]
+        if missing_fields:
+            return jsonify({"msg": f"Missing required fields: {', '.join(missing_fields)}"}), 400
+        
+          # Check if the attendee already registered for the meeting
+        if attendee.check_attendance(email, meeting_id):
             return jsonify({"msg": "You cannot register twice"}), 409
+        
+        response, status_code = attendee.create(
+            first_name,last_name,organization,designation,email,phone,meeting_id,
+        )
+
+        return jsonify(response), status_code
 
     except Exception as e:
         return jsonify({"msg": f"Error occurred: {str(e)}"}), 500
@@ -37,10 +41,12 @@ def add():
 @attendees_blueprint.route("/api/v1/attendees", methods=["GET"])
 def fetchall():
     attendee = Attendee()
-    return jsonify(attendee.get_all())
+    response, status_code = attendee.get_all()
+    return jsonify(response), status_code
 
 
 @attendees_blueprint.route("/api/v1/attendees/<int:id>", methods=["GET"])
 def fetch_by_meeting_id(id):
     attendee = Attendee()
-    return jsonify(attendee.get_by_meeting_id(id))
+    response, status_code = attendee.get_by_meeting_id(id)
+    return jsonify(response), status_code
