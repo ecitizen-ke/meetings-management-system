@@ -7,8 +7,35 @@ class Organization:
     def __init__(self):
         self.db = Connection()
 
+    # def create(self, name, description):
+    #     try:
+    #         self.db.insert(
+    #             "INSERT INTO organizations (name, description) VALUES (%s, %s)",
+    #             (name, description),
+    #         )
+    #         if self.db.insert_success():
+    #             self.db.commit()
+    #     except Exception as e:
+    #         self.db.rollback()
+    #         return e
+    #     finally:
+    #         self.db.close()
+
+    # def get_all(self):
+    #     try:
+    #         return self.db.fetchmany("SELECT * FROM organizations")
+    #     except Exception:
+    #         pass
+
+    #     finally:
+    #         self.db.close()
     def create(self, name, description):
         try:
+            # Check if the organization already exists
+            existing_org = self.db.fetchone("SELECT * FROM organizations WHERE name = %s", (name,))
+            if existing_org:
+                return "Organization with this name already exists."
+
             self.db.insert(
                 "INSERT INTO organizations (name, description) VALUES (%s, %s)",
                 (name, description),
@@ -21,22 +48,31 @@ class Organization:
         finally:
             self.db.close()
 
-    def get_all(self):
-        try:
-            return self.db.fetchmany("SELECT * FROM organizations")
-        except Exception:
-            pass
-
-        finally:
-            self.db.close()
-
 
 class Boardroom:
     def __init__(self):
         self.db = Connection()
 
+    # def create(self, name, capacity, location, description):
+    #     try:
+    #         self.db.insert(
+    #             "INSERT INTO boardrooms (name, capacity, location, description) VALUES (%s, %s, %s, %s)",
+    #             (name, capacity, location, description),
+    #         )
+    #         if self.db.insert_success():
+    #             self.db.commit()
+    #     except Exception as e:
+    #         self.db.rollback()
+    #         return e
+    #     finally:
+    #         self.db.close()
     def create(self, name, capacity, location, description):
         try:
+            # Check if the boardroom already exists
+            existing_boardroom = self.db.fetchone("SELECT * FROM boardrooms WHERE name = %s", (name,))
+            if existing_boardroom:
+                return "Boardroom with this name already exists."
+
             self.db.insert(
                 "INSERT INTO boardrooms (name, capacity, location, description) VALUES (%s, %s, %s, %s)",
                 (name, capacity, location, description),
