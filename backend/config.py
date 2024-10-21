@@ -12,6 +12,7 @@ class Config:
     MYSQL_DB = os.getenv("MYSQL_DB")
     SECRET_KEY = os.getenv("SECRET_KEY")
     SERVER = os.getenv("SERVER")
+    JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 
     # Additional configurations
     SQLALCHEMY_TRACK_MODIFICATIONS = False
