@@ -140,29 +140,30 @@ const Attendees = () => {
 
       // Add table
       const tableColumn = [
-        'S/NO',
+        'NO',
         'Names',
-        'Phone',
-        'Email',
-        //'Designation',
         // "Department",
         'Organization',
+        'Designation',
+        'Phone',
+        'Email',
         'Signature'
       ];
       const tableRows = attendees.map((item, index) => [
         index + 1, // Row number (index)
         item.first_name + ' ' + item.last_name,
-        item.phone,
-        item.email, // Email
-        //item.designation, // Designation
-        //item.department, // Department
         item.organization,
+        item.designation, // Designation
+        item.phone, //Phone
+        item.email, // Email
+        item.signature,  //signature
+        //item.department, // Department
       ]);
 
       doc.autoTable({
         head: [tableColumn],
         body: tableRows,
-        startY: 75, // Start table below the title and logo
+        startY: 75, // Start table below the title and logo -Y axis
         headStyles: {
           fillColor: [17, 180, 73], // Set the background color of the header (RGB format)
           textColor: [255, 255, 255], // Set the text color to white
@@ -178,13 +179,13 @@ const Attendees = () => {
           valign: 'middle', // Vertically align the text in the middle
         },
         columnStyles: {
-          0: { cellWidth: 20 }, // First column (index) width
-          1: { cellWidth: 45 }, // Name
-          2: { cellWidth: 30 }, // phone number
-          3: { cellWidth: 65 }, // email
-          4: { cellWidth: 55 }, // Organization
-          5: { cellWidth: 40 }, // signature
-          //6: { cellWidth: 100 }, // Organization
+          0: { cellWidth: 12 }, // First column (index) width
+          1: { cellWidth: 40 }, // Names
+          2: { cellWidth: 55 }, // Organization
+          3: { cellWidth: 40 }, // Designation
+          4: { cellWidth: 30 }, // phone number
+          5: { cellWidth: 50 }, // email
+          6: { cellWidth: 35 }, // signature
         },
       });
       setAnchorEl(null);
