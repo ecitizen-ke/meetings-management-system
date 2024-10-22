@@ -60,6 +60,23 @@ SERVER = "http://localhost:5173"
 | `GET` | `/api/v1/reports/pdf/<int:id` | Regenerates reports in pdf form |
 | `POST` | `/api/v1/roles` | Creates a new role |
 
+
+#### Server Requests and Responses
+
+##### Sample user registration request body
+
+```json
+{
+"first_name":"your_first_name",
+"last_name":"your_last_name",
+"organization":"your_organization",
+"designation":"your_designation",
+"email":"your_email",
+"phone":"your_phone_number",
+"password":"your_password"
+}
+```
+
 ##### Sample user registration success response body
 
 ```json
@@ -76,6 +93,19 @@ SERVER = "http://localhost:5173"
     "message": "You're already registered!"
 }
 ```
+##### Sample attendee addition request body
+
+```json
+{
+"first_name":"your_first_name",
+"last_name":"your_last_name",
+"organization":"your_organization",
+"designation":"your_designation",
+"email":"your_email",
+"phone":"your_phone_number",
+"meeting_id":"existing_meeting _id"
+}
+```
 
 ##### Sample attendee addition response body
 ```json
@@ -84,11 +114,61 @@ SERVER = "http://localhost:5173"
     "msg": "Attendee added successfully"
 }
 ```
+##### Sample same attendee addition response body
+```json
+{
+    "code": 409,
+    "msg": "You cannot register twice"
+}
+```
+
+##### Sample boadroom creation request body
+
+```json
+{
+"name":"boardroom-name", 
+"capacity":"its-capacity", 
+"location":"where-its-located", 
+"description":"its-description",
+}
+```
+
 ##### Sample boardroom creation response body
 ```json
 {
     "code": 201,
     "msg": "Boardroom created successfully"
+}
+```
+
+##### Sample meeting creation request body
+
+```json
+{
+     "title":"AWS",
+     "description":"CCP",
+     "start_time":"23:00",
+     "end_time":"22:00",
+     "organization_id":2,
+     "location":"Nyayo",
+     "meeting_date":"12/12/24",
+     "boardroom_id":1
+}
+```
+
+##### Sample meeting creation response body
+```json
+{    
+    "code": 201,
+    "msg": "Meeting added successfully"
+}
+```
+##### Sample organization creation request body
+
+```json
+{
+"name":"name_of_organization",
+"description":"its_description"
 }
 ```
 
@@ -99,12 +179,29 @@ SERVER = "http://localhost:5173"
     "msg": "organization created successfully"
 }
 ```
+##### Sample role creation request body
+
+```json
+{
+"name":"name_of_role",
+"description":"its_description"
+}
+```
 
 ##### Sample role creation response body
 ```json
 {
     "code": 201,
     "msg": "Role created successfully"
+}
+```
+##### Sample resource creation request body
+
+```json
+{
+"name":"name_of_resource",
+"description":"its_description",
+"quantity":"required_quantity"
 }
 ```
 
