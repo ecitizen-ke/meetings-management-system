@@ -5,20 +5,18 @@ import {
   Grid,
   Typography,
   Button,
-} from "@mui/material";
-import { green, red } from "@mui/material/colors";
-import React, { useEffect, useState } from "react";
-import { getData } from "../utils/api";
-import { Config } from "../Config";
-import { useDispatch } from "react-redux";
-import { DataGrid } from "@mui/x-data-grid";
-import moment from "moment";
-import { useNavigate } from "react-router";
-import {
-  hideNotification,
-  showNotification,
-} from "../redux/features/notifications/notificationSlice";
-import Notification from "../components/Notification";
+} from '@mui/material';
+import { green, red } from '@mui/material/colors';
+import React, { useEffect, useState } from 'react';
+import { getData } from '../utils/api';
+import { Config } from '../Config';
+import { useDispatch } from 'react-redux';
+import { DataGrid } from '@mui/x-data-grid';
+import moment from 'moment';
+import { useNavigate } from 'react-router';
+import Notification from '../components/Notification';
+import { handleApiError } from '../utils/errorHandler';
+
 const Main = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -29,31 +27,37 @@ const Main = () => {
   });
   const [meetings, setMeetings] = useState([]);
   const columns = [
-    { field: "id", headerName: "#", width: 70 },
-    { field: "title", headerName: "Title", width: 220 },
-    { field: "boardroom_name", headerName: "Boardroom", width: 220 },
-    { field: "description", headerName: "Description", width: 220 },
+    { field: 'id', headerName: '#', width: 70 },
+    { field: 'title', headerName: 'Title', width: 220 },
+    { field: 'boardroom_name', headerName: 'Boardroom', width: 220 },
+    { field: 'description', headerName: 'Description', width: 220 },
     {
-      field: "meeting_date",
-      headerName: "Meeting Date",
+      field: 'meeting_date',
+      headerName: 'Meeting Date',
       width: 220,
       renderCell: (params) => (
-        <div>{moment(params.row.meeting_date).format("MMMM D, YYYY")}</div>
+        <div>{moment(params.row.meeting_date).format('MMMM D, YYYY')}</div>
       ),
     },
     {
-      field: "start_time",
-      headerName: "Start Time",
+      field: 'start_time',
+      headerName: 'Start Time',
       width: 130,
+      renderCell: (params) => (
+        <div>{moment(params.row.start_time, 'HH:mm:ss').format('HH:mm A')}</div>
+      ),
     },
     {
-      field: "end_time",
-      headerName: "End Time",
+      field: 'end_time',
+      headerName: 'End Time',
       width: 130,
+      renderCell: (params) => (
+        <div>{moment(params.row.end_time, 'HH:mm:ss').format('HH:mm A')}</div>
+      ),
     },
     {
-      field: "actions",
-      headerName: "",
+      field: 'actions',
+      headerName: '',
       width: 350,
       sortable: false,
       filterable: false,
@@ -61,10 +65,10 @@ const Main = () => {
         <>
           <div>
             <Button
-              onClick={() => navigate("/dashboard/attendees/" + params.row.id)}
-              variant="contained"
-              color="info"
-              size="small"
+              onClick={() => navigate('/dashboard/attendees/' + params.row.id)}
+              variant='contained'
+              color='info'
+              size='small'
             >
               View Attendees
             </Button>
@@ -77,42 +81,31 @@ const Main = () => {
   const fetchStats = async () => {
     try {
       const customHeaders = {
-        Authorization: "Bearer xxxxxx",
-        "Content-Type": "application/json",
+        Authorization: 'Bearer xxxxxx',
+        'Content-Type': 'application/json',
       };
-      const result = await getData(
-        `${Config.API_URL}/reports-summary`,
+      const { data } = await getData(
+        `${Config.API_URL}/meetings/summary`,
         customHeaders
       );
-      setStats(result);
+      setStats(data);
     } catch (error) {
-      console.log(error);
-      dispatch(
-        showNotification({
-          message: error.message,
-          type: "error", // success, error, warning, info
-        })
-      );
-
-      setTimeout(() => dispatch(hideNotification()), 3000);
+      handleApiError(error, dispatch);
     }
   };
   const fetchMeetings = async () => {
     try {
       const customHeaders = {
-        Authorization: "Bearer xxxxxx",
-        "Content-Type": "application/json",
+        Authorization: 'Bearer xxxxxx',
+        'Content-Type': 'application/json',
       };
-      const result = await getData(`${Config.API_URL}/meetings`, customHeaders);
-      setMeetings(result);
-    } catch (error) {
-      dispatch(
-        showNotification({
-          message: error.response.data.msg,
-          type: "error", // success, error, warning, info
-        })
+      const { data } = await getData(
+        `${Config.API_URL}/meetings`,
+        customHeaders
       );
-      setTimeout(() => dispatch(hideNotification()), 3000);
+      setMeetings(data);
+    } catch (error) {
+      handleApiError(error, dispatch);
     }
   };
   useEffect(() => {
@@ -127,18 +120,18 @@ const Main = () => {
             style={{
               backgroundColor: green[400],
             }}
-            color="primary"
+            color='primary'
           >
             <CardContent>
               <Typography
                 color={`white`}
                 gutterBottom
-                variant="h4"
-                component="div"
+                variant='h4'
+                component='div'
               >
                 Ongoing
               </Typography>
-              <Typography color={`white`} variant="h5">
+              <Typography color={`white`} variant='h5'>
                 {stats.ongoing}
               </Typography>
             </CardContent>
@@ -149,35 +142,35 @@ const Main = () => {
             style={{
               backgroundColor: red[400],
             }}
-            color="primary"
+            color='primary'
           >
             <CardContent>
               <Typography
                 color={`white`}
                 gutterBottom
-                variant="h4"
-                component="div"
+                variant='h4'
+                component='div'
               >
-                Pending
+                Upcoming
               </Typography>
-              <Typography color={`white`} variant="h5">
+              <Typography color={`white`} variant='h5'>
                 {stats.pending}
               </Typography>
             </CardContent>
           </Card>
         </Grid>
         <Grid item md={3} xs={12}>
-          <Card color="primary">
+          <Card color='primary'>
             <CardContent>
               <Typography
                 color={`black`}
                 gutterBottom
-                variant="h4"
-                component="div"
+                variant='h4'
+                component='div'
               >
                 Completed
               </Typography>
-              <Typography color={`black`} variant="h5">
+              <Typography color={`black`} variant='h5'>
                 {stats.complete}
               </Typography>
             </CardContent>
@@ -186,20 +179,20 @@ const Main = () => {
         <Grid item md={3} xs={12}>
           <Card
             style={{
-              backgroundColor: "#222222",
+              backgroundColor: '#222222',
             }}
-            color=""
+            color=''
           >
             <CardContent>
               <Typography
                 color={`white`}
                 gutterBottom
-                variant="h4"
-                component="div"
+                variant='h4'
+                component='div'
               >
                 Total Meetings
               </Typography>
-              <Typography color={`white`} variant="h5">
+              <Typography color={`white`} variant='h5'>
                 {stats.ongoing + stats.pending + stats.complete}
               </Typography>
             </CardContent>
@@ -210,13 +203,13 @@ const Main = () => {
       <Divider />
       <Notification />
       <br />
-      <Typography variant="h3" component="div">
+      <Typography variant='h3' component='div'>
         Recent Meetings
       </Typography>
       <br />
       <br />
 
-      <div style={{ width: "100%", marginTop: "35px" }}>
+      <div style={{ width: '100%', marginTop: '35px' }}>
         <DataGrid
           rows={meetings}
           columns={columns}

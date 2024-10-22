@@ -1,5 +1,7 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, request
 from ..models import Resource
+from utils.exception import DatabaseException
+from utils.responses import response, response_with_data
 
 resources_blueprint = Blueprint("resources_blueprint", __name__)
 
@@ -10,16 +12,19 @@ def create():
     try:
         data = request.get_json()
         if not data or not isinstance(data, dict):
-            return jsonify({"msg": "Invalid JSON format or empty payload"}), 400
+            return response("Invalid JSON format or empty payload", 400)
         if "name" not in data:
-            return jsonify({"msg": "'name' field is required"}), 400
-        resource.create(data["name"], data["description"], data["quantity"])
-        return jsonify({"msg": "Resource created successfully"}), 201
-    except Exception as e:
-        return jsonify({"msg": f"Error occurred: {str(e)}"}), 500
+            return response("'name' field is required!", 400)
+        result = resource.create(data["name"], data["description"], data["quantity"])
+        if not isinstance(result, Exception):
+            return response("Resource added successfully!", 201)
+        else:
+            raise DatabaseException(str(result))
+    except DatabaseException as e:
+        return response("Something went wrong, " + str(e), 400)
 
 
 @resources_blueprint.route("/api/v1/resources", methods=["GET"])
 def fetchall():
     resource = Resource()
-    return jsonify(resource.get_all())
+    return response_with_data("OK", resource.get_all(), 200)

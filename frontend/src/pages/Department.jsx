@@ -1,5 +1,6 @@
 import { Add, Edit } from "@mui/icons-material";
 import {
+  Badge,
   Box,
   Button,
   Divider,
@@ -140,7 +141,14 @@ const Department = () => {
     <>
       <div className="meetings-header">
         <div>
-          <h3>Departments</h3>
+          <h3>
+            Departments &nbsp;
+            <Badge
+              max={10}
+              badgeContent={departments.length}
+              color="secondary"
+            ></Badge>
+          </h3>
         </div>
 
         <div

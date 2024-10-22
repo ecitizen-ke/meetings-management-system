@@ -1,5 +1,9 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, request
+from flask_jwt_extended import create_access_token
 from ..models import User
+from utils.exception import DatabaseException
+from utils.responses import response, response_with_data
+
 
 auth_blueprint = Blueprint("auth_blueprint", __name__)
 
@@ -10,7 +14,7 @@ def create():
     try:
         data = request.get_json()
         if not data or not isinstance(data, dict):
-            return jsonify({"msg": "Invalid JSON format or empty payload"}), 400
+            return response("Invalid JSON format or empty payload", 400)
 
         first_name = data.get("first_name")
         last_name = data.get("last_name")
@@ -21,16 +25,19 @@ def create():
         password = data.get("password")
 
         if not all([first_name, last_name, organization, designation, email, phone, password]):
-            return jsonify({"error": "Missing required fields"}), 400
-
+            return response("Missing required fields", 400)
         if not user.find_by_email(email):
-            user.create(first_name, last_name, organization, designation, email, phone, password)
-            return jsonify({"msg": "User added successfully"}), 201
+            result = user.create(
+                first_name, last_name, organization, designation, email, phone, password
+            )
+            if not isinstance(result, Exception):
+                return response("User added successfully", 201)
+            else:
+                raise DatabaseException(str(result))
         else:
-            return jsonify({"msg": "You're already registered!"}), 409
-
-    except Exception as e:
-        return jsonify({"msg": f"Error occurred: {str(e)}"}), 500
+            return response("You're already registered!", 409)
+    except DatabaseException as e:
+        return response("Something went wrong, " + str(e), 400)
 
 
 @auth_blueprint.route("/api/v1/auth/login", methods=["POST"])
@@ -39,21 +46,29 @@ def login():
     try:
         data = request.get_json()
         if not data or not isinstance(data, dict):
-            return jsonify({"msg": "Invalid JSON format or empty payload"}), 400
+            return response("Invalid JSON format or empty payload", 400)
 
         email = data.get("email")
         password = data.get("password")
 
         if not all([email, password]):
-            return jsonify({"error": "Missing required fields"}), 400
+            return response("Missing required fields", 400)
 
-        if user.login(email, password):
-            return jsonify({"msg": "Login successfull!"}), 200
+        result = user.login(email, password)
+
+        if result:
+            return response_with_data(
+                "OK",
+                {
+                    "token": create_access_token(identity=result.get("email")),
+                },
+                200,
+            )
         else:
-            return jsonify({"msg": "Authentication failed!"}), 403
+            return response("Authentication failed!", 401)
 
-    except Exception as e:
-        return jsonify({"msg": f"Error occurred: {str(e)}"}), 500
+    except DatabaseException as e:
+        return response("Something went wrong, " + str(e), 400)
 
 
 @auth_blueprint.route("/api/v1/auth/assign", methods=["POST"])
@@ -62,24 +77,24 @@ def assign():
     try:
         data = request.get_json()
         if not data or not isinstance(data, dict):
-            return jsonify({"msg": "Invalid JSON format or empty payload"}), 400
+            return response("Invalid JSON format or empty payload", 400)
         email = data["email"]
         role = data["role"]
         if not all([email, role]):
-            return jsonify({"error": "Missing required fields"}), 400
+            return response("Missing required fields", 400)
         if user.find_by_email(email):
             user.asign_role(email, role)
-            return jsonify({"msg": "User role successfully assigned!"}), 200
+            return response("User role successfully assigned!", 200)
         else:
-            return jsonify({"msg": "Role assignment failed!"}), 403
-    except Exception as e:
-        return jsonify({"msg": f"Error occurred: {str(e)}"}), 500
+            return response("Role assignment failed!", 403)
+    except DatabaseException as e:
+        return response("Something went wrong, " + str(e), 400)
 
 
 @auth_blueprint.route("/api/v1/auth/users", methods=["GET"])
 def users():
     user = User()
     try:
-        return jsonify(user.get_users()), 200
-    except Exception as e:
-        return jsonify({"msg": f"Error occurred: {str(e)}"}), 500
+        return response_with_data("OK", user.get_users(), 200)
+    except DatabaseException as e:
+        return response("Something went wrong, " + str(e), 400)

@@ -1,5 +1,7 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, request
 from ..models import Role
+from utils.exception import DatabaseException
+from utils.responses import response, response_with_data
 
 
 roles_blueprint = Blueprint("roles_blueprint", __name__)
@@ -11,16 +13,19 @@ def add():
     try:
         data = request.get_json()
         if not data or not isinstance(data, dict):
-            return jsonify({"msg": "Invalid JSON format or empty payload"}), 400
+            return response("Invalid JSON format or empty payload!", 400)
         if "name" not in data:
-            return jsonify({"msg": "'name' field is required"}), 400
-        role.create(data["name"], data["description"])
-        return jsonify({"msg": "Role created successfully"}), 201
-    except Exception as e:
-        return jsonify({"msg": f"Error occurred: {str(e)}"}), 500
+            return response("Missing required fields!", 400)
+        result = role.create(data["name"], data["description"])
+        if not isinstance(result, Exception):
+            return response("Role created successfully!", 201)
+        else:
+            raise DatabaseException(str(result))
+    except DatabaseException as e:
+        return response("Something went wrong, " + str(e), 400)
 
 
 @roles_blueprint.route("/api/v1/roles", methods=["GET"])
 def fetchall():
     role = Role()
-    return jsonify(role.get_all())
+    return response_with_data("OK", role.get_all(), 200)

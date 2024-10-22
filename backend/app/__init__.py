@@ -10,14 +10,15 @@ def create_app():
 
 
 def initialize_extensions(app):
-    from extensions import db, cors
-    from .db import Connection
+    from extensions import db, cors, jwt
+    from .db import Database
 
     db.init_app(app)
     cors.init_app(app)
+    jwt.init_app(app)
     with app.app_context() as context:
         context.push()
-        Connection().create_tables()
+        Database().create_tables()
 
 
 def register_blueprints(app):

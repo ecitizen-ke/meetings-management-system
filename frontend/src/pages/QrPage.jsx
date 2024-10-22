@@ -9,8 +9,8 @@ import InputBase from "@mui/material/InputBase";
 import MenuIcon from "@mui/icons-material/Menu";
 import SearchIcon from "@mui/icons-material/Search";
 import { useSelector } from "react-redux";
-import { Home } from "@mui/icons-material";
-import { Avatar, Card, CardHeader, CardMedia } from "@mui/material";
+import { ArrowBack, Home } from "@mui/icons-material";
+import { Avatar, Card, CardHeader, CardMedia, Tooltip } from "@mui/material";
 import { red } from "@mui/material/colors";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import "../assets/landing.css";
@@ -70,7 +70,7 @@ export default function QrPage() {
   const params = useParams();
   const generateQrCode = async (id) => {
     try {
-      const result = await fetch(`${Config.API_URL}/admin/generate_qr/${id}`);
+      const result = await fetch(`${Config.API_URL}/qr/${id}`);
       const blob = await result.blob();
       const imageUrl = URL.createObjectURL(blob);
       setQrLink(imageUrl);
@@ -85,17 +85,19 @@ export default function QrPage() {
     <Box sx={{ flexGrow: 1 }}>
       <AppBar>
         <Toolbar>
-          <IconButton
-            onClick={() => navigate("/dashboard/meetings")}
-            size="large"
-            edge="start"
-            color="inherit"
-            aria-label="open drawer"
-            sx={{ mr: 2 }}
-          >
-            {/* <MenuIcon /> */}
-            <Home />
-          </IconButton>
+          <Tooltip title="Go Back">
+            <IconButton
+              onClick={() => navigate("/dashboard/meetings")}
+              size="large"
+              edge="start"
+              color="inherit"
+              aria-label="open drawer"
+              sx={{ mr: 2 }}
+            >
+              {/* <MenuIcon /> */}
+              <ArrowBack />
+            </IconButton>
+          </Tooltip>
           <Typography
             variant="h6"
             noWrap

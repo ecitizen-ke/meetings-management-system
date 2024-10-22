@@ -1,18 +1,21 @@
-from app.db import Connection
+from app.db import Database
 from datetime import datetime
 from utils import combine_date_time
+from passlib.hash import pbkdf2_sha256 as sha256
 
 
 class Organization:
     def __init__(self):
-        self.db = Connection()
+        self.db = Database()
 
     def create(self, name, description):
         try:
-            self.db.insert(
+            self.db.execute(
                 "INSERT INTO organizations (name, description) VALUES (%s, %s)",
                 (name, description),
             )
+            if self.db.insert_success():
+                self.db.commit()
         except Exception as e:
             self.db.rollback()
             return e
@@ -31,14 +34,16 @@ class Organization:
 
 class Boardroom:
     def __init__(self):
-        self.db = Connection()
+        self.db = Database()
 
     def create(self, name, capacity, location, description):
         try:
-            self.db.insert(
+            self.db.execute(
                 "INSERT INTO boardrooms (name, capacity, location, description) VALUES (%s, %s, %s, %s)",
                 (name, capacity, location, description),
             )
+            if self.db.insert_success():
+                self.db.commit()
         except Exception as e:
             self.db.rollback()
             return e
@@ -64,15 +69,17 @@ class Boardroom:
 
 class Resource:
     def __init__(self):
-        self.db = Connection()
+        self.db = Database()
 
     def create(self, name, description, quantity):
         try:
 
-            self.db.insert(
+            self.db.execute(
                 "INSERT INTO resources (name, description, quantity) VALUES (%s, %s, %s)",
                 (name, description, quantity),
             )
+            if self.db.insert_success():
+                self.db.commit()
         except Exception as e:
             self.db.rollback()
             return e
@@ -90,7 +97,7 @@ class Resource:
 
 class Meeting:
     def __init__(self):
-        self.db = Connection()
+        self.db = Database()
 
     def create(
         self,
@@ -101,7 +108,6 @@ class Meeting:
         end_time,
         boardroom_id,
         organization_id,
-        resources_id,
         location,
         longitude,
         latitude,
@@ -109,14 +115,9 @@ class Meeting:
         town,
     ):
         try:
-            print("SQL Query: ", "INSERT INTO meetings ...")
-            print("Values: ", (
-                title, description, meeting_date, start_time, end_time, 
-                boardroom_id, organization_id, resources_id, location, 
-                longitude, latitude, county, town
-            ))
-            self.db.insert(
-                "INSERT INTO meetings (title, description, meeting_date, start_time, end_time, boardroom_id, department_id, resources_id, location, longitude,latitude,county,town) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+
+            self.db.execute(
+                "INSERT INTO meetings (title, description, meeting_date, start_time, end_time, boardroom_id, organization_id, location) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
                 (
                     title,
                     description,
@@ -125,7 +126,6 @@ class Meeting:
                     end_time,
                     boardroom_id,
                     organization_id,
-                    resources_id,
                     location,
                     longitude,
                     latitude,
@@ -133,18 +133,9 @@ class Meeting:
                     town,
                 ),
             )
-            try:
-                location = self.db.fetchone(
-                    "SELECT * FROM locations WHERE county = %s AND town = %s", (county, town)
-                )
-                if not location:
-                    self.db.insert(
-                        "INSERT INTO locations (county, town) VALUES (%s, %s)", (county, town)
-                    )
-            except Exception as e:
-                print("Database error:", e)
-                
-            return {"msg": "Meeting added successfully"}, 201
+
+            if self.db.insert_success():
+                self.db.commit()
 
         except Exception as e:
             self.db.rollback()
@@ -156,10 +147,11 @@ class Meeting:
     def get_all(self):
         try:
             meetings = self.db.fetchmany("SELECT * FROM meetings")
+
             for meeting in meetings:
                 meeting["start_time"] = str(meeting["start_time"])
                 meeting["end_time"] = str(meeting["end_time"])
-                self.db.cursor.execute(
+                self.db.execute(
                     "SELECT name FROM boardrooms WHERE id = %s", (meeting["boardroom_id"],)
                 )
                 boardroom = self.db.cursor.fetchone()
@@ -172,7 +164,7 @@ class Meeting:
 
     def get_by_id(self, id):
         try:
-            self.db.cursor.execute("SELECT * FROM meetings WHERE id = %s", (id,))
+            self.db.execute("SELECT * FROM meetings WHERE id = %s", (id,))
             meeting = self.db.cursor.fetchone()
             meeting["start_time"] = str(meeting["start_time"])
             meeting["end_time"] = str(meeting["end_time"])
@@ -184,14 +176,14 @@ class Meeting:
         self, meeting_id, title, description, meeting_date, start_time, end_time, boardroom_id, organization_id, resources_id, location, longitude, latitude, county, town
     ):
         try:
-            self.db.cursor.execute(
+            self.db.execute(
                 """
                 UPDATE meetings SET title = %s, description = %s, meeting_date = %s, start_time = %s, end_time =%s, boardroom_id = %s, organization_id = %s, resources_id = %s, location = %s, longitude = %s, latitude = %s, county = %s, town = %s
                 WHERE id = %s
             """,
                 (title, description, meeting_date, start_time, end_time, boardroom_id, meeting_id, organization_id, resources_id, location, longitude, latitude, county, town),
             )
-            self.db.conn.commit()
+            self.db.commit()
 
             check_location = self.check_location(county, town)
             if not check_location:
@@ -205,20 +197,20 @@ class Meeting:
 
     def update_status(self, meeting_id, status):
         try:
-            self.db.cursor.execute(
+            self.db.execute(
                 """
                 UPDATE meetings SET status = %s WHERE id = %s""",
                 (status, meeting_id),
             )
-            self.db.conn.commit()
+            self.db.commit()
         except Exception as e:
             self.db.rollback()
             return e
 
     def delete(self, id):
         try:
-            self.db.cursor.execute("DELETE FROM meetings WHERE id = %s", (id,))
-            self.db.conn.commit()
+            self.db.execute("DELETE FROM meetings WHERE id = %s", (id,))
+            self.db.commit()
         except Exception as e:
             print(str(e))
             self.db.rollback()
@@ -229,13 +221,15 @@ class Meeting:
 
 class Attendee:
     def __init__(self):
-        self.db = Connection()
+        self.db = Database()
 
     def create(self, first_name, last_name, organization, designation, email, phone, meeting_id):
         try:
             statement = "INSERT INTO attendees (first_name, last_name, organization, designation, email, phone,meeting_id)VALUES (%s, %s, %s, %s, %s, %s, %s)"
             data = (first_name, last_name, organization, designation, email, phone, meeting_id)
-            self.db.insert(statement, data)
+            self.db.execute(statement, data)
+            if self.db.insert_success():
+                self.db.commit()
         except Exception as e:
             self.db.rollback()
             return e
@@ -270,13 +264,15 @@ class Attendee:
 
 class Role:
     def __init__(self):
-        self.db = Connection()
+        self.db = Database()
 
     def create(self, name, description):
         try:
             statement = "INSERT INTO roles (name, description)VALUES (%s, %s)"
             data = (name, description)
-            self.db.insert(statement, data)
+            self.db.execute(statement, data)
+            if self.db.insert_success():
+                self.db.commit()
         except Exception:
             self.db.rollback()
         finally:
@@ -293,15 +289,25 @@ class Role:
 
 class User:
     def __init__(self):
-        self.db = Connection()
+        self.db = Database()
 
     def create(self, first_name, last_name, organization, designation, email, phone, password):
         """Save user details to users table in the database"""
         try:
-            self.db.insert(
+            self.db.execute(
                 "INSERT INTO users (first_name, last_name, organization, designation, email, phone, password) VALUES (%s, %s, %s, %s, %s, %s, %s)",
-                (first_name, last_name, organization, designation, email, phone, password),
+                (
+                    first_name,
+                    last_name,
+                    organization,
+                    designation,
+                    email,
+                    phone,
+                    User.generate_hash(password),
+                ),
             )
+            if self.db.insert_success():
+                self.db.commit()
         except Exception as e:
             self.db.rollback()
             return e
@@ -315,7 +321,18 @@ class User:
             return e
 
     def login(self, email, password):
-        """Login user using login credentials"""
+        user = self.find_by_email(email)
+        if User.verify_hash(password, user.get("password")):
+            try:
+                return self.db.fetchone(
+                    "SELECT * FROM users WHERE email=%s;",
+                    (email,),
+                )
+            except Exception as e:
+                return e
+            finally:
+                self.db.close()
+
         user = self.find_by_email(email)
         if user and user["password"] == password:
             return user
@@ -328,7 +345,7 @@ class User:
             role = self.db.fetchone("SELECT id FROM roles WHERE name = %s", (role_name,))
             user = self.db.fetchone("SELECT id FROM users WHERE email = %s", (email,))
             if role:
-                self.db.insert(
+                self.db.execute(
                     "INSERT INTO users_roles (user_id, role_id) VALUES (%s, %s)",
                     (user["id"], role["id"]),
                 )
@@ -347,6 +364,14 @@ class User:
             return e
         finally:
             self.db.close()
+
+    @staticmethod
+    def generate_hash(password):
+        return sha256.hash(password)
+
+    @staticmethod
+    def verify_hash(password, hash):
+        return sha256.verify(password, hash)
 
 
 class Report:
@@ -370,7 +395,7 @@ class Report:
                 meetings_status["complete"] += 1
                 # Meeting().update_status(meeting["id"], "complete")
             elif meeting_date == current_date:
-                if start_date_time <= current_date <= end_date_time:
+                if start_date_time <= current_date_time <= end_date_time:
                     meetings_status["ongoing"] += 1
                     # Meeting().update_status(meeting["id"], "ongoing")
                 elif current_date_time < start_date_time:
