@@ -75,10 +75,11 @@ const Attendees = () => {
     },
     { field: 'first_name', headerName: 'First Name', width: 150 },
     { field: 'last_name', headerName: 'Last Name', width: 150 },
+    { field: 'organization', headerName: 'Organization', width: 220 },
+    { field: 'designation', headerName: 'Designation', width: 220 },
     { field: 'email', headerName: 'Email', width: 240 },
     { field: 'phone', headerName: 'Phone Number', width: 220 },
-    { field: 'designation', headerName: 'Designation', width: 220 },
-    { field: 'department', headerName: 'Organization', width: 220 },
+    { field: 'signature', headerName: 'Signature', width: 200 },
   ];
 
   const generatePdfReport = () => {
