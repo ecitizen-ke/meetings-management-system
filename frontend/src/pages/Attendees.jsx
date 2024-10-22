@@ -109,7 +109,7 @@ const Attendees = () => {
         }
       );
       doc.text(
-        'STATE DEPARTMENT OF IMMIGRATION AND CITIZEN SERVICES',
+        'STATE DEPARTMENT FOR IMMIGRATION AND CITIZEN SERVICES',
         pageWidth / 2,
         35,
         {
