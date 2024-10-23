@@ -10,7 +10,6 @@ The following tools should be preinstalled in the target host
 
 - [x] MySQL version 8.0.36
 - [x] Python version 3.12.3
-- [x] Docker version 27.1.1
 - [x] Pip version 24.1.2
 
 ## Installation
@@ -126,10 +125,10 @@ SERVER = "http://localhost:5173"
 
 ```json
 {
-"name":"boardroom-name", 
-"capacity":"its-capacity", 
-"location":"where-its-located", 
-"description":"its-description",
+"name":"boardroom_name", 
+"capacity":"its_capacity", 
+"location":"where_its_located", 
+"description":"its_description",
 }
 ```
 
@@ -145,14 +144,14 @@ SERVER = "http://localhost:5173"
 
 ```json
 {
-     "title":"AWS",
-     "description":"CCP",
-     "start_time":"23:00",
-     "end_time":"22:00",
-     "organization_id":2,
-     "location":"Nyayo",
-     "meeting_date":"12/12/24",
-     "boardroom_id":1
+     "title":"meeting_title",
+     "description":"meeting_description",
+     "start_time":"meeting_start_time",
+     "end_time":"meeting_end_time",
+     "organization_id":"meeting_organization_id",
+     "location":"meeting_location",
+     "meeting_date":"meeting_date",
+     "boardroom_id":"meeting_boardroom_id"
 }
 ```
 
