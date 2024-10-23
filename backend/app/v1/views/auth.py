@@ -2,6 +2,7 @@ from flask import Blueprint, request
 from flask_jwt_extended import jwt_required
 from flask_jwt_extended import create_access_token
 from ..models import User
+from ..models import Role
 from utils.exception import DatabaseException
 from utils.responses import response, response_with_data
 
@@ -54,17 +55,22 @@ def login():
 
         if not all([email, password]):
             return response("Missing required fields", 400)
+        
+        role = user.get_role(email)
 
         result = user.login(email, password)
+       
+        if not role:
+            return response("Role not found", 404)
+        
+        additional_claims = {"role": role}
 
         if result:
             name = {"name": result.get("first_name") + " " + result.get("last_name")}
             return response_with_data(
                 "OK",
                 {
-                    "token": create_access_token(
-                        identity=result.get("email"), additional_claims=name
-                    ),
+                    "token": create_access_token(identity=result.get("email"), additional_claims=additional_claims),
                 },
                 200,
             )
@@ -78,19 +84,23 @@ def login():
 @auth_blueprint.route("/api/v1/auth/assign", methods=["POST"])
 def assign():
     user = User()
+    role = Role()
     try:
         data = request.get_json()
         if not data or not isinstance(data, dict):
             return response("Invalid JSON format or empty payload", 400)
         email = data["email"]
-        role = data["role"]
-        if not all([email, role]):
+        role_name = data["role"]
+        if not all([email, role_name]):
             return response("Missing required fields", 400)
         if user.find_by_email(email):
-            user.asign_role(email, role)
-            return response("User role successfully assigned!", 200)
+            result = user.assign_role(email, role_name)
+            # user.assign_role(email, role)
+            if isinstance(result, Exception):
+                return response("Role Assignment Failed"+str(result),403)
+            return response("User Role Assgined Successfully",200)
         else:
-            return response("Role assignment failed!", 403)
+            return response("User not found!", 404)
     except DatabaseException as e:
         return response("Something went wrong, " + str(e), 400)
 

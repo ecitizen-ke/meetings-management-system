@@ -17,7 +17,7 @@ class Database:
 
     def create_tables(self):
         for statement in statements.values():
-            self.cursor.execute(statement)
+            self.cursor.execute(statement, multi=True)
 
     def execute(self, statement, data):
         return self.cursor.execute(statement, data)
@@ -36,14 +36,21 @@ class Database:
         self.cursor.close()
         self.conn.close()
 
-    def fetchmany(self, statement):
-        self.cursor.execute(statement)
-        return self.cursor.fetchall()
+    def fetchmany(self, statement, params=None):
+        try:
+            if params:
+                self.cursor.execute(statement, params)  # Execute with parameters
+            else:
+                self.cursor.execute(statement)  # Execute without parameters
+            return self.cursor.fetchall()
+        except Exception as e:
+            print(f"Database fetch error: {e}")  # Log any fetch error
+            return []
 
     def fetchandfilter(self, statement, data):
         self.cursor.execute(statement, data)
         return self.cursor.fetchall()
 
-    def fetchone(self, statement, data):
+    def fetchone(self, statement, data): #data can be null
         self.cursor.execute(statement, data)
         return self.cursor.fetchone()
