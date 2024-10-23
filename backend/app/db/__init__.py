@@ -4,7 +4,7 @@ from utils import statements
 from mysql.connector import connect
 
 
-class Connection:
+class Database:
     def __init__(self):
         self.host = app.config["MYSQL_HOST"]
         self.user = app.config["MYSQL_USER"]
@@ -19,7 +19,7 @@ class Connection:
         for statement in statements.values():
             self.cursor.execute(statement)
 
-    def insert(self, statement, data):
+    def execute(self, statement, data):
         return self.cursor.execute(statement, data)
 
     def insert_success(self):

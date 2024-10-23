@@ -75,10 +75,11 @@ const Attendees = () => {
     },
     { field: 'first_name', headerName: 'First Name', width: 150 },
     { field: 'last_name', headerName: 'Last Name', width: 150 },
+    { field: 'organization', headerName: 'Organization', width: 220 },
+    { field: 'designation', headerName: 'Designation', width: 220 },
     { field: 'email', headerName: 'Email', width: 240 },
     { field: 'phone', headerName: 'Phone Number', width: 220 },
-    { field: 'designation', headerName: 'Designation', width: 220 },
-    { field: 'department', headerName: 'Organization', width: 220 },
+    { field: 'signature', headerName: 'Signature', width: 200 },
   ];
 
   const generatePdfReport = () => {
@@ -108,7 +109,7 @@ const Attendees = () => {
         }
       );
       doc.text(
-        'STATE DEPARTMENT OF IMMIGRATION AND CITIZEN SERVICES',
+        'STATE DEPARTMENT FOR IMMIGRATION AND CITIZEN SERVICES',
         pageWidth / 2,
         35,
         {
@@ -117,12 +118,12 @@ const Attendees = () => {
       );
 
       doc.text(`MEETING: ${meeting.title}`, 14, 45);
-      doc.text(`VENUE: ${meeting.boardroom_name}`, 14, 55);
+      doc.text(`VENUE: ${meeting.location}`, 14, 50);
       // doc.text(`LOCATION: ${meeting.location ?? ""}`, 14, 63);todo:
       doc.text(
         `DATE:  ${new Date(meeting.meeting_date).toLocaleDateString()}`,
         14,
-        70
+        60
       );
       doc.text(
         `TIME: ${
@@ -131,37 +132,39 @@ const Attendees = () => {
           moment(meeting.end_time, 'HH:mm:ss').format('HH:mm A')
         }`,
         14,
-        80
+        65
       );
       // doc.text(`-: ${meeting.end_time}`, 90, 60);
-      doc.text(`LIST OF ATTENDEES:`, 14, 95);
-      doc.setFontSize(12);
+      doc.text(`LIST OF ATTENDEES:`, 14, 72);
+      doc.setFontSize(10);
       // doc.text(`${meeting.description}`, 14, 110, { maxWidth: 180 }); // Text wrapping
 
       // Add table
       const tableColumn = [
-        'S/NO',
+        'NO',
         'Names',
-        'Phone',
-        'Email',
-        'Designation',
         // "Department",
         'Organization',
+        'Designation',
+        'Phone',
+        'Email',
+        'Signature'
       ];
       const tableRows = attendees.map((item, index) => [
         index + 1, // Row number (index)
         item.first_name + ' ' + item.last_name,
-        item.phone,
-        item.email, // Email
+        item.organization,
         item.designation, // Designation
-        item.department, // Department
-        // item.organization,
+        item.phone, //Phone
+        item.email, // Email
+        item.signature,  //signature
+        //item.department, // Department
       ]);
 
       doc.autoTable({
         head: [tableColumn],
         body: tableRows,
-        startY: 100, // Start table below the title and logo
+        startY: 75, // Start table below the title and logo -Y axis
         headStyles: {
           fillColor: [17, 180, 73], // Set the background color of the header (RGB format)
           textColor: [255, 255, 255], // Set the text color to white
@@ -177,13 +180,13 @@ const Attendees = () => {
           valign: 'middle', // Vertically align the text in the middle
         },
         columnStyles: {
-          0: { cellWidth: 20 }, // First column (index) width
-          1: { cellWidth: 40 }, // Name
-          2: { cellWidth: 30 }, // phone number
-          3: { cellWidth: 100 }, // email
-          4: { cellWidth: 35 }, // designation
-          5: { cellWidth: 40 }, // Department
-          6: { cellWidth: 100 }, // Organization
+          0: { cellWidth: 12 }, // First column (index) width
+          1: { cellWidth: 40 }, // Names
+          2: { cellWidth: 55 }, // Organization
+          3: { cellWidth: 40 }, // Designation
+          4: { cellWidth: 30 }, // phone number
+          5: { cellWidth: 50 }, // email
+          6: { cellWidth: 35 }, // signature
         },
       });
       setAnchorEl(null);

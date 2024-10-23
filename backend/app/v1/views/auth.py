@@ -1,4 +1,5 @@
 from flask import Blueprint, request
+from flask_jwt_extended import create_access_token
 from ..models import User
 from utils.exception import DatabaseException
 from utils.responses import response, response_with_data
@@ -56,7 +57,13 @@ def login():
         result = user.login(email, password)
 
         if result:
-            return response_with_data("OK", result, 200)
+            return response_with_data(
+                "OK",
+                {
+                    "token": create_access_token(identity=result.get("email")),
+                },
+                200,
+            )
         else:
             return response("Authentication failed!", 401)
 

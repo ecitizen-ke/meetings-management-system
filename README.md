@@ -7,30 +7,47 @@ The Meetings Management System with QR Code Integration is a web-based applicati
 ## Prerequisite Technologies
 
 The following tools should be preinstalled in the target host
-
 - [x] MySQL version 8.0.36
 - [x] Python version 3.12.3
-- [x] Docker version 27.1.1
 - [x] Pip version 24.1.2
+- [x] NodeJS v20.16.0
+- [x] Yarn
 
 ## Installation
 
 1. Clone the repository
 2. Launch terminal and navigate to the root directory of the cloned folder
 3. Create and activate a virtual environment
-4. Navigate to `backend` folder
 
-`$ cd backend`
+## Follow the steps below to create a virtual environment
+Run the following command in the terminal. Replace `venv_name` with your desired environment name
+   `python -m venv venv_name`  
 
-5. Install project dependencies
+Activate the Virtual Environment
 
-`$ pip install -r requirements.txt`
+   `source venv_name/bin/activate` (macOS/Linux) or `venv_name\Scripts\activate` (Windows)
 
-#### Database Setup
+4. Project directories
+## Navigate to `backend` folder
+  `$ cd backend`
+
+Install project dependencies
+  `$ pip install -r requirements.txt`
+
+## In another terminal navigate to `frontend` folder
+  `$ cd frontend`
+
+Install project dependencies
+  `$ npm install`
+
+ If you do not have yarn installed on your machine use the following command to install
+  `npm install yarn`
+
+## Database Setup
 
 Create the database `your-development-db` in the host machine
 
-#### Configuring environment variables
+## Configuring environment variables
 
 1. Create an `.env` file in the `backend` directory
 2. Add the following variables
@@ -42,12 +59,17 @@ MYSQL_PASSWORD = "your-password"
 MYSQL_DB = "your-development-db"
 SECRET_KEY = "your-secret-key"
 SERVER = "http://localhost:5173"
+port = ""
 ```
-#### Running the application
+## Running the application
+   ### backend
+`python3 run.py`
 
-`$ python3 run.py`
+Use either of these commands to run `frontend`
 
-## v1 API Endpoints
+`yarn dev` or `npm run dev`
+
+## V1 API Endpoints
 
 | Method | Endpoint            | Functionality |
 | ------ | ------------------------------- | ------------------------------------------- |
@@ -61,9 +83,9 @@ SERVER = "http://localhost:5173"
 | `POST` | `/api/v1/roles` | Creates a new role |
 
 
-#### Server Requests and Responses
+## Server Requests and Responses
 
-##### Sample user registration request body
+## Sample user registration request body
 
 ```json
 {
@@ -77,7 +99,7 @@ SERVER = "http://localhost:5173"
 }
 ```
 
-##### Sample user registration success response body
+## Sample user registration success response body
 
 ```json
 {
@@ -86,14 +108,14 @@ SERVER = "http://localhost:5173"
 }
 ```
 
-##### Sample same user registration response body
+## Sample same user registration response body
 ```json
 {
     "code": 409,
     "message": "You're already registered!"
 }
 ```
-##### Sample attendee addition request body
+## Sample attendee addition request body
 
 ```json
 {
@@ -107,14 +129,14 @@ SERVER = "http://localhost:5173"
 }
 ```
 
-##### Sample attendee addition response body
+## Sample attendee addition response body
 ```json
 {
     "code": 201,
     "msg": "Attendee added successfully"
 }
 ```
-##### Sample same attendee addition response body
+## Sample same attendee addition response body
 ```json
 {
     "code": 409,
@@ -122,18 +144,18 @@ SERVER = "http://localhost:5173"
 }
 ```
 
-##### Sample boadroom creation request body
+## Sample boadroom creation request body
 
 ```json
 {
-"name":"boardroom-name", 
-"capacity":"its-capacity", 
-"location":"where-its-located", 
-"description":"its-description",
+"name":"boardroom_name", 
+"capacity":"its_capacity", 
+"location":"where_its_located", 
+"description":"its_description",
 }
 ```
 
-##### Sample boardroom creation response body
+## Sample boardroom creation response body
 ```json
 {
     "code": 201,
@@ -141,29 +163,29 @@ SERVER = "http://localhost:5173"
 }
 ```
 
-##### Sample meeting creation request body
+## Sample meeting creation request body
 
 ```json
 {
-     "title":"AWS",
-     "description":"CCP",
-     "start_time":"23:00",
-     "end_time":"22:00",
-     "organization_id":2,
-     "location":"Nyayo",
-     "meeting_date":"12/12/24",
-     "boardroom_id":1
+     "title":"meeting_title",
+     "description":"meeting_description",
+     "start_time":"meeting_start_time",
+     "end_time":"meeting_end_time",
+     "organization_id":"meeting_organization_id",
+     "location":"meeting_location",
+     "meeting_date":"meeting_date",
+     "boardroom_id":"meeting_boardroom_id"
 }
 ```
 
-##### Sample meeting creation response body
+## Sample meeting creation response body
 ```json
 {    
     "code": 201,
     "msg": "Meeting added successfully"
 }
 ```
-##### Sample organization creation request body
+## Sample organization creation request body
 
 ```json
 {
@@ -172,14 +194,14 @@ SERVER = "http://localhost:5173"
 }
 ```
 
-##### Sample organization creation response body
+## Sample organization creation response body
 ```json
 {
     "code": 201,
     "msg": "organization created successfully"
 }
 ```
-##### Sample role creation request body
+## Sample role creation request body
 
 ```json
 {
@@ -188,14 +210,14 @@ SERVER = "http://localhost:5173"
 }
 ```
 
-##### Sample role creation response body
+## Sample role creation response body
 ```json
 {
     "code": 201,
     "msg": "Role created successfully"
 }
 ```
-##### Sample resource creation request body
+## Sample resource creation request body
 
 ```json
 {
@@ -205,7 +227,7 @@ SERVER = "http://localhost:5173"
 }
 ```
 
-##### Sample resource creation response body
+## Sample resource creation response body
 ```json
 {
   "code": 201,
