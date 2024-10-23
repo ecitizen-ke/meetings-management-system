@@ -1,4 +1,5 @@
 from flask import Blueprint, request
+from flask_jwt_extended import jwt_required
 from ..models import Resource
 from utils.exception import DatabaseException
 from utils.responses import response, response_with_data
@@ -7,6 +8,7 @@ resources_blueprint = Blueprint("resources_blueprint", __name__)
 
 
 @resources_blueprint.route("/api/v1/resources", methods=["POST"])
+@jwt_required()
 def create():
     resource = Resource()
     try:
@@ -25,6 +27,7 @@ def create():
 
 
 @resources_blueprint.route("/api/v1/resources", methods=["GET"])
+@jwt_required()
 def fetchall():
     resource = Resource()
     return response_with_data("OK", resource.get_all(), 200)

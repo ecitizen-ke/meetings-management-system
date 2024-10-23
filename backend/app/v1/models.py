@@ -416,22 +416,16 @@ class User:
 
     def login(self, email, password):
         user = self.find_by_email(email)
-        if User.verify_hash(password, user.get("password")):
-            try:
+        try:
+            if user is not None and User.verify_hash(password, user.get("password")):
                 return self.db.fetchone(
                     "SELECT * FROM users WHERE email=%s;",
                     (email,),
                 )
-            except Exception as e:
-                return e
-            finally:
-                self.db.close()
-
-        user = self.find_by_email(email)
-        if user and user["password"] == password:
-            return user
-        else:
-            return False
+        except Exception as e:
+            return e
+        finally:
+            self.db.close()
 
     def assign_role(self, email, role_name):
         """Fetch all users in the database table"""
