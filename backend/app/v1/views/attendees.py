@@ -1,4 +1,5 @@
 from flask import Blueprint, request
+from flask_jwt_extended import jwt_required
 from ..models import Attendee
 from utils.exception import DatabaseException
 from utils.responses import response, response_with_data
@@ -8,6 +9,7 @@ attendees_blueprint = Blueprint("attendees_blueprint", __name__)
 
 
 @attendees_blueprint.route("/api/v1/attendees", methods=["POST"])
+@jwt_required()
 def add():
     attendee = Attendee()
     try:
@@ -40,12 +42,14 @@ def add():
 
 
 @attendees_blueprint.route("/api/v1/attendees", methods=["GET"])
+@jwt_required()
 def fetchall():
     attendee = Attendee()
     return response_with_data("OK", attendee.get_all(), 200)
 
 
 @attendees_blueprint.route("/api/v1/attendees/<int:id>", methods=["GET"])
+@jwt_required()
 def fetch_by_meeting_id(id):
     attendee = Attendee()
     return response_with_data("OK", attendee.get_by_meeting_id(id), 200)

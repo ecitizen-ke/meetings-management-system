@@ -1,5 +1,5 @@
-import json
 from flask import Blueprint, jsonify, request
+from flask_jwt_extended import jwt_required
 from ..models import Meeting, Report
 
 
@@ -7,6 +7,7 @@ meetings_blueprint = Blueprint("meetings_blueprint", __name__)
 
 
 @meetings_blueprint.route("/api/v1/meetings", methods=["POST"])
+@jwt_required()
 def create():
     meeting = Meeting()
 
@@ -29,29 +30,37 @@ def create():
             data.get("organization_id"),
             # resources_json,
             # data.get("location"),
-            'Nyayo House'
+            "Nyayo House",
         )
         return jsonify({"msg": "Meeting added successfully"}), 201
     except Exception as e:
 
-        return jsonify({
-            "msg":"Something went wrong, "+str(e),
-        }),500
+        return (
+            jsonify(
+                {
+                    "msg": "Something went wrong, " + str(e),
+                }
+            ),
+            500,
+        )
 
 
 @meetings_blueprint.route("/api/v1/meetings", methods=["GET"])
+@jwt_required()
 def fetchall():
     meetings = Meeting()
     return jsonify(meetings.get_all())
 
 
 @meetings_blueprint.route("/api/v1/meetings/<int:id>", methods=["GET"])
+@jwt_required()
 def fetchone(id):
     meetings = Meeting()
     return jsonify(meetings.get_by_id(id))
 
 
 @meetings_blueprint.route("/api/v1/meetings/<int:meeting_id>", methods=["PUT"])
+@jwt_required()
 def update(meeting_id):
     try:
         meeting = Meeting()
@@ -83,6 +92,7 @@ def update(meeting_id):
 
 
 @meetings_blueprint.route("/api/v1/meetings/update-status/<int:meeting_id>", methods=["PATCH"])
+@jwt_required()
 def update_status(meeting_id):
     try:
         meeting = Meeting()
@@ -103,6 +113,7 @@ def update_status(meeting_id):
 
 
 @meetings_blueprint.route("/api/v1/meetings/<int:id>", methods=["DELETE"])
+@jwt_required()
 def delete(id):
     meeting = Meeting()
     try:
@@ -115,6 +126,7 @@ def delete(id):
 
 
 @meetings_blueprint.route("/api/v1/meetings/summary", methods=["GET"])
+@jwt_required()
 def summerize():
     report = Report()
     try:
