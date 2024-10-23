@@ -117,7 +117,7 @@ class Meeting:
         try:
 
             self.db.execute(
-                "INSERT INTO meetings (title, description, meeting_date, start_time, end_time, boardroom_id, organization_id, location) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+                "INSERT INTO meetings (title, description, meeting_date, start_time, end_time, boardroom_id, organization_id, location, longitude, latitude, county, town) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s,%s,%s, %s)",
                 (
                     title,
                     description,
@@ -173,7 +173,21 @@ class Meeting:
             return e
 
     def update(
-        self, meeting_id, title, description, meeting_date, start_time, end_time, boardroom_id, organization_id, resources_id, location, longitude, latitude, county, town
+        self,
+        meeting_id,
+        title,
+        description,
+        meeting_date,
+        start_time,
+        end_time,
+        boardroom_id,
+        organization_id,
+        resources_id,
+        location,
+        longitude,
+        latitude,
+        county,
+        town,
     ):
         try:
             self.db.execute(
@@ -181,7 +195,22 @@ class Meeting:
                 UPDATE meetings SET title = %s, description = %s, meeting_date = %s, start_time = %s, end_time =%s, boardroom_id = %s, organization_id = %s, resources_id = %s, location = %s, longitude = %s, latitude = %s, county = %s, town = %s
                 WHERE id = %s
             """,
-                (title, description, meeting_date, start_time, end_time, boardroom_id, meeting_id, organization_id, resources_id, location, longitude, latitude, county, town),
+                (
+                    title,
+                    description,
+                    meeting_date,
+                    start_time,
+                    end_time,
+                    boardroom_id,
+                    meeting_id,
+                    organization_id,
+                    resources_id,
+                    location,
+                    longitude,
+                    latitude,
+                    county,
+                    town,
+                ),
             )
             self.db.commit()
 
@@ -298,7 +327,7 @@ class Role:
             return e
         finally:
             self.db.close()
-        
+
     def delete(self, id):
         try:
             self.db.execute("DELETE FROM roles WHERE id = %s", (id,))
@@ -308,7 +337,7 @@ class Role:
             return e
         finally:
             self.db.close()
-    
+
     def add_permission(self, role_id, permissions):
         try:
             for permission in permissions:
@@ -322,7 +351,7 @@ class Role:
             return e
         finally:
             self.db.close()
-    
+
     def has_permission(self, role_id, permission_id):
         try:
             return self.db.fetchone(
@@ -343,6 +372,7 @@ class Role:
             return e
         finally:
             self.db.close()
+
 
 class Permission:
     def __init__(self):
@@ -379,6 +409,7 @@ class Permission:
             return e
         finally:
             self.db.close()
+
 
 class User:
 
@@ -460,8 +491,8 @@ class User:
             user = self.db.fetchone("SELECT id FROM users WHERE email = %s", (email,))
             if not role or not user:
                 return False
-            
-            user_roles =  self.db.fetchone(
+
+            user_roles = self.db.fetchone(
                 "SELECT * FROM users_roles WHERE user_id = %s AND role_id = %s",
                 (user["id"], role["id"]),
             )
@@ -474,17 +505,21 @@ class User:
             return e
         # finally:
         #     self.db.close()
-        
+
     def has_permission(self, email, permission_name):
         try:
-            
-            permission = self.db.fetchone("SELECT id FROM permissions WHERE name = %s", (permission_name,))
+
+            permission = self.db.fetchone(
+                "SELECT id FROM permissions WHERE name = %s", (permission_name,)
+            )
 
             user = self.db.fetchone("SELECT id FROM users WHERE email = %s", (email,))
             if not permission or not user:
                 return False  # Permission or User not found
-            
-            role = self.db.fetchone("SELECT role_id FROM users_roles WHERE user_id = %s", (user["id"],))
+
+            role = self.db.fetchone(
+                "SELECT role_id FROM users_roles WHERE user_id = %s", (user["id"],)
+            )
             if not role:
                 return False  # User has no assigned roles
 
@@ -500,20 +535,22 @@ class User:
             return e
         finally:
             self.db.close()
-        
+
     def get_role(self, email):
         try:
             # return email
             user = self.db.fetchone("SELECT id FROM users WHERE email = %s", (email,))
             if not user:
-                return None  # User 
-            
-            role = self.db.fetchone("SELECT role_id FROM users_roles WHERE user_id = %s", (user["id"],))
+                return None  # User
+
+            role = self.db.fetchone(
+                "SELECT role_id FROM users_roles WHERE user_id = %s", (user["id"],)
+            )
             if not role:
                 return None  # User has no assigned roles
-            
+
             return self.db.fetchone("SELECT name FROM roles WHERE id = %s", (role["role_id"],))
-          
+
         except Exception as e:
             print(f"Database Error: {e}")
             return None
@@ -562,9 +599,10 @@ class Report:
                 # self.meetings.update_status(meeting["id"], "pending")
         return meetings_status
 
+
 class Location:
     def __init__(self):
-        self.db = Connection()
+        self.db = Database()
 
     def create(self, county, town):
         try:
@@ -573,9 +611,7 @@ class Location:
             # check if town exists in the list location variable
             if location and town in location["town"]:
                 return "Location already exists"
-            self.db.insert(
-                "INSERT INTO locations (county, town) VALUES (%s, %s)", (county, town)
-            )
+            self.db.insert("INSERT INTO locations (county, town) VALUES (%s, %s)", (county, town))
         except Exception as e:
             self.db.rollback()
             return e
@@ -597,6 +633,7 @@ class Location:
             return e
         finally:
             self.db.close()
+
     def filter_by_county_and_search(self, county, search):
         try:
             query = """
@@ -609,7 +646,6 @@ class Location:
             params = (f"%{county}%", f"%{search}%")
             return self.db.fetchmany(query, params)
         except Exception as e:
-            print (f"Database Error: {e}")
-            return []
+            return e
         finally:
             self.db.close()
