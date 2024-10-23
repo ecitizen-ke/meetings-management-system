@@ -1,4 +1,5 @@
 from flask import Blueprint, request
+from flask_jwt_extended import jwt_required
 from ..models import Boardroom
 from utils.exception import DatabaseException
 from utils.responses import response, response_with_data
@@ -8,6 +9,7 @@ boardroom_blueprint = Blueprint("boardroom_blueprint", __name__)
 
 
 @boardroom_blueprint.route("/api/v1/boardrooms", methods=["POST"])
+@jwt_required()
 def create():
     boardroom = Boardroom()
     try:
@@ -29,12 +31,14 @@ def create():
 
 
 @boardroom_blueprint.route("/api/v1/boardrooms", methods=["GET"])
+@jwt_required()
 def fetchall():
     boardroom = Boardroom()
     return response_with_data("OK", boardroom.get_all(), 200)
 
 
 @boardroom_blueprint.route("/api/v1/boardrooms/<int:id>", methods=["GET"])
+@jwt_required()
 def fetchone(id):
     boardroom = Boardroom()
     return response_with_data("OK", boardroom.get_by_id(id), 200)

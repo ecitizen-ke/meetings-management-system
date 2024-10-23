@@ -1,4 +1,5 @@
 from flask import Blueprint, request
+from flask_jwt_extended import jwt_required
 from ..models import Role
 from utils.exception import DatabaseException
 from utils.responses import response, response_with_data
@@ -8,6 +9,7 @@ roles_blueprint = Blueprint("roles_blueprint", __name__)
 
 
 @roles_blueprint.route("/api/v1/roles", methods=["POST"])
+@jwt_required()
 def add():
     role = Role()
     try:
@@ -26,6 +28,7 @@ def add():
 
 
 @roles_blueprint.route("/api/v1/roles", methods=["GET"])
+@jwt_required()
 def fetchall():
     role = Role()
     return response_with_data("OK", role.get_all(), 200)

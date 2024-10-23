@@ -1,4 +1,5 @@
 from flask import Blueprint, request
+from flask_jwt_extended import jwt_required
 from flask_jwt_extended import create_access_token
 from ..models import User
 from utils.exception import DatabaseException
@@ -95,6 +96,7 @@ def assign():
 
 
 @auth_blueprint.route("/api/v1/auth/users", methods=["GET"])
+@jwt_required()
 def users():
     user = User()
     try:
