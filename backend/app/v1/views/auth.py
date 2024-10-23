@@ -57,10 +57,13 @@ def login():
         result = user.login(email, password)
 
         if result:
+            name = {"name": result.get("first_name") + " " + result.get("last_name")}
             return response_with_data(
                 "OK",
                 {
-                    "token": create_access_token(identity=result.get("email")),
+                    "token": create_access_token(
+                        identity=result.get("email"), additional_claims=name
+                    ),
                 },
                 200,
             )
