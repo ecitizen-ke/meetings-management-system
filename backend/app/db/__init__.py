@@ -17,7 +17,7 @@ class Database:
 
     def create_tables(self):
         for statement in statements.values():
-            self.cursor.execute(statement)
+            self.cursor.execute(statement, multi=True)
 
     def execute(self, statement, data):
         return self.cursor.execute(statement, data)

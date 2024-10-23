@@ -286,8 +286,102 @@ class Role:
         finally:
             self.db.close()
 
+    def update(self, id, name, description):
+        try:
+            self.db.execute(
+                "UPDATE roles SET name = %s, description = %s WHERE id = %s",
+                (name, description, id),
+            )
+            self.db.commit()
+        except Exception as e:
+            self.db.rollback()
+            return e
+        finally:
+            self.db.close()
+        
+    def delete(self, id):
+        try:
+            self.db.execute("DELETE FROM roles WHERE id = %s", (id,))
+            self.db.commit()
+        except Exception as e:
+            self.db.rollback()
+            return e
+        finally:
+            self.db.close()
+    
+    def add_permission(self, role_id, permissions):
+        try:
+            for permission in permissions:
+                self.db.execute(
+                    "INSERT INTO roles_permissions (role_id, permission_id) VALUES (%s, %s)",
+                    (role_id, permission),
+                )
+            self.db.commit()
+        except Exception as e:
+            self.db.rollback()
+            return e
+        finally:
+            self.db.close()
+    
+    def has_permission(self, role_id, permission_id):
+        try:
+            return self.db.fetchone(
+                "SELECT * FROM roles_permissions WHERE role_id = %s AND permission_id = %s",
+                (role_id, permission_id),
+            )
+        except Exception as e:
+            return e
+        finally:
+            self.db.close()
+
+    def get_permissions(self, role_id):
+        try:
+            return self.db.fetchmany(
+                "SELECT * FROM roles_permissions WHERE role_id = %s", (role_id,)
+            )
+        except Exception as e:
+            return e
+        finally:
+            self.db.close()
+
+class Permission:
+    def __init__(self):
+        self.db = Database()
+
+    def create(self, name):
+        try:
+            self.db.execute("INSERT INTO permissions (name) VALUES (%s)", (name,))
+            if self.db.insert_success():
+                self.db.commit()
+        except Exception:
+            self.db.rollback()
+        finally:
+            self.db.close()
+
+    def get_all(self):
+        try:
+            return self.db.fetchmany("SELECT * FROM permissions")
+        except Exception as e:
+            return e
+        finally:
+            self.db.close()
+
+    def assign_permission_to_role(self, role_id, permission_id):
+        try:
+            self.db.execute(
+                "INSERT INTO roles_permissions (role_id, permission_id) VALUES (%s, %s)",
+                (role_id, permission_id),
+            )
+            if self.db.insert_success():
+                self.db.commit()
+        except Exception as e:
+            self.db.rollback()
+            return e
+        finally:
+            self.db.close()
 
 class User:
+
     def __init__(self):
         self.db = Database()
 
@@ -339,7 +433,7 @@ class User:
         else:
             return False
 
-    def asign_role(self, email, role_name):
+    def assign_role(self, email, role_name):
         """Fetch all users in the database table"""
         try:
             role = self.db.fetchone("SELECT id FROM roles WHERE name = %s", (role_name,))
@@ -349,6 +443,7 @@ class User:
                     "INSERT INTO users_roles (user_id, role_id) VALUES (%s, %s)",
                     (user["id"], role["id"]),
                 )
+                self.db.commit()
         except Exception as e:
             self.db.rollback()
             return e
@@ -364,6 +459,70 @@ class User:
             return e
         finally:
             self.db.close()
+
+    def has_role(self, email, role_name):
+        try:
+            role = self.db.fetchone("SELECT id FROM roles WHERE name = %s", (role_name,))
+            user = self.db.fetchone("SELECT id FROM users WHERE email = %s", (email,))
+            if not role or not user:
+                return False
+            
+            user_roles =  self.db.fetchone(
+                "SELECT * FROM users_roles WHERE user_id = %s AND role_id = %s",
+                (user["id"], role["id"]),
+            )
+            if user_roles:
+                return True
+            else:
+                return False
+
+        except Exception as e:
+            return e
+        # finally:
+        #     self.db.close()
+        
+    def has_permission(self, email, permission_name):
+        try:
+            
+            permission = self.db.fetchone("SELECT id FROM permissions WHERE name = %s", (permission_name,))
+
+            user = self.db.fetchone("SELECT id FROM users WHERE email = %s", (email,))
+            if not permission or not user:
+                return False  # Permission or User not found
+            
+            role = self.db.fetchone("SELECT role_id FROM users_roles WHERE user_id = %s", (user["id"],))
+            if not role:
+                return False  # User has no assigned roles
+
+            role_permissions = self.db.fetchone(
+                "SELECT * FROM roles_permissions WHERE role_id = %s AND permission_id = %s",
+                (role["role_id"], permission["id"]),
+            )
+            if role_permissions:
+                return True
+            else:
+                return False
+        except Exception as e:
+            return e
+        finally:
+            self.db.close()
+        
+    def get_role(self, email):
+        try:
+            # return email
+            user = self.db.fetchone("SELECT id FROM users WHERE email = %s", (email,))
+            if not user:
+                return None  # User 
+            
+            role = self.db.fetchone("SELECT role_id FROM users_roles WHERE user_id = %s", (user["id"],))
+            if not role:
+                return None  # User has no assigned roles
+            
+            return self.db.fetchone("SELECT name FROM roles WHERE id = %s", (role["role_id"],))
+          
+        except Exception as e:
+            print(f"Database Error: {e}")
+            return None
 
     @staticmethod
     def generate_hash(password):
