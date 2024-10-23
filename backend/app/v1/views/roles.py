@@ -1,4 +1,5 @@
 from flask import Blueprint, request
+from flask_jwt_extended import jwt_required
 from ..models import Role
 from ..models import Permission
 from ..models import User
@@ -32,6 +33,7 @@ def add():
 
 
 @roles_blueprint.route("/api/v1/roles", methods=["GET"])
+@jwt_required()
 def fetchall():
     role = Role()
     return response_with_data("OK", role.get_all(), 200)

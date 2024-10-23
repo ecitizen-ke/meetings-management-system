@@ -1,4 +1,5 @@
 from flask import Blueprint, request
+from flask_jwt_extended import jwt_required
 from flask_jwt_extended import create_access_token
 from ..models import User
 from ..models import Role
@@ -65,6 +66,7 @@ def login():
         additional_claims = {"role": role}
 
         if result:
+            name = {"name": result.get("first_name") + " " + result.get("last_name")}
             return response_with_data(
                 "OK",
                 {
@@ -104,6 +106,7 @@ def assign():
 
 
 @auth_blueprint.route("/api/v1/auth/users", methods=["GET"])
+@jwt_required()
 def users():
     user = User()
     try:

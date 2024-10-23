@@ -1,4 +1,5 @@
 from flask import Blueprint, request
+from flask_jwt_extended import jwt_required
 from ..models import Organization
 from utils.exception import DatabaseException
 from utils.responses import response, response_with_data
@@ -8,6 +9,7 @@ organizations_blueprint = Blueprint("organizations_blueprint", __name__)
 
 
 @organizations_blueprint.route("/api/v1/organizations", methods=["POST"])
+@jwt_required()
 def create():
     organization = Organization()
     try:
@@ -27,6 +29,7 @@ def create():
 
 
 @organizations_blueprint.route("/api/v1/organizations", methods=["GET"])
+@jwt_required()
 def fetchall():
     organization = Organization()
     return response_with_data("OK", organization.get_all(), 200)
