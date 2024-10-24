@@ -1,5 +1,7 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required
+from utils.responses import response, response_with_data
+from utils.exception import DatabaseException
 from ..models import Meeting, Report
 
 
@@ -14,8 +16,8 @@ def create():
     try:
         data = request.get_json()
         # resources_json = json.dumps(data["resources_id"])
-        # if not data or not isinstance(data, dict):
-        #     return jsonify({"msg": "Invalid JSON format or empty payload"}), 400
+        if not data or not isinstance(data, dict):
+            return jsonify({"msg": "Invalid JSON format or empty payload"}), 400
         required_fields = ["title", "description", "start_time", "end_time"]
         missing_fields = [field for field in required_fields if field not in data]
         if missing_fields:
@@ -27,7 +29,6 @@ def create():
             data.get("start_time"),
             data.get("end_time"),
             data.get("boardroom_id"),
-            data.get("department_id"),
             # resources_json,
             data.get("organization_id"),
             data.get("location"),
@@ -35,35 +36,24 @@ def create():
             data.get("latitude"),
             data.get("county"),
             data.get("town"),
-            # resources_json,
-            # data.get("location"),
-            "Nyayo House",
         )
-        return jsonify({"msg": "Meeting added successfully"}), 201
-    except Exception as e:
-
-        return (
-            jsonify(
-                {
-                    "msg": "Something went wrong, " + str(e),
-                }
-            ),
-            500,
-        )
+        return response("Meeting added successfully", 201)
+    except DatabaseException as e:
+        return response("Something went wrong, " + str(e), 400)
 
 
 @meetings_blueprint.route("/api/v1/meetings", methods=["GET"])
 @jwt_required()
 def fetchall():
     meetings = Meeting()
-    return jsonify(meetings.get_all())
+    return response_with_data("OK", meetings.get_all(), 200)
 
 
 @meetings_blueprint.route("/api/v1/meetings/<int:id>", methods=["GET"])
 @jwt_required()
 def fetchone(id):
     meetings = Meeting()
-    return jsonify(meetings.get_by_id(id))
+    return response_with_data("OK", meetings.get_by_id(id), 200)
 
 
 @meetings_blueprint.route("/api/v1/meetings/<int:meeting_id>", methods=["PUT"])

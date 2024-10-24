@@ -13,6 +13,7 @@ def fetchall():
     return response_with_data("OK", locations.get_all(), 200)
 
 
+
 @locations_blueprint.route("/api/v1/location-towns", methods=["GET"])
 def get_locations_select():
     county = request.args.get("county", None)

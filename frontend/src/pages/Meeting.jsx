@@ -101,11 +101,8 @@ const Meeting = () => {
 
   const fetchMeetings = async () => {
     try {
-      const { data } = await getData(
-        `${Config.API_URL}/meetings`,
-        customHeaders
-      );
-      setMeetings(data);
+      const data = await getData(`${Config.API_URL}/meetings`, customHeaders);
+      setMeetings(data.reverse());
     } catch (error) {
       handleApiError(error, dispatch);
     }
@@ -193,7 +190,6 @@ const Meeting = () => {
 
     setOpenToast(false);
   };
-
   const columns = [
     {
       field: 'id',

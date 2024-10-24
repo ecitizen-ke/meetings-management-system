@@ -25,6 +25,7 @@ import Notification from '../../components/Notification';
 import { handleApiError } from '../../utils/errorHandler';
 import { postData } from '../../utils/api';
 import { Config } from '../../Config';
+import { jwtDecode } from 'jwt-decode';
 
 const Login = () => {
   const {
@@ -58,13 +59,15 @@ const Login = () => {
         email: e.email,
         password: e.password,
       };
-      const {
-        data: { email, first_name, last_name },
-      } = await postData(`${Config.API_URL}/auth/login`, user);
+      const response = await postData(`${Config.API_URL}/auth/login`, user);
+      console.log(response);
+      const token = response.data.token;
+      const { sub, name } = jwtDecode(token);
+
       const authData = {
         auth: {
-          email,
-          name: `${first_name} ${last_name}`,
+          email: sub,
+          name,
         },
         isLoggedIn: true,
       };
@@ -153,7 +156,7 @@ const Login = () => {
                             }}
                             variant='h6'
                           >
-                            {!showPassword ? 'Show Password' : 'Hide Password'}
+                            {!showPassword ? <Visibility /> : <VisibilityOff />}
                           </Typography>
                         </IconButton>
                       </InputAdornment>

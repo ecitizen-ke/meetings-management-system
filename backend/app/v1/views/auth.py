@@ -1,6 +1,6 @@
 from flask import Blueprint, request
 from flask_jwt_extended import jwt_required
-from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_access_token, create_refresh_token
 from ..models import User
 from ..models import Role
 from utils.exception import DatabaseException
@@ -55,22 +55,28 @@ def login():
 
         if not all([email, password]):
             return response("Missing required fields", 400)
-        
+
         role = user.get_role(email)
 
         result = user.login(email, password)
-       
-        if not role:
-            return response("Role not found", 404)
-        
-        additional_claims = {"role": role}
+
+        # if not role:
+        #     return response("Role not found", 404)
 
         if result:
-            name = {"name": result.get("first_name") + " " + result.get("last_name")}
+            claims = {
+                "name": result.get("first_name") + " " + result.get("last_name"),
+                "role": role,
+            }
             return response_with_data(
                 "OK",
                 {
-                    "token": create_access_token(identity=result.get("email"), additional_claims=additional_claims),
+                    "access_token": create_access_token(
+                        identity=result.get("email"),
+                        additional_claims=claims,
+                        fresh=True,
+                    ),
+                    "refresh_token": create_refresh_token(identity=result.get("email")),
                 },
                 200,
             )
@@ -97,8 +103,8 @@ def assign():
             result = user.assign_role(email, role_name)
             # user.assign_role(email, role)
             if isinstance(result, Exception):
-                return response("Role Assignment Failed"+str(result),403)
-            return response("User Role Assgined Successfully",200)
+                return response("Role Assignment Failed" + str(result), 403)
+            return response("User Role Assgined Successfully", 200)
         else:
             return response("User not found!", 404)
     except DatabaseException as e:
