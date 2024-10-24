@@ -636,13 +636,7 @@ class Location:
 
     def filter_by_county_and_search(self, county, search):
         try:
-            query = """
-                SELECT id, town 
-                FROM locations 
-                WHERE county LIKE %s AND town LIKE %s 
-                ORDER BY town ASC 
-                LIMIT 10
-            """
+            query = "SELECT id, town FROM locations WHERE county LIKE %s AND town LIKE %s ORDER BY town ASC LIMIT 10"
             params = (f"%{county}%", f"%{search}%")
             return self.db.fetchmany(query, params)
         except Exception as e:

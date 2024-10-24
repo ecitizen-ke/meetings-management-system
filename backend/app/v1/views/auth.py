@@ -60,8 +60,8 @@ def login():
 
         result = user.login(email, password)
 
-        if not role:
-            return response("Role not found", 404)
+        # if not role:
+        #     return response("Role not found", 404)
 
         if result:
             claims = {
