@@ -5,8 +5,7 @@ from ..models import Permission
 from ..models import User
 from utils.exception import DatabaseException
 from utils.responses import response, response_with_data
-from utils.middleware import verify_role
-from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
+from utils.decorators import verify_role
 
 
 roles_blueprint = Blueprint("roles_blueprint", __name__)
@@ -38,10 +37,12 @@ def fetchall():
     role = Role()
     return response_with_data("OK", role.get_all(), 200)
 
+
 @roles_blueprint.route("/api/v1/roles/<int:id>", methods=["GET"])
 def fetch_by_id(id):
     role = Role()
     return response_with_data("OK", role.get_permissions(id), 200)
+
 
 @roles_blueprint.route("/api/v1/roles/<int:id>", methods=["DELETE"])
 def delete(id):
@@ -54,7 +55,8 @@ def delete(id):
             raise DatabaseException(str(result))
     except DatabaseException as e:
         return response("Something went wrong, " + str(e), 400)
-    
+
+
 @roles_blueprint.route("/api/v1/roles/<int:id>", methods=["PUT"])
 def update(id):
     role = Role()
@@ -71,7 +73,8 @@ def update(id):
             raise DatabaseException(str(result))
     except DatabaseException as e:
         return response("Something went wrong, " + str(e), 400)
-    
+
+
 @roles_blueprint.route("/api/v1/roles/assign-permissions", methods=["POST"])
 def assign_permissions():
     role = Role()
@@ -88,7 +91,8 @@ def assign_permissions():
             raise DatabaseException(str(result))
     except DatabaseException as e:
         return response("Something went wrong, " + str(e), 400)
-    
+
+
 @roles_blueprint.route("/api/v1/roles/assign-role", methods=["POST"])
 def assign_role():
     user = User()
@@ -104,16 +108,16 @@ def assign_role():
         if user.find_by_email(email):
             result = user.assign_role(email, role_name)
             if isinstance(result, Exception):
-                return response("Role Assignment Failed"+str(result),403)
-            return response("User Role Assgined Successfully",200)
+                return response("Role Assignment Failed" + str(result), 403)
+            return response("User Role Assgined Successfully", 200)
         else:
             return response("User not found!", 404)
     except DatabaseException as e:
         return response("Something went wrong, " + str(e), 400)
 
 
-
 # Permissions
+
 
 @roles_blueprint.route("/api/v1/permissions", methods=["POST"])
 def create_permission():
@@ -131,7 +135,8 @@ def create_permission():
             raise DatabaseException(str(result))
     except DatabaseException as e:
         return response("Something went wrong, " + str(e), 400)
-    
+
+
 @roles_blueprint.route("/api/v1/permissions", methods=["GET"])
 def fetchall_permissions():
     permission = Permission()
