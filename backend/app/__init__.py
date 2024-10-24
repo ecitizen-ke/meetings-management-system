@@ -19,12 +19,14 @@ def initialize_extensions(app):
     jwt.init_app(app)
     with app.app_context() as context:
         context.push()
-        Database().create_tables()
+        db = Database()
+        db.create_tables()
+        db.seed()
 
 
 def register_blueprints(app):
     from .v1.views.organizations import organizations_blueprint
-    from .v1.views.boardrooms import boardroom_blueprint
+    from .v1.views.venues import venue_blueprint
     from .v1.views.meetings import meetings_blueprint
     from .v1.views.attendees import attendees_blueprint
     from .v1.views.resources import resources_blueprint
@@ -33,9 +35,10 @@ def register_blueprints(app):
     from .v1.views.qr import qr_blueprint
     from .v1.views.reports import reports_blueprint
     from .v1.views.locations import locations_blueprint
+    from .v1.views.permissions import permissions_blueprint
 
     app.register_blueprint(organizations_blueprint)
-    app.register_blueprint(boardroom_blueprint)
+    app.register_blueprint(venue_blueprint)
     app.register_blueprint(meetings_blueprint)
     app.register_blueprint(attendees_blueprint)
     app.register_blueprint(roles_blueprint)
@@ -44,3 +47,4 @@ def register_blueprints(app):
     app.register_blueprint(qr_blueprint)
     app.register_blueprint(reports_blueprint)
     app.register_blueprint(locations_blueprint)
+    app.register_blueprint(permissions_blueprint)

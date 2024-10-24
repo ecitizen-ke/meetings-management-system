@@ -9,3 +9,8 @@ def response(message, code):
 def response_with_data(message, data, code):
     """response with data"""
     return jsonify({"message": message, "data": data, "code": code}), code
+
+
+def no_data_found():
+    """response without content"""
+    return jsonify(), 204
