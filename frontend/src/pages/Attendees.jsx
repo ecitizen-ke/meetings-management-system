@@ -19,7 +19,11 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import logo from '../assets/logo.jpg';
 import moment from 'moment';
-
+import { getToken } from '../utils/helpers';
+const customHeaders = {
+  Authorization: 'Bearer ' + getToken(),
+  'Content-Type': 'application/json',
+};
 const Attendees = () => {
   const [attendees, setAttendees] = useState([]);
   const [meeting, setMeeting] = useState(null);
@@ -39,7 +43,8 @@ const Attendees = () => {
   const fetchAttendees = async () => {
     try {
       const { data } = await getData(
-        `${Config.API_URL}/attendees/${params.id}`
+        `${Config.API_URL}/attendees/${params.id}`,
+        customHeaders
       );
       setAttendees(data);
     } catch (error) {
@@ -50,7 +55,10 @@ const Attendees = () => {
   //   fetch meeting
   const fetchMeeting = async () => {
     try {
-      const { data } = await getData(`${Config.API_URL}/meetings/${params.id}`);
+      const { data } = await getData(
+        `${Config.API_URL}/meetings/${params.id}`,
+        customHeaders
+      );
       setMeeting(data);
     } catch (error) {
       handleApiError(error, dispatch);
@@ -148,7 +156,7 @@ const Attendees = () => {
         'Designation',
         'Phone',
         'Email',
-        'Signature'
+        'Signature',
       ];
       const tableRows = attendees.map((item, index) => [
         index + 1, // Row number (index)
@@ -157,7 +165,7 @@ const Attendees = () => {
         item.designation, // Designation
         item.phone, //Phone
         item.email, // Email
-        item.signature,  //signature
+        item.signature, //signature
         //item.department, // Department
       ]);
 
