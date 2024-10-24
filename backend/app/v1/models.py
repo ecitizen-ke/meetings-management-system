@@ -611,9 +611,7 @@ class Location:
             # check if town exists in the list location variable
             if location and town in location["town"]:
                 return "Location already exists"
-            self.db.execute(
-                "INSERT INTO locations (county, town) VALUES (%s, %s)", (county, town)
-            )
+            self.db.execute("INSERT INTO locations (county, town) VALUES (%s, %s)", (county, town))
         except Exception as e:
             self.db.rollback()
             return e
@@ -645,4 +643,3 @@ class Location:
             return e
         finally:
             self.db.close()
-            
