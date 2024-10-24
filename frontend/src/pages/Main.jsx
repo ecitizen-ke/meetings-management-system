@@ -84,11 +84,16 @@ const Main = () => {
         Authorization: 'Bearer xxxxxx',
         'Content-Type': 'application/json',
       };
-      const { data } = await getData(
+      const { complete, ongoing, pending } = await getData(
         `${Config.API_URL}/meetings/summary`,
         customHeaders
       );
-      setStats(data);
+
+      setStats({
+        complete,
+        ongoing,
+        pending,
+      });
     } catch (error) {
       handleApiError(error, dispatch);
     }
@@ -99,11 +104,8 @@ const Main = () => {
         Authorization: 'Bearer xxxxxx',
         'Content-Type': 'application/json',
       };
-      const { data } = await getData(
-        `${Config.API_URL}/meetings`,
-        customHeaders
-      );
-      setMeetings(data);
+      const data = await getData(`${Config.API_URL}/meetings`, customHeaders);
+      setMeetings(data.reverse());
     } catch (error) {
       handleApiError(error, dispatch);
     }
@@ -132,7 +134,7 @@ const Main = () => {
                 Ongoing
               </Typography>
               <Typography color={`white`} variant='h5'>
-                {stats.ongoing}
+                {stats?.ongoing}
               </Typography>
             </CardContent>
           </Card>
@@ -154,7 +156,7 @@ const Main = () => {
                 Upcoming
               </Typography>
               <Typography color={`white`} variant='h5'>
-                {stats.pending}
+                {stats?.pending}
               </Typography>
             </CardContent>
           </Card>
@@ -171,7 +173,7 @@ const Main = () => {
                 Completed
               </Typography>
               <Typography color={`black`} variant='h5'>
-                {stats.complete}
+                {stats?.complete}
               </Typography>
             </CardContent>
           </Card>
@@ -193,7 +195,7 @@ const Main = () => {
                 Total Meetings
               </Typography>
               <Typography color={`white`} variant='h5'>
-                {stats.ongoing + stats.pending + stats.complete}
+                {stats?.ongoing + stats?.pending + stats?.complete}
               </Typography>
             </CardContent>
           </Card>
