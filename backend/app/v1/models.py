@@ -117,7 +117,7 @@ class Meeting:
         try:
 
             self.db.execute(
-                "INSERT INTO meetings (title, description, meeting_date, start_time, end_time, boardroom_id, organization_id, location) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+                "INSERT INTO meetings (title, description, meeting_date, start_time, end_time, boardroom_id, organization_id, location, longitude, latitude, county, town) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                 (
                     title,
                     description,
@@ -564,7 +564,7 @@ class Report:
 
 class Location:
     def __init__(self):
-        self.db = Connection()
+        self.db = Database()
 
     def create(self, county, town):
         try:
@@ -573,7 +573,7 @@ class Location:
             # check if town exists in the list location variable
             if location and town in location["town"]:
                 return "Location already exists"
-            self.db.insert(
+            self.db.execute(
                 "INSERT INTO locations (county, town) VALUES (%s, %s)", (county, town)
             )
         except Exception as e:
@@ -607,9 +607,8 @@ class Location:
                 LIMIT 10
             """
             params = (f"%{county}%", f"%{search}%")
-            return self.db.fetchmany(query, params)
+            return self.db.fetchandfilter(query, params)
         except Exception as e:
-            print (f"Database Error: {e}")
-            return []
+            return e
         finally:
             self.db.close()
