@@ -611,7 +611,9 @@ class Location:
             # check if town exists in the list location variable
             if location and town in location["town"]:
                 return "Location already exists"
-            self.db.insert("INSERT INTO locations (county, town) VALUES (%s, %s)", (county, town))
+            self.db.execute(
+                "INSERT INTO locations (county, town) VALUES (%s, %s)", (county, town)
+            )
         except Exception as e:
             self.db.rollback()
             return e
@@ -638,8 +640,9 @@ class Location:
         try:
             query = "SELECT id, town FROM locations WHERE county LIKE %s AND town LIKE %s ORDER BY town ASC LIMIT 10"
             params = (f"%{county}%", f"%{search}%")
-            return self.db.fetchmany(query, params)
+            return self.db.fetchandfilter(query, params)
         except Exception as e:
             return e
         finally:
             self.db.close()
+            
