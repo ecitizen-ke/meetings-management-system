@@ -19,7 +19,7 @@ import { getData, postData } from '../utils/api';
 import { Config } from '../Config';
 import { handleApiError } from '../utils/errorHandler';
 import { useDispatch } from 'react-redux';
-import { showMessage } from '../utils/helpers';
+import { getToken, showMessage } from '../utils/helpers';
 
 const Organizations = () => {
   const [organizations, setOrganizations] = useState([]);
@@ -46,7 +46,7 @@ const Organizations = () => {
     p: 4,
   };
   const customHeaders = {
-    Authorization: 'Bearer xxxxxx',
+    Authorization: 'Bearer ' + getToken(),
     'Content-Type': 'application/json',
   };
 
@@ -94,10 +94,10 @@ const Organizations = () => {
       reset();
       setOpenToast(true);
       fetchOrganizations();
-      
+
       showMessage(result.message, 'success', dispatch);
     } catch (error) {
-      console.log(error)
+      console.log(error);
       handleApiError(error, dispatch);
     }
   };
