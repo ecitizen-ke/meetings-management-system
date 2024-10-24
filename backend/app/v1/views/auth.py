@@ -1,10 +1,6 @@
 from flask import Blueprint, request
-from flask_jwt_extended import (
-    jwt_required,
-    create_access_token,
-    create_refresh_token,
-    get_jwt_identity,
-)
+from flask_jwt_extended import jwt_required
+from flask_jwt_extended import create_access_token, create_refresh_token, get_jwt_identity
 from ..models import User
 from utils.exception import DatabaseException
 from utils.responses import response, response_with_data, no_data_found
@@ -106,7 +102,7 @@ def login():
 
 @auth_blueprint.route("/api/v1/auth/refresh", methods=["POST"])
 @jwt_required(refresh=True)
-def get_refresh_token():
+def refresh():
     current_user = get_jwt_identity()
     try:
         return response_with_data(
