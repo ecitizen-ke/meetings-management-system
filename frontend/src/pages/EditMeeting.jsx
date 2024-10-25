@@ -26,6 +26,7 @@ import {
 import Notification from '../components/Notification';
 import { handleApiError } from '../utils/errorHandler';
 import { getToken, showMessage } from '../utils/helpers';
+import { useTokenRefresh } from '../hooks/useTokenRefresh';
 const customHeaders = {
   Authorization: 'Bearer ' + getToken(),
   'Content-Type': 'application/json',
@@ -36,6 +37,7 @@ const EditMeeting = () => {
   const [boardrooms, setBoardrooms] = useState([]);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const token = useTokenRefresh(getToken());
 
   const {
     register,

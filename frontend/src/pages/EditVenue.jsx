@@ -20,6 +20,7 @@ import {
   showNotification,
 } from '../redux/features/notifications/notificationSlice';
 import { getToken } from '../utils/helpers';
+import { useTokenRefresh } from '../hooks/useTokenRefresh';
 
 const customHeaders = {
   Authorization: 'Bearer ' + getToken(),
@@ -30,6 +31,8 @@ const EditVenue = () => {
   const [boardroom, setBoardroom] = useState();
   const dispatch = useDispatch();
   const params = useParams();
+  const token = useTokenRefresh(getToken());
+
   const {
     register,
     handleSubmit,

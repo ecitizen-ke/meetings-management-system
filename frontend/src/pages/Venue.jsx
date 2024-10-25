@@ -22,6 +22,7 @@ import {
 import Notification from '../components/Notification';
 import { useDispatch } from 'react-redux';
 import { getToken } from '../utils/helpers';
+import { useTokenRefresh } from '../hooks/useTokenRefresh';
 const customHeaders = {
   Authorization: 'Bearer ' + getToken(),
   'Content-Type': 'application/json',
@@ -34,6 +35,8 @@ const Venue = () => {
   const [boardrooms, setBoardrooms] = useState([]);
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const token = useTokenRefresh(getToken());
+
   const {
     register,
     handleSubmit,

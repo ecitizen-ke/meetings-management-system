@@ -20,6 +20,7 @@ import { Config } from '../Config';
 import { handleApiError } from '../utils/errorHandler';
 import { useDispatch } from 'react-redux';
 import { getToken, showMessage } from '../utils/helpers';
+import { useTokenRefresh } from '../hooks/useTokenRefresh';
 
 const Organizations = () => {
   const [organizations, setOrganizations] = useState([]);
@@ -28,6 +29,8 @@ const Organizations = () => {
   const handleClose = () => setOpen(false);
   const [openToast, setOpenToast] = useState(false);
   const dispatch = useDispatch();
+  const token = useTokenRefresh(getToken());
+
   const {
     register,
     handleSubmit,
