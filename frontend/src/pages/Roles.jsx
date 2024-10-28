@@ -14,8 +14,9 @@ import { Config } from '../Config';
 import { handleApiError } from '../utils/errorHandler';
 import { useDispatch } from 'react-redux';
 import { DataGrid } from '@mui/x-data-grid';
+import { getToken } from '../utils/helpers';
 const customHeaders = {
-  Authorization: 'Bearer xxxxxx',
+  Authorization: 'Bearer ' + getToken(),
   'Content-Type': 'application/json',
 };
 

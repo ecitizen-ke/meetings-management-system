@@ -16,6 +16,7 @@ import moment from 'moment';
 import { useNavigate } from 'react-router';
 import Notification from '../components/Notification';
 import { handleApiError } from '../utils/errorHandler';
+import { getToken } from '../utils/helpers';
 
 const Main = () => {
   const dispatch = useDispatch();
@@ -81,7 +82,7 @@ const Main = () => {
   const fetchStats = async () => {
     try {
       const customHeaders = {
-        Authorization: 'Bearer xxxxxx',
+        Authorization: 'Bearer ' + getToken(),
         'Content-Type': 'application/json',
       };
       const { complete, ongoing, pending } = await getData(
@@ -101,12 +102,17 @@ const Main = () => {
   const fetchMeetings = async () => {
     try {
       const customHeaders = {
-        Authorization: 'Bearer xxxxxx',
+        Authorization: 'Bearer ' + getToken(),
         'Content-Type': 'application/json',
       };
-      const data = await getData(`${Config.API_URL}/meetings`, customHeaders);
+      const { data } = await getData(
+        `${Config.API_URL}/meetings`,
+        customHeaders
+      );
+      console.log(data);
       setMeetings(data.reverse());
     } catch (error) {
+      console.log(error);
       handleApiError(error, dispatch);
     }
   };

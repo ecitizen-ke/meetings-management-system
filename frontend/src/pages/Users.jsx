@@ -1,4 +1,4 @@
-import { Add, ArrowForward, Edit } from "@mui/icons-material";
+import { Add, ArrowForward, Edit } from '@mui/icons-material';
 import {
   Badge,
   Box,
@@ -13,21 +13,27 @@ import {
   Select,
   Snackbar,
   TextField,
-} from "@mui/material";
-import React, { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { Config } from "../Config";
-import axios from "axios";
-import { postData } from "../utils/api";
-import { useDispatch } from "react-redux";
+} from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { Config } from '../Config';
+import axios from 'axios';
+import { getData, postData } from '../utils/api';
+import { useDispatch } from 'react-redux';
 import {
   hideNotification,
   showNotification,
-} from "../redux/features/notifications/notificationSlice";
-import Notification from "../components/Notification";
-import { DataGrid } from "@mui/x-data-grid";
-import Swal from "sweetalert2";
-import { Link } from "react-router-dom";
+} from '../redux/features/notifications/notificationSlice';
+import Notification from '../components/Notification';
+import { DataGrid } from '@mui/x-data-grid';
+import Swal from 'sweetalert2';
+import { Link } from 'react-router-dom';
+import { getToken } from '../utils/helpers';
+import { handleApiError } from '../utils/errorHandler';
+const customHeaders = {
+  Authorization: 'Bearer ' + getToken(),
+  'Content-Type': 'application/json',
+};
 const Users = () => {
   const [open, setOpen] = useState(false);
   const handleOpen = () => setOpen(true);
@@ -45,12 +51,12 @@ const Users = () => {
   } = useForm();
 
   const style = {
-    position: "absolute",
-    top: "50%",
-    left: "50%",
-    transform: "translate(-50%, -50%)",
-    width: "45%",
-    bgcolor: "background.paper",
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: '45%',
+    bgcolor: 'background.paper',
     boxShadow: 24,
     p: 4,
   };
@@ -72,24 +78,18 @@ const Users = () => {
   };
 
   // fetch users
-  const fetchUsers = () => {
-    fetch(`${Config.API_URL}/users`)
-      .then((response) => response.json())
-      .then((data) => {
-        console.log(data);
-        setUsers(data);
-      })
-      .catch((error) => console.log(error));
+  const fetchUsers = async () => {
+    try {
+      const users = await getData(`${Config.API_URL}/users`, customHeaders);
+      setUsers(users);
+    } catch (error) {
+      handleApiError(error, dispatch);
+    }
   };
 
   // create users
   const onSubmit = async (data) => {
-    data["password"] = "12345678";
-
-    const customHeaders = {
-      Authorization: "Bearer xxxxxx",
-      "Content-Type": "application/json",
-    };
+    data['password'] = '12345678';
 
     try {
       const result = await postData(
@@ -101,7 +101,7 @@ const Users = () => {
       dispatch(
         showNotification({
           message: result.msg,
-          type: "success", // success, error, warning, info
+          type: 'success', // success, error, warning, info
         })
       );
       handleClose();
@@ -110,11 +110,11 @@ const Users = () => {
       reset();
       fetchUsers();
     } catch (error) {
-      console.error("Error submitting data: ", error.response.data.msg);
+      console.error('Error submitting data: ', error.response.data.msg);
       dispatch(
         showNotification({
           message: error.response.data.msg,
-          type: "error", // success, error, warning, info
+          type: 'error', // success, error, warning, info
         })
       );
       handleClose();
@@ -123,7 +123,7 @@ const Users = () => {
   };
   // snackbar close
   const handleToastClose = (event, reason) => {
-    if (reason === "clickaway") {
+    if (reason === 'clickaway') {
       return;
     }
 
@@ -133,13 +133,13 @@ const Users = () => {
   const handleEdit = () => {};
   const handleDelete = () => {
     Swal.fire({
-      title: "Are you sure?",
+      title: 'Are you sure?',
       text: "You won't be able to revert this!",
-      icon: "warning",
+      icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: "#398e3d",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Yes, delete it!",
+      confirmButtonColor: '#398e3d',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, delete it!',
     }).then((result) => {
       if (result.isConfirmed) {
       }
@@ -147,16 +147,16 @@ const Users = () => {
   };
 
   const columns = [
-    { field: "id", headerName: "#", width: 70 },
-    { field: "first_name", headerName: "First Name", width: 220 },
-    { field: "last_name", headerName: "Last Name", width: 220 },
-    { field: "phone_number", headerName: "Phone Number", width: 220 },
-    { field: "email", headerName: "Email Address", width: 220 },
-    { field: "designation", headerName: "Designation", width: 220 },
+    { field: 'id', headerName: '#', width: 70 },
+    { field: 'first_name', headerName: 'First Name', width: 220 },
+    { field: 'last_name', headerName: 'Last Name', width: 220 },
+    { field: 'phone_number', headerName: 'Phone Number', width: 220 },
+    { field: 'email', headerName: 'Email Address', width: 220 },
+    { field: 'designation', headerName: 'Designation', width: 220 },
 
     {
-      field: "actions",
-      headerName: "",
+      field: 'actions',
+      headerName: '',
       width: 350,
       sortable: false,
       filterable: false,
@@ -164,9 +164,9 @@ const Users = () => {
         <>
           <div>
             <Button
-              variant="contained"
-              color="primary"
-              size="small"
+              variant='contained'
+              color='primary'
+              size='small'
               style={{ marginRight: 8 }}
               onClick={() => handleEdit(params.row)}
             >
@@ -175,9 +175,9 @@ const Users = () => {
 
             <Button
               style={{ marginRight: 8 }}
-              variant="contained"
-              color="secondary"
-              size="small"
+              variant='contained'
+              color='secondary'
+              size='small'
               onClick={() => handleDelete(params.row)}
             >
               Delete
@@ -190,31 +190,31 @@ const Users = () => {
 
   return (
     <>
-      <div className="meetings-header">
+      <div className='meetings-header'>
         <div>
           <h3>
             Users &nbsp;
             <Badge
               max={10}
               badgeContent={users.length}
-              color="secondary"
+              color='secondary'
             ></Badge>
           </h3>
         </div>
 
         <div
           style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
           }}
         >
           <div>
             <Button
               onClick={handleOpen}
-              variant="contained"
+              variant='contained'
               endIcon={<Add />}
-              color="secondary"
+              color='secondary'
             >
               Add New User
             </Button>
@@ -224,7 +224,7 @@ const Users = () => {
       <br />
       <Notification />
       <br />
-      <div style={{ width: "100%", marginTop: "35px" }}>
+      <div style={{ width: '100%', marginTop: '35px' }}>
         <DataGrid
           rows={users}
           columns={columns}
@@ -243,8 +243,8 @@ const Users = () => {
       <Modal
         open={open}
         onClose={handleClose}
-        aria-labelledby="modal-modal-title"
-        aria-describedby="modal-modal-description"
+        aria-labelledby='modal-modal-title'
+        aria-describedby='modal-modal-description'
       >
         <Box sx={style}>
           <Box
@@ -258,9 +258,9 @@ const Users = () => {
             </div>
             <div>
               <Button
-                variant="contained"
+                variant='contained'
                 onClick={handleClose}
-                color="secondary"
+                color='secondary'
               >
                 Close
               </Button>
@@ -271,23 +271,23 @@ const Users = () => {
           <br />
           <br />
 
-          <form onSubmit={handleSubmit(onSubmit)} action="" method="post">
+          <form onSubmit={handleSubmit(onSubmit)} action='' method='post'>
             <Grid container spacing={2}>
               <Grid item md={6} xs={12}>
                 <TextField
                   fullWidth={true}
-                  id="outlined-basic"
-                  label="First Name"
-                  variant="outlined"
-                  {...register("first_name", {
-                    required: "This field is required",
+                  id='outlined-basic'
+                  label='First Name'
+                  variant='outlined'
+                  {...register('first_name', {
+                    required: 'This field is required',
                   })}
                   error={errors.first_name && true}
                 />
                 {errors.first_name && (
                   <span
                     style={{
-                      color: "crimson",
+                      color: 'crimson',
                     }}
                   >
                     {errors.first_name.message}
@@ -297,18 +297,18 @@ const Users = () => {
               <Grid item md={6} xs={12}>
                 <TextField
                   fullWidth={true}
-                  id="outlined-basic"
-                  label="Last Name"
-                  variant="outlined"
-                  {...register("last_name", {
-                    required: "This field is required",
+                  id='outlined-basic'
+                  label='Last Name'
+                  variant='outlined'
+                  {...register('last_name', {
+                    required: 'This field is required',
                   })}
                   error={errors.last_name && true}
                 />
                 {errors.last_name && (
                   <span
                     style={{
-                      color: "crimson",
+                      color: 'crimson',
                     }}
                   >
                     {errors.last_name.message}
@@ -321,19 +321,19 @@ const Users = () => {
             <Box>
               <TextField
                 fullWidth={true}
-                id="outlined-basic"
-                label="Email"
-                type="email"
-                variant="outlined"
-                {...register("email", {
-                  required: "This field is required",
+                id='outlined-basic'
+                label='Email'
+                type='email'
+                variant='outlined'
+                {...register('email', {
+                  required: 'This field is required',
                 })}
                 error={errors.email && true}
               />
               {errors.email && (
                 <span
                   style={{
-                    color: "crimson",
+                    color: 'crimson',
                   }}
                 >
                   {errors.email.message}
@@ -345,19 +345,19 @@ const Users = () => {
             <Box>
               <TextField
                 fullWidth={true}
-                id="outlined-basic"
-                label="Phone Number"
-                type="tel"
-                variant="outlined"
-                {...register("phone_number", {
-                  required: "This field is required",
+                id='outlined-basic'
+                label='Phone Number'
+                type='tel'
+                variant='outlined'
+                {...register('phone_number', {
+                  required: 'This field is required',
                 })}
                 error={errors.phone_number && true}
               />
               {errors.phone_number && (
                 <span
                   style={{
-                    color: "crimson",
+                    color: 'crimson',
                   }}
                 >
                   {errors.phone_number.message}
@@ -369,19 +369,19 @@ const Users = () => {
             <Box>
               <TextField
                 fullWidth={true}
-                id="outlined-basic"
-                label="Designation"
-                type="text"
-                variant="outlined"
-                {...register("designation", {
-                  required: "This field is required",
+                id='outlined-basic'
+                label='Designation'
+                type='text'
+                variant='outlined'
+                {...register('designation', {
+                  required: 'This field is required',
                 })}
                 error={errors.designation && true}
               />
               {errors.designation && (
                 <span
                   style={{
-                    color: "crimson",
+                    color: 'crimson',
                   }}
                 >
                   {errors.designation.message}
@@ -392,13 +392,13 @@ const Users = () => {
             <br />
             <Box>
               <FormControl fullWidth>
-                <InputLabel id="bordroom-select-label">Department</InputLabel>
+                <InputLabel id='bordroom-select-label'>Department</InputLabel>
                 <Select
-                  labelId="bordroom-select-label"
-                  id="bordroom-select-label"
-                  label="Department"
-                  {...register("department_id", {
-                    required: "This field is required",
+                  labelId='bordroom-select-label'
+                  id='bordroom-select-label'
+                  label='Department'
+                  {...register('department_id', {
+                    required: 'This field is required',
                   })}
                 >
                   {departments.map((dept) => (
@@ -411,7 +411,7 @@ const Users = () => {
               {errors.department_id && (
                 <span
                   style={{
-                    color: "crimson",
+                    color: 'crimson',
                   }}
                 >
                   {errors.department_id.message}
@@ -424,15 +424,15 @@ const Users = () => {
             <Button
               disabled={isSubmitting}
               fullWidth={true}
-              variant="contained"
-              color="primary"
-              type="submit"
+              variant='contained'
+              color='primary'
+              type='submit'
             >
-              {isSubmitting ? "Please wait ..." : "Save"}
+              {isSubmitting ? 'Please wait ...' : 'Save'}
             </Button>
           </form>
           <br />
-          <Link className="text-muted" to={`/dashboard/departments`}>
+          <Link className='text-muted' to={`/dashboard/departments`}>
             View Departments&nbsp;
             <ArrowForward />
           </Link>
@@ -445,7 +445,7 @@ const Users = () => {
         open={openToast}
         autoHideDuration={6000}
         onClose={handleToastClose}
-        message="User was saved successfully"
+        message='User was saved successfully'
       />
     </>
   );
