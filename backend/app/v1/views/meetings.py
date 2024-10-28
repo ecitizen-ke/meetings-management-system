@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, json
 from flask_jwt_extended import jwt_required
 from utils.responses import response, response_with_data
 from utils.exception import DatabaseException
@@ -30,7 +30,7 @@ def create():
             data.get("end_time"),
             data.get("boardroom_id"),
             # resources_json,
-            data.get("organization_id"),
+            data["organization_ids"],
             data.get("location"),
             data.get("longitude"),
             data.get("latitude"),

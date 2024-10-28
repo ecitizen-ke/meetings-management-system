@@ -190,5 +190,24 @@ statements = {
     "roles_permissions": "CREATE TABLE IF NOT EXISTS roles_permissions (role_id INT NOT NULL,permission_id INT NOT NULL,PRIMARY KEY (role_id, permission_id),FOREIGN KEY (role_id) REFERENCES roles(id),FOREIGN KEY (permission_id) REFERENCES permissions(id),created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,updated_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP);",
     "locations": "CREATE TABLE IF NOT EXISTS locations (id INT AUTO_INCREMENT PRIMARY KEY,county VARCHAR(254) NOT NULL,town VARCHAR(254) NOT NULL,created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,updated_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP);",
     "alter_meetings": "SET @tables = (SELECT COUNT(*) FROM information_schema.tables WHERE table_name = 'meetings'); SET @columns = (SELECT COUNT(*) FROM information_schema.columns WHERE table_name = 'meetings' AND column_name IN ('longitude', 'latitude', 'county', 'town')); IF @tables > 0 AND @columns = 0 THEN ALTER TABLE meetings ADD COLUMN longitude DECIMAL(10, 8) AFTER location, ADD COLUMN latitude DECIMAL(10, 8) AFTER longitude, ADD COLUMN county VARCHAR(254) AFTER latitude, ADD COLUMN town VARCHAR(254) AFTER county; END IF;",
+    "meeting_organizations": "CREATE TABLE IF NOT EXISTS meeting_organizations (meeting_id INT NOT NULL,organization_id INT NOT NULL,PRIMARY KEY (meeting_id, organization_id),FOREIGN KEY (meeting_id) REFERENCES meetings(id),FOREIGN KEY (organization_id) REFERENCES organizations(id),created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,updated_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP);",
+    "drop_organization_id": """
+        SET @constraint_name = (SELECT CONSTRAINT_NAME FROM information_schema.KEY_COLUMN_USAGE 
+                                WHERE TABLE_NAME = 'meetings' 
+                                AND COLUMN_NAME = 'organization_id' 
+                                AND TABLE_SCHEMA = DATABASE());
+                                
+        IF @constraint_name IS NOT NULL THEN 
+            SET @sql = CONCAT('ALTER TABLE meetings DROP FOREIGN KEY ', @constraint_name); 
+            PREPARE stmt FROM @sql; 
+            EXECUTE stmt; 
+            DEALLOCATE PREPARE stmt;
+        END IF;
 
+        IF EXISTS (SELECT * FROM information_schema.columns 
+                WHERE table_name = 'meetings' 
+                AND column_name = 'organization_id') THEN
+            ALTER TABLE meetings DROP COLUMN organization_id;
+        END IF;
+        """,
 }
