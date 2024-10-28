@@ -10,23 +10,26 @@ import {
   Select,
   TextField,
   Typography,
-} from "@mui/material";
-import React, { useEffect, useState } from "react";
-import { getData, postData, putData } from "../utils/api";
-import { Config } from "../Config";
-import { useNavigate, useParams } from "react-router";
-import { useForm } from "react-hook-form";
-import { Edit } from "@mui/icons-material";
-import { useDispatch } from "react-redux";
-import moment from "moment";
+} from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import { getData, postData, putData } from '../utils/api';
+import { Config } from '../Config';
+import { useNavigate, useParams } from 'react-router';
+import { useForm } from 'react-hook-form';
+import { Edit } from '@mui/icons-material';
+import { useDispatch } from 'react-redux';
+import moment from 'moment';
 import {
   hideNotification,
   showNotification,
-} from "../redux/features/notifications/notificationSlice";
-import Notification from "../components/Notification";
-import { handleApiError } from "../utils/errorHandler";
-import { showMessage } from "../utils/helpers";
-
+} from '../redux/features/notifications/notificationSlice';
+import Notification from '../components/Notification';
+import { handleApiError } from '../utils/errorHandler';
+import { getToken, showMessage } from '../utils/helpers';
+const customHeaders = {
+  Authorization: 'Bearer ' + getToken(),
+  'Content-Type': 'application/json',
+};
 const EditMeeting = () => {
   const params = useParams();
   const [meeting, setMeeting] = useState(null);
@@ -47,10 +50,6 @@ const EditMeeting = () => {
   }, []);
 
   const fetchMeeting = async () => {
-    const customHeaders = {
-      Authorization: "Bearer xxxxxx",
-      "Content-Type": "application/json",
-    };
     try {
       const result = await getData(
         `${Config.API_URL}/meetings/${params.id}`,
@@ -63,11 +62,6 @@ const EditMeeting = () => {
   };
   const fetchBoardrooms = async () => {
     try {
-      const customHeaders = {
-        Authorization: "Bearer xxxxxx",
-        "Content-Type": "application/json",
-      };
-
       const result = await getData(
         `${Config.API_URL}/boardrooms`,
         customHeaders
@@ -79,18 +73,14 @@ const EditMeeting = () => {
   };
 
   const onSubmit = async (data) => {
-    const customHeaders = {
-      Authorization: "Bearer xxxxxx",
-      "Content-Type": "application/json",
-    };
     try {
       const result = await putData(
         `${Config.API_URL}/meeting/${params.id}`,
         data,
         customHeaders
       );
-      showMessage(result.msg, "success", dispatch);
-      navigate("/dashboard/meetings");
+      showMessage(result.msg, 'success', dispatch);
+      navigate('/dashboard/meetings');
     } catch (error) {
       handleApiError(error, dispatch);
     }
@@ -98,20 +88,20 @@ const EditMeeting = () => {
 
   return (
     <>
-      <div className="page-header">
+      <div className='page-header'>
         <div>
-          <Typography variant="h4">
+          <Typography variant='h4'>
             Edit - {meeting && meeting.title}
           </Typography>
         </div>
         <div>
-          <Button onClick={() => window.history.back()} variant="text">
+          <Button onClick={() => window.history.back()} variant='text'>
             Back
           </Button>
         </div>
       </div>
       <br />
-      <Divider color="" />
+      <Divider color='' />
       <br />
 
       <Notification />
@@ -121,30 +111,30 @@ const EditMeeting = () => {
         <Grid item md={3} xs={12}></Grid>
         <Grid item md={6} xs={12}>
           {meeting && (
-            <form onSubmit={handleSubmit(onSubmit)} action="" method="post">
-              <Box className="my-2">
+            <form onSubmit={handleSubmit(onSubmit)} action='' method='post'>
+              <Box className='my-2'>
                 <TextField
                   InputProps={{
                     startAdornment: (
-                      <InputAdornment position="start">
+                      <InputAdornment position='start'>
                         <Edit />
                       </InputAdornment>
                     ),
                   }}
                   fullWidth={true}
-                  id="outlined-basic"
-                  label="Meeting Title"
+                  id='outlined-basic'
+                  label='Meeting Title'
                   defaultValue={meeting.title}
-                  variant="outlined"
-                  {...register("title", {
-                    required: "This field is required",
+                  variant='outlined'
+                  {...register('title', {
+                    required: 'This field is required',
                   })}
                   error={errors.title && true}
                 />
                 {errors.title && (
                   <span
                     style={{
-                      color: "crimson",
+                      color: 'crimson',
                     }}
                   >
                     {errors.title.message}
@@ -156,20 +146,20 @@ const EditMeeting = () => {
                 <TextField
                   multiline={true}
                   minRows={5}
-                  label="Meeting Description"
-                  variant="outlined"
+                  label='Meeting Description'
+                  variant='outlined'
                   defaultValue={meeting && meeting.description}
                   focused={true}
                   fullWidth={true}
-                  {...register("description", {
-                    required: "This field is required",
+                  {...register('description', {
+                    required: 'This field is required',
                   })}
                   error={errors.description && true}
                 />
                 {errors.description && (
                   <span
                     style={{
-                      color: "crimson",
+                      color: 'crimson',
                     }}
                   >
                     {errors.description.message}
@@ -182,23 +172,23 @@ const EditMeeting = () => {
                 <Grid container spacing={2}>
                   <Grid item md={4} xs={12}>
                     <TextField
-                      type="date"
-                      label="Meeting Date"
-                      variant="outlined"
+                      type='date'
+                      label='Meeting Date'
+                      variant='outlined'
                       defaultValue={moment(
                         meeting && meeting.meeting_date
-                      ).format("YYYY-MM-DD")}
+                      ).format('YYYY-MM-DD')}
                       fullWidth={true}
                       focused
-                      {...register("meeting_date", {
-                        required: "This is a required field",
+                      {...register('meeting_date', {
+                        required: 'This is a required field',
                       })}
                       error={errors.meeting_date && true}
                     />
                     {errors.meeting_date && (
                       <span
                         style={{
-                          color: "crimson",
+                          color: 'crimson',
                         }}
                       >
                         {errors.meeting_date.message}
@@ -207,21 +197,21 @@ const EditMeeting = () => {
                   </Grid>
                   <Grid item md={4} xs={12}>
                     <TextField
-                      type="time"
-                      label="Start Time"
-                      variant="outlined"
+                      type='time'
+                      label='Start Time'
+                      variant='outlined'
                       fullWidth={true}
                       defaultValue={meeting && meeting.start_time}
                       focused
-                      {...register("start_time", {
-                        required: "This field is required",
+                      {...register('start_time', {
+                        required: 'This field is required',
                       })}
                       error={errors.start_time && true}
                     />
                     {errors.start_time && (
                       <span
                         style={{
-                          color: "crimson",
+                          color: 'crimson',
                         }}
                       >
                         {errors.start_time.message}
@@ -230,21 +220,21 @@ const EditMeeting = () => {
                   </Grid>
                   <Grid item md={4} xs={12}>
                     <TextField
-                      type="time"
-                      label="End Time"
-                      variant="outlined"
+                      type='time'
+                      label='End Time'
+                      variant='outlined'
                       fullWidth={true}
                       defaultValue={meeting && meeting.end_time}
                       focused
-                      {...register("end_time", {
-                        required: "This field is required",
+                      {...register('end_time', {
+                        required: 'This field is required',
                       })}
                       error={errors.end_time && true}
                     />
                     {errors.end_time && (
                       <span
                         style={{
-                          color: "crimson",
+                          color: 'crimson',
                         }}
                       >
                         {errors.end_time.message}
@@ -257,14 +247,14 @@ const EditMeeting = () => {
                 <br />
 
                 <FormControl fullWidth>
-                  <InputLabel id="bordroom-select-label">Boardroom</InputLabel>
+                  <InputLabel id='bordroom-select-label'>Boardroom</InputLabel>
                   <Select
-                    labelId="bordroom-select-label"
-                    id="bordroom-select-label"
+                    labelId='bordroom-select-label'
+                    id='bordroom-select-label'
                     // value={age}
-                    label="Boardroom"
-                    {...register("boardroom_id", {
-                      required: "This field is required",
+                    label='Boardroom'
+                    {...register('boardroom_id', {
+                      required: 'This field is required',
                     })}
                     defaultValue={meeting.boardroom_id}
                   >
@@ -294,11 +284,11 @@ const EditMeeting = () => {
                   <Button
                     disabled={isSubmitting}
                     fullWidth={true}
-                    variant="contained"
-                    color="primary"
-                    type="submit"
+                    variant='contained'
+                    color='primary'
+                    type='submit'
                   >
-                    {isSubmitting ? "Updating ..." : "Update"}
+                    {isSubmitting ? 'Updating ...' : 'Update'}
                   </Button>
 
                   <br />

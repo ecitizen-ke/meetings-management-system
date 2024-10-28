@@ -1,6 +1,6 @@
 from flask import Blueprint, request
 from flask_jwt_extended import jwt_required
-from flask_jwt_extended import create_access_token, create_refresh_token
+from flask_jwt_extended import create_access_token, create_refresh_token, get_jwt_identity
 from ..models import User
 from ..models import Role
 from utils.exception import DatabaseException
@@ -83,6 +83,25 @@ def login():
         else:
             return response("Authentication failed!", 401)
 
+    except DatabaseException as e:
+        return response("Something went wrong, " + str(e), 400)
+
+
+@auth_blueprint.route("/api/v1/auth/refresh", methods=["POST"])
+@jwt_required(refresh=True)
+def refresh():
+    current_user = get_jwt_identity()
+    try:
+        return response_with_data(
+            "OK",
+            {
+                "access_token": create_access_token(
+                    identity=current_user,
+                    fresh=False,
+                ),
+            },
+            200,
+        )
     except DatabaseException as e:
         return response("Something went wrong, " + str(e), 400)
 

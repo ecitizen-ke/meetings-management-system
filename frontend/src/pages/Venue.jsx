@@ -21,8 +21,9 @@ import {
 } from '../redux/features/notifications/notificationSlice';
 import Notification from '../components/Notification';
 import { useDispatch } from 'react-redux';
+import { getToken } from '../utils/helpers';
 const customHeaders = {
-  Authorization: 'Bearer xxxxxx',
+  Authorization: 'Bearer ' + getToken(),
   'Content-Type': 'application/json',
 };
 

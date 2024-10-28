@@ -61,7 +61,8 @@ const Login = () => {
       };
       const response = await postData(`${Config.API_URL}/auth/login`, user);
       console.log(response);
-      const token = response.data.token;
+      const token = response.data.access_token;
+      const refresh_token = response.data.refresh_token;
       const { sub, name } = jwtDecode(token);
 
       const authData = {
@@ -70,10 +71,14 @@ const Login = () => {
           name,
         },
         isLoggedIn: true,
+        token,
       };
       localStorage.setItem('user', JSON.stringify(authData));
+      localStorage.setItem('token', token);
+      localStorage.setItem('refresh_token', refresh_token);
       dispatch(login(authData));
     } catch (error) {
+      console.log(error);
       handleApiError(error, dispatch);
     }
   };

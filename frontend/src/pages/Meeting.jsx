@@ -38,8 +38,9 @@ import { deleteData, getData, postData } from '../utils/api';
 import Swal from 'sweetalert2';
 import Notification from '../components/Notification';
 import { handleApiError } from '../utils/errorHandler';
-import { showMessage } from '../utils/helpers';
+import { getToken, showMessage } from '../utils/helpers';
 import { Link } from 'react-router-dom';
+import { useTokenRefresh } from '../hooks/useTokenRefresh';
 
 let count = 0;
 
@@ -54,10 +55,11 @@ const Meeting = () => {
   const [organizations, setOrganizations] = useState([]);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const token = useTokenRefresh(getToken());
 
   const [anchorEl, setAnchorEl] = React.useState(null);
   const customHeaders = {
-    Authorization: 'Bearer xxxxxx',
+    Authorization: 'Bearer ' + getToken(),
     'Content-Type': 'application/json',
   };
 
@@ -73,6 +75,10 @@ const Meeting = () => {
     fetchBoardrooms();
     fetchMeetings();
     fetchOrganizations();
+    if (token) {
+      console.log('Using token:', token);
+      // Update your app state with the new token
+    }
   }, []);
 
   const fetchOrganizations = async () => {
@@ -101,7 +107,10 @@ const Meeting = () => {
 
   const fetchMeetings = async () => {
     try {
-      const data = await getData(`${Config.API_URL}/meetings`, customHeaders);
+      const { data } = await getData(
+        `${Config.API_URL}/meetings`,
+        customHeaders
+      );
       setMeetings(data.reverse());
     } catch (error) {
       handleApiError(error, dispatch);
