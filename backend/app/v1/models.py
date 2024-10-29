@@ -1,3 +1,4 @@
+import json
 from app.db import Database
 from datetime import datetime
 from utils import combine_date_time
@@ -32,16 +33,20 @@ class Organization:
             self.db.close()
 
 
-class Boardroom:
+class Location:
     def __init__(self):
         self.db = Database()
 
-    def create(self, name, capacity, location, description):
+    def create(self, county, town):
         try:
-            self.db.execute(
-                "INSERT INTO boardrooms (name, capacity, location, description) VALUES (%s, %s, %s, %s)",
-                (name, capacity, location, description),
-            )
+            # check if location already exists
+            location = self.db.fetchone("SELECT * FROM locations WHERE county = %s", (county,))
+
+            if location and town in location["town"]:
+                return "Location already exists"
+            # reset cursor to execute another
+            self.db.reset_cursor()
+            self.db.execute("INSERT INTO locations (county, town) VALUES (%s, %s)", (county, town))
             if self.db.insert_success():
                 self.db.commit()
         except Exception as e:
@@ -52,7 +57,7 @@ class Boardroom:
 
     def get_all(self):
         try:
-            return self.db.fetchmany("SELECT * FROM boardrooms")
+            return self.db.fetchmany("SELECT * FROM locations")
         except Exception as e:
             return e
         finally:
@@ -60,11 +65,240 @@ class Boardroom:
 
     def get_by_id(self, id):
         try:
-            return self.db.fetchone("SELECT status FROM boardrooms WHERE id = %s", (id,))
+            return self.db.fetchone("SELECT * FROM locations WHERE id = %s", (id,))
         except Exception as e:
             return e
         finally:
             self.db.close()
+
+    def filter_by_county_and_search(self, county, search):
+        try:
+            query = "SELECT id, town FROM locations WHERE county LIKE %s AND town LIKE %s ORDER BY town ASC LIMIT 10"
+            params = (county, search)
+            return self.db.fetchandfilter(query, params)
+        except Exception as e:
+            return e
+        finally:
+            self.db.close()
+
+
+class Venue:
+    def __init__(self):
+        self.db = Database()
+
+    def create(self, name, building, town, county, status, longitude, latitude):
+
+        try:
+
+            # check if location exists
+            res = Location().filter_by_county_and_search(county, town)
+            if not res:
+
+                return Location().create(county, town)
+            else:
+                self.db.execute(
+                    "INSERT INTO venues (name, building, location_id, status, longitude, latitude) VALUES (%s, %s, %s, %s, %s, %s)",
+                    (name, building, res[0]["id"], status, longitude, latitude),
+                )
+            if self.db.insert_success():
+                self.db.commit()
+        except Exception as e:
+            self.db.rollback()
+            return e
+        finally:
+            self.db.close()
+
+    def update(self, name, building, town, county, status, longitude, latitude, venue_id):
+
+        try:
+
+            # check if location exists
+            res = Location().filter_by_county_and_search(county, town)
+
+            location_id = None
+
+            if not res:
+                Location().create(county, town)
+                res = Location().filter_by_county_and_search(county, town)
+                location_id = res[0]["id"]
+            else:
+                location_id = res[0]["id"]
+            print(location_id)
+            self.db.execute(
+                """UPDATE venues SET name=%s, building=%s, location_id=%s, status=%s, longitude=%s, latitude=%s WHERE id=%s""",
+                (name, building, location_id, status, longitude, latitude, venue_id),
+            )
+            self.db.commit()
+
+        except Exception as e:
+            self.db.rollback()
+            return e
+        finally:
+            self.db.close()
+
+    def get_all(self):
+        try:
+            return self.db.fetchmany("SELECT * FROM venues")
+        except Exception as e:
+            return e
+        finally:
+            self.db.close()
+
+    def get_by_id(self, id):
+        try:
+            return self.db.fetchone("SELECT * FROM venues WHERE id = %s", (id,))
+        except Exception as e:
+            return e
+
+
+class Meeting:
+    def __init__(self):
+        self.db = Database()
+
+    def create(
+        self,
+        venue_id,
+        title,
+        description,
+        meeting_date,
+        start_time,
+        end_time,
+        organizations,
+        status=None,
+    ):
+        try:
+
+            self.db.execute(
+                "INSERT INTO meetings (venue_id, title, description, meeting_date, start_time, end_time, organizations, status) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+                (
+                    venue_id,
+                    title,
+                    description,
+                    meeting_date,
+                    start_time,
+                    end_time,
+                    organizations,
+                    status,
+                ),
+            )
+
+            if self.db.insert_success():
+
+                meeting_id = self.db.cursor.lastrowid
+                self.add_organizations(meeting_id, organizations)
+                self.db.commit()
+
+        except Exception as e:
+            self.db.rollback()
+            return e
+        finally:
+            self.db.close()
+
+    def get_all(self):
+        try:
+            meetings = self.db.fetchmany("SELECT * FROM meetings")
+
+            for meeting in meetings:
+                meeting["start_time"] = str(meeting["start_time"])
+                meeting["end_time"] = str(meeting["end_time"])
+            return meetings
+        except Exception as e:
+            return e
+        finally:
+            self.db.close()
+
+    def get_by_id(self, id):
+        try:
+            self.db.execute("SELECT * FROM meetings WHERE id = %s", (id,))
+            meeting = self.db.cursor.fetchone()
+            meeting["start_time"] = str(meeting["start_time"])
+            meeting["end_time"] = str(meeting["end_time"])
+            return meeting
+        except Exception as e:
+            return e
+
+    def update(
+        self,
+        venue_id,
+        title,
+        description,
+        meeting_date,
+        start_time,
+        end_time,
+        organizations,
+        status,
+        meeting_id,
+    ):
+        try:
+            self.db.execute(
+                """
+                UPDATE meetings SET venue_id=%s, title = %s, description = %s, meeting_date = %s, start_time = %s, end_time =%s, organizations = %s, status = %s WHERE id = %s""",
+                (
+                    venue_id,
+                    title,
+                    description,
+                    meeting_date,
+                    start_time,
+                    end_time,
+                    organizations,
+                    status,
+                    meeting_id,
+                ),
+            )
+            self.db.commit()
+
+        except Exception as e:
+            self.db.rollback()
+            return e
+
+    def update_status(self, meeting_id, status):
+        try:
+            self.db.execute(
+                """
+                UPDATE meetings SET status = %s WHERE id = %s""",
+                (status, meeting_id),
+            )
+            self.db.commit()
+        except Exception as e:
+            self.db.rollback()
+            return e
+
+    def delete(self, id):
+        try:
+            self.db.execute("DELETE FROM meetings WHERE id = %s", (id,))
+            self.db.commit()
+        except Exception as e:
+            self.db.rollback()
+            return e
+        finally:
+            self.db.close()
+
+    def add_organizations(self, meeting_id, organizations):
+        organizations = json.loads(organizations)
+        if not isinstance(organizations, list):
+            raise ValueError("organizations must be a list of organization IDs")
+
+        for id in organizations:
+            self.db.execute(
+                "INSERT INTO meetings_organizations(meeting_id, organization_id) VALUES (%s, %s)",
+                (meeting_id, id),
+            )
+
+    def get_organizations_by_meeting(self, meeting_id):
+        try:
+            ids = self.db.fetchandfilter(
+                "SELECT * FROM meetings_organizations WHERE meeting_id = %s", (meeting_id,)
+            )
+            organizations = []
+            for organization in ids:
+                self.db.execute(
+                    "SELECT * FROM organizations WHERE id = %s", (organization["organization_id"],)
+                )
+                organizations.append(self.db.cursor.fetchone())
+            return organizations
+
+        except Exception as e:
+            return e
 
 
 class Resource:
@@ -95,166 +329,13 @@ class Resource:
             self.db.close()
 
 
-class Meeting:
-    def __init__(self):
-        self.db = Database()
-
-    def create(
-        self,
-        title,
-        description,
-        meeting_date,
-        start_time,
-        end_time,
-        boardroom_id,
-        organization_id,
-        location,
-        longitude,
-        latitude,
-        county,
-        town,
-    ):
-        try:
-
-            self.db.execute(
-                "INSERT INTO meetings (title, description, meeting_date, start_time, end_time, boardroom_id, organization_id, location, longitude, latitude, county, town) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s,%s,%s, %s)",
-                (
-                    title,
-                    description,
-                    meeting_date,
-                    start_time,
-                    end_time,
-                    boardroom_id,
-                    organization_id,
-                    location,
-                    longitude,
-                    latitude,
-                    county,
-                    town,
-                ),
-            )
-
-            if self.db.insert_success():
-                self.db.commit()
-
-        except Exception as e:
-            self.db.rollback()
-            print("Database error:", e)  # Print the full error message
-            return {"msg": f"An error occurred: {str(e)}"}, 500
-        finally:
-            self.db.close()
-
-    def get_all(self):
-        try:
-            meetings = self.db.fetchmany("SELECT * FROM meetings")
-
-            for meeting in meetings:
-                meeting["start_time"] = str(meeting["start_time"])
-                meeting["end_time"] = str(meeting["end_time"])
-                self.db.execute(
-                    "SELECT name FROM boardrooms WHERE id = %s", (meeting["boardroom_id"],)
-                )
-                boardroom = self.db.cursor.fetchone()
-                meeting["boardroom_name"] = boardroom["name"]
-            return meetings
-        except Exception as e:
-            return e
-        finally:
-            self.db.close()
-
-    def get_by_id(self, id):
-        try:
-            self.db.execute("SELECT * FROM meetings WHERE id = %s", (id,))
-            meeting = self.db.cursor.fetchone()
-            meeting["start_time"] = str(meeting["start_time"])
-            meeting["end_time"] = str(meeting["end_time"])
-            return meeting
-        except Exception as e:
-            return e
-
-    def update(
-        self,
-        meeting_id,
-        title,
-        description,
-        meeting_date,
-        start_time,
-        end_time,
-        boardroom_id,
-        organization_id,
-        resources_id,
-        location,
-        longitude,
-        latitude,
-        county,
-        town,
-    ):
-        try:
-            self.db.execute(
-                """
-                UPDATE meetings SET title = %s, description = %s, meeting_date = %s, start_time = %s, end_time =%s, boardroom_id = %s, organization_id = %s, resources_id = %s, location = %s, longitude = %s, latitude = %s, county = %s, town = %s
-                WHERE id = %s
-            """,
-                (
-                    title,
-                    description,
-                    meeting_date,
-                    start_time,
-                    end_time,
-                    boardroom_id,
-                    meeting_id,
-                    organization_id,
-                    resources_id,
-                    location,
-                    longitude,
-                    latitude,
-                    county,
-                    town,
-                ),
-            )
-            self.db.commit()
-
-            check_location = self.check_location(county, town)
-            if not check_location:
-                self.db.insert(
-                    "INSERT INTO locations (county, town) VALUES (%s, %s)", (county, town)
-                )
-
-        except Exception as e:
-            self.db.rollback()
-            return e
-
-    def update_status(self, meeting_id, status):
-        try:
-            self.db.execute(
-                """
-                UPDATE meetings SET status = %s WHERE id = %s""",
-                (status, meeting_id),
-            )
-            self.db.commit()
-        except Exception as e:
-            self.db.rollback()
-            return e
-
-    def delete(self, id):
-        try:
-            self.db.execute("DELETE FROM meetings WHERE id = %s", (id,))
-            self.db.commit()
-        except Exception as e:
-            print(str(e))
-            self.db.rollback()
-            return e
-        finally:
-            self.db.close()
-
-
 class Attendee:
     def __init__(self):
         self.db = Database()
 
     def create(self, first_name, last_name, organization, designation, email, phone, meeting_id):
         try:
-            statement = "INSERT INTO attendees (first_name, last_name, organization, designation, email, phone,meeting_id)VALUES (%s, %s, %s, %s, %s, %s, %s)"
+            statement = "INSERT INTO attendees (first_name, last_name, organization, designation, email, phone,meeting_id) VALUES (%s, %s, %s, %s, %s, %s, %s)"
             data = (first_name, last_name, organization, designation, email, phone, meeting_id)
             self.db.execute(statement, data)
             if self.db.insert_success():
@@ -503,8 +584,8 @@ class User:
 
         except Exception as e:
             return e
-        # finally:
-        #     self.db.close()
+        finally:
+            self.db.close()
 
     def has_permission(self, email, permission_name):
         try:
@@ -552,8 +633,7 @@ class User:
             return self.db.fetchone("SELECT name FROM roles WHERE id = %s", (role["role_id"],))
 
         except Exception as e:
-            print(f"Database Error: {e}")
-            return None
+            return e
 
     @staticmethod
     def generate_hash(password):
@@ -581,7 +661,6 @@ class Report:
             start_date_time = combine_date_time(meeting_date, start)
             end_date_time = combine_date_time(meeting_date, end)
             if meeting_date < current_date:
-                print("True")
                 meetings_status["complete"] += 1
                 # Meeting().update_status(meeting["id"], "complete")
             elif meeting_date == current_date:
@@ -598,48 +677,3 @@ class Report:
                 meetings_status["pending"] += 1
                 # self.meetings.update_status(meeting["id"], "pending")
         return meetings_status
-
-
-class Location:
-    def __init__(self):
-        self.db = Database()
-
-    def create(self, county, town):
-        try:
-            # check if location already exists
-            location = self.db.fetchone("SELECT * FROM locations WHERE county = %s", (county,))
-            # check if town exists in the list location variable
-            if location and town in location["town"]:
-                return "Location already exists"
-            self.db.execute("INSERT INTO locations (county, town) VALUES (%s, %s)", (county, town))
-        except Exception as e:
-            self.db.rollback()
-            return e
-        finally:
-            self.db.close()
-
-    def get_all(self):
-        try:
-            return self.db.fetchmany("SELECT * FROM locations")
-        except Exception as e:
-            return e
-        finally:
-            self.db.close()
-
-    def get_by_id(self, id):
-        try:
-            return self.db.fetchone("SELECT * FROM locations WHERE id = %s", (id,))
-        except Exception as e:
-            return e
-        finally:
-            self.db.close()
-
-    def filter_by_county_and_search(self, county, search):
-        try:
-            query = "SELECT id, town FROM locations WHERE county LIKE %s AND town LIKE %s ORDER BY town ASC LIMIT 10"
-            params = (f"%{county}%", f"%{search}%")
-            return self.db.fetchandfilter(query, params)
-        except Exception as e:
-            return e
-        finally:
-            self.db.close()

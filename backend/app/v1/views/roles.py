@@ -20,9 +20,15 @@ def add():
         data = request.get_json()
         if not data or not isinstance(data, dict):
             return response("Invalid JSON format or empty payload!", 400)
-        if "name" not in data:
-            return response("Missing required fields!", 400)
-        result = role.create(data["name"], data["description"])
+
+        name = data.get("name")
+        description = data.get("description")
+
+        missing_fields = [field for field in ["name"] if field not in data]
+        if missing_fields:
+            return response(f"Missing required fields: {', '.join(missing_fields)}", 400)
+        result = role.create(name, description)
+
         if not isinstance(result, Exception):
             return response("Role created successfully!", 201)
         else:
@@ -64,9 +70,14 @@ def update(id):
         data = request.get_json()
         if not data or not isinstance(data, dict):
             return response("Invalid JSON format or empty payload!", 400)
-        if "name" not in data:
-            return response("Missing required fields!", 400)
-        result = role.update(id, data["name"], data["description"])
+
+        name = data.get("name")
+        description = data.get("description")
+
+        missing_fields = [field for field in ["name"] if field not in data]
+        if missing_fields:
+            return response(f"Missing required fields: {', '.join(missing_fields)}", 400)
+        result = role.update(id, name, description)
         if not isinstance(result, Exception):
             return response("Role updated successfully!", 200)
         else:
@@ -82,9 +93,15 @@ def assign_permissions():
         data = request.get_json()
         if not data or not isinstance(data, dict):
             return response("Invalid JSON format or empty payload!", 400)
-        if "role_id" not in data or "permissions" not in data:
-            return response("Missing required fields!", 400)
-        result = role.add_permission(data["role_id"], data["permissions"])
+
+        role_id = data.get("role_id")
+        permissions = data.get("permissions")
+
+        missing_fields = [field for field in ["role_id", "permissions"] if field not in data]
+        if missing_fields:
+            return response(f"Missing required fields: {', '.join(missing_fields)}", 400)
+
+        result = role.add_permission(role_id, permissions)
         if not isinstance(result, Exception):
             return response("Permissions assigned successfully!", 200)
         else:
@@ -101,22 +118,22 @@ def assign_role():
         data = request.get_json()
         if not data or not isinstance(data, dict):
             return response("Invalid JSON format or empty payload!", 400)
-        email = data["email"]
-        role_name = data["role"]
-        if not all([email, role_name]):
-            return response("Missing required fields!", 400)
+
+        email = data.get("email")
+        role_name = data.get("role_name")
+
+        missing_fields = [field for field in ["email", "role_name"] if field not in data]
+        if missing_fields:
+            return response(f"Missing required fields: {', '.join(missing_fields)}", 400)
         if user.find_by_email(email):
             result = user.assign_role(email, role_name)
             if isinstance(result, Exception):
-                return response("Role Assignment Failed" + str(result), 403)
-            return response("User Role Assgined Successfully", 200)
+                return response("Role assignment failed" + str(result), 403)
+            return response("User role assgined Successfully", 200)
         else:
             return response("User not found!", 404)
     except DatabaseException as e:
         return response("Something went wrong, " + str(e), 400)
-
-
-# Permissions
 
 
 @roles_blueprint.route("/api/v1/permissions", methods=["POST"])
@@ -126,9 +143,14 @@ def create_permission():
         data = request.get_json()
         if not data or not isinstance(data, dict):
             return response("Invalid JSON format or empty payload!", 400)
-        if "name" not in data:
-            return response("Missing required fields!", 400)
-        result = permission.create(data["name"])
+
+        perm = data.get("name")
+
+        missing_fields = [field for field in ["perm"] if field not in data]
+        if missing_fields:
+            return response(f"Missing required fields: {', '.join(missing_fields)}", 400)
+
+        result = permission.create(perm)
         if not isinstance(result, Exception):
             return response("Permission created successfully!", 201)
         else:

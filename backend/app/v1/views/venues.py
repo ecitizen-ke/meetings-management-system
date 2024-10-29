@@ -1,0 +1,95 @@
+from flask import Blueprint, request
+from flask_jwt_extended import jwt_required
+from ..models import Venue
+from utils.exception import DatabaseException
+from utils.responses import response, response_with_data
+
+
+venue_blueprint = Blueprint("venue_blueprint", __name__)
+
+
+@venue_blueprint.route("/api/v1/venues", methods=["POST"])
+@jwt_required()
+def create():
+    venue = Venue()
+    try:
+        data = request.get_json()
+
+        if not data or not isinstance(data, dict):
+            return response("Invalid JSON format or empty payload", 400)
+        missing_fields = [
+            field for field in ["name", "building", "town", "county"] if field not in data
+        ]
+        if missing_fields:
+            return response(f"Missing required fields: {', '.join(missing_fields)}", 400)
+
+        name = data.get("name")
+        building = data.get("building")
+        town = data.get("town")
+        county = data.get("county")
+        status = data.get("status")
+        longitude = data.get("longitude")
+        latitude = data.get("latitude")
+
+        result = venue.create(name, building, town, county, status, longitude, latitude)
+        if not isinstance(result, Exception):
+            return response("Venue added successfully!", 201)
+        else:
+            raise DatabaseException(str(result))
+
+    except DatabaseException as e:
+        return response("Something went wrong, " + str(e), 400)
+
+
+@venue_blueprint.route("/api/v1/venues", methods=["GET"])
+@jwt_required()
+def fetchall():
+    venue = Venue()
+    try:
+        return response_with_data("OK", venue.get_all(), 200)
+    except DatabaseException as e:
+        return response("Something went wrong, " + str(e), 400)
+
+
+@venue_blueprint.route("/api/v1/venues/<int:id>", methods=["GET"])
+@jwt_required()
+def fetchone(id):
+    venue = Venue()
+    try:
+        return response_with_data("OK", venue.get_by_id(id), 200)
+    except DatabaseException as e:
+        return response("Something went wrong, " + str(e), 400)
+
+
+@venue_blueprint.route("/api/v1/venues/<int:venue_id>", methods=["PATCH"])
+@jwt_required()
+def update(venue_id):
+
+    try:
+        venue = Venue()
+        data = request.get_json()
+
+        if not data or not isinstance(data, dict):
+            return response("Invalid JSON format or empty payload", 400)
+
+        required_fields = ["name", "building", "town", "county", "status"]
+        missing_fields = [field for field in required_fields if field not in data]
+        if missing_fields:
+            return response(f"Missing required fields: {', '.join(missing_fields)}", 400)
+
+        if not venue.get_by_id(venue_id):
+            return response("Meeting not found", 404)
+
+        name = data.get("name")
+        building = data.get("building")
+        town = data.get("town")
+        county = data.get("county")
+        status = data.get("status")
+        longitude = data.get("longitude")
+        latitude = data.get("latitude")
+
+        venue.update(name, building, town, county, status, longitude, latitude, venue_id)
+        return response("Meeting updated successfully", 200)
+
+    except DatabaseException as e:
+        return response("Something went wrong, " + str(e), 400)

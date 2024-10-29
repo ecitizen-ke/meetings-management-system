@@ -13,7 +13,6 @@ def fetchall():
     return response_with_data("OK", locations.get_all(), 200)
 
 
-
 @locations_blueprint.route("/api/v1/location-towns", methods=["GET"])
 def get_locations_select():
     county = request.args.get("county", None)
@@ -30,5 +29,5 @@ def get_locations_select():
         return response(str(locations), 400)
     # format locaions for choices js library
     locations = [{"value": location["town"], "label": location["town"]} for location in locations]
-    
+
     return response_with_data("OK", locations, 200)
