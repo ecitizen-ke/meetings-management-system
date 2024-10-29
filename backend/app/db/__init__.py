@@ -17,7 +17,15 @@ class Database:
 
     def create_tables(self):
         for statement in statements.values():
-            self.cursor.execute(statement, multi=True)
+            try:
+                for result in self.cursor.execute(statement, multi=True):
+                    if result.with_rows:
+                        print(f"Rows produced by statement '{result.statement}':")
+                        result.fetchall()  # Fetch any results to complete execution
+                self.conn.commit()
+            except Exception as e:
+                print(f"An error occurred: {e}") 
+                self.conn.rollback()
 
     def execute(self, statement, data):
         return self.cursor.execute(statement, data)
@@ -51,6 +59,7 @@ class Database:
         self.cursor.execute(statement, data)
         return self.cursor.fetchall()
 
-    def fetchone(self, statement, data): #data can be null
+    def fetchone(self, statement, data):  # data can be null
         self.cursor.execute(statement, data)
         return self.cursor.fetchone()
+    

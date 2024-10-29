@@ -10,6 +10,8 @@ class Organization:
 
     def create(self, name, description):
         try:
+            if not name:
+                raise ValueError ("Name cannot be None")
             self.db.execute(
                 "INSERT INTO organizations (name, description) VALUES (%s, %s)",
                 (name, description),
@@ -18,6 +20,7 @@ class Organization:
                 self.db.commit()
         except Exception as e:
             self.db.rollback()
+            print("Database error:", e)
             return e
         finally:
             self.db.close()
@@ -25,9 +28,16 @@ class Organization:
     def get_all(self):
         try:
             return self.db.fetchmany("SELECT * FROM organizations")
-        except Exception:
-            pass
-
+        except Exception as e:
+            return e
+        finally:
+            self.db.close()
+    
+    def filter_by_search(self, search):
+        try:
+            return self.db.fetchmany("SELECT id, name FROM organizations WHERE name LIKE %s", (f"%{search}%",))
+        except Exception as e:
+            return e
         finally:
             self.db.close()
 
@@ -107,7 +117,7 @@ class Meeting:
         start_time,
         end_time,
         boardroom_id,
-        organization_id,
+        organizations_json,
         location,
         longitude,
         latitude,
@@ -117,7 +127,7 @@ class Meeting:
         try:
 
             self.db.execute(
-                "INSERT INTO meetings (title, description, meeting_date, start_time, end_time, boardroom_id, organization_id, location, longitude, latitude, county, town) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s,%s,%s, %s)",
+                "INSERT INTO meetings (title, description, meeting_date, start_time, end_time, boardroom_id, location, longitude, latitude, county, town) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                 (
                     title,
                     description,
@@ -125,7 +135,6 @@ class Meeting:
                     start_time,
                     end_time,
                     boardroom_id,
-                    organization_id,
                     location,
                     longitude,
                     latitude,
@@ -133,8 +142,9 @@ class Meeting:
                     town,
                 ),
             )
-
             if self.db.insert_success():
+                meeting_id = self.db.cursor.lastrowid
+                self.insert_meeting_organizations(meeting_id, organizations_json)
                 self.db.commit()
 
         except Exception as e:
@@ -144,21 +154,54 @@ class Meeting:
         finally:
             self.db.close()
 
+    
+    def insert_meeting_organizations(self, meeting_id, organizations):
+        if not isinstance(organizations, list):
+            raise ValueError("organizations_json must be a list of organization IDs")
+        
+        for organization_id in organizations:
+            self.db.execute(
+                "INSERT INTO meeting_organizations (meeting_id, organization_id) VALUES (%s, %s)",
+                (meeting_id, organization_id),
+            )
+        
+    def get_meeting_organizations(self, meeting_id):
+        try:
+            organization_ids= self.db.fetchandfilter(
+                "SELECT * FROM meeting_organizations WHERE meeting_id = %s", (meeting_id,)
+            )
+            organizations = []
+            for organization in organization_ids:
+                self.db.execute(
+                    "SELECT * FROM organizations WHERE id = %s", (organization["organization_id"],)
+                )
+                organizations.append(self.db.cursor.fetchone())
+            return organizations
+
+        except Exception as e:
+            return e
+
     def get_all(self):
         try:
             meetings = self.db.fetchmany("SELECT * FROM meetings")
 
             for meeting in meetings:
-                meeting["start_time"] = str(meeting["start_time"])
-                meeting["end_time"] = str(meeting["end_time"])
-                self.db.execute(
-                    "SELECT name FROM boardrooms WHERE id = %s", (meeting["boardroom_id"],)
-                )
-                boardroom = self.db.cursor.fetchone()
-                meeting["boardroom_name"] = boardroom["name"]
+                meeting["start_time"] = str(meeting.get("start_time", ""))
+                meeting["end_time"] = str(meeting.get("end_time", ""))
+
+                if meeting.get("boardroom_id"):
+                    self.db.execute(
+                        "SELECT name FROM boardrooms WHERE id = %s", (meeting["boardroom_id"],)
+                    )
+                    boardroom = self.db.cursor.fetchone()
+                    meeting["boardroom_name"] = boardroom["name"] if boardroom else None
+
+                meeting["organizations"] = self.get_meeting_organizations(meeting["id"]) or []
+
             return meetings
         except Exception as e:
-            return e
+            print("Error fetching all meetings: %s", e)
+            return {"msg": "An error occurred while fetching meetings"}, 500
         finally:
             self.db.close()
 
@@ -168,6 +211,7 @@ class Meeting:
             meeting = self.db.cursor.fetchone()
             meeting["start_time"] = str(meeting["start_time"])
             meeting["end_time"] = str(meeting["end_time"])
+            meeting["organizations"] = self.get_meeting_organizations(meeting["id"]) or []
             return meeting
         except Exception as e:
             return e
@@ -302,8 +346,9 @@ class Role:
             self.db.execute(statement, data)
             if self.db.insert_success():
                 self.db.commit()
-        except Exception:
+        except Exception as e:
             self.db.rollback()
+            return e
         finally:
             self.db.close()
 
@@ -383,8 +428,9 @@ class Permission:
             self.db.execute("INSERT INTO permissions (name) VALUES (%s)", (name,))
             if self.db.insert_success():
                 self.db.commit()
-        except Exception:
+        except Exception as e:
             self.db.rollback()
+            return e
         finally:
             self.db.close()
 
@@ -611,7 +657,10 @@ class Location:
             # check if town exists in the list location variable
             if location and town in location["town"]:
                 return "Location already exists"
-            self.db.execute("INSERT INTO locations (county, town) VALUES (%s, %s)", (county, town))
+            self.db.execute(
+                "INSERT INTO locations (county, town) VALUES (%s, %s)", (county, town)
+            )
+            self.db.commit()
         except Exception as e:
             self.db.rollback()
             return e
