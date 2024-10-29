@@ -20,7 +20,7 @@ def create():
         if not data or not isinstance(data, dict):
             return response("Invalid JSON format or empty payload", 400)
 
-        missing_fields = check_missing_fields(data, ["name", "organization"])
+        missing_fields = check_missing_fields(data, ["name", "description"])
         if missing_fields:
             return response(f"Field(s) {', '.join(missing_fields)} required!", 400)
 
@@ -62,6 +62,8 @@ def update_organization(id):
             return response("Invalid JSON format or empty payload", 400)
         if "name" not in data:
             return response("'name' field is required!", 400)
+        if not organization.get_by_id(id):
+            return response("Organization not found!", 404)
         name = data.get("name")
         description = data.get("description", "")
         result = organization.update_organization(id, name, description)
@@ -80,6 +82,8 @@ def update_organization(id):
 def delete_organization(id):
     organization = Organization()
     try:
+        if not organization.get_by_id(id):
+            return response("Organization not found!", 404)
         result = organization.delete_organization(id)
         if not isinstance(result, Exception):
             return response("Organization deleted successfully!", 200)
@@ -88,4 +92,20 @@ def delete_organization(id):
     except DatabaseException as e:
         return response("Something went wrong, " + str(e), 400)
     except Exception as e:
+        return response("Something went wrong, " + str(e), 400)
+
+@organizations_blueprint.route("/api/v1/organizations-select", methods=["GET"])
+@jwt_required()
+def search_organization():
+    organization = Organization()
+    try:
+        search = request.args.get("search")
+        res = organization.filter_by_search(search)
+        if not isinstance(res, Exception):
+            if not res:
+                return no_data_found()
+            return response_with_data("OK", res, 200)
+        else:
+            raise DatabaseException(str(res))
+    except DatabaseException as e:
         return response("Something went wrong, " + str(e), 400)
