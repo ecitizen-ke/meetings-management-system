@@ -22,7 +22,7 @@ def create():
         description = data.get("description", "")
         result = organization.create(name, description)
         if not isinstance(result, Exception):
-            return response("'Meeting added successfully!", 201)
+            return response("'Organizaion added successfully!", 201)
         else:
             raise DatabaseException(str(result))
     except DatabaseException as e:
@@ -50,4 +50,42 @@ def get_organizations_select():
         return response_with_data("OK", organizations, 200)
     except DatabaseException as e:
         return response("Something went wrong, " + str(e), 400)
-    
+
+
+@organizations_blueprint.route("/api/v1/organizations/<int:id>", methods=["PUT"])
+@jwt_required()
+def update_organization(id):
+    organization = Organization()
+    try:
+        data = request.get_json()
+        if not data or not isinstance(data, dict):
+            return response("Invalid JSON format or empty payload", 400)
+        if "name" not in data:
+            return response("'name' field is required!", 400)
+        name = data.get("name")
+        description = data.get("description", "")
+        result = organization.update_organization(id, name, description)
+        if not isinstance(result, Exception):
+            return response("Organization updated successfully!", 200)
+        else:
+            raise DatabaseException(str(result))
+    except DatabaseException as e:
+        return response("Something went wrong, " + str(e), 400)
+    except Exception as e:
+        return response("Something went wrong, " + str(e), 400)
+
+
+@organizations_blueprint.route("/api/v1/organizations/<int:id>", methods=["DELETE"])
+@jwt_required()
+def delete_organization(id):
+    organization = Organization()
+    try:
+        result = organization.delete_organization(id)
+        if not isinstance(result, Exception):
+            return response("Organization deleted successfully!", 200)
+        else:
+            raise DatabaseException(str(result))
+    except DatabaseException as e:
+        return response("Something went wrong, " + str(e), 400)
+    except Exception as e:
+        return response("Something went wrong, " + str(e), 400)

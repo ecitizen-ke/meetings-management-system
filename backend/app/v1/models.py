@@ -40,6 +40,33 @@ class Organization:
             return e
         finally:
             self.db.close()
+    
+    def update_organization(self, id, name, description):
+        try:
+            self.db.execute(
+                "UPDATE organizations SET name = %s, description = %s WHERE id = %s",
+                (name, description, id),
+            )
+            self.db.commit()
+        except Exception as e:
+            self.db.rollback()
+            return e
+        finally:
+            self.db.close()
+    
+    def delete_organization(self, id):
+        try:
+            if not id:
+                raise ValueError ("ID cannot be None")
+            if not self.db.fetchone("SELECT * FROM organizations WHERE id = %s", (id,)):
+                raise ValueError ("Organization does not exist")
+            self.db.execute("DELETE FROM organizations WHERE id = %s", (id,))
+            self.db.commit()
+        except Exception as e:
+            self.db.rollback()
+            return e
+        finally:
+            self.db.close()
 
 
 class Boardroom:
