@@ -12,7 +12,7 @@ class Organization:
     def create(self, name, description):
         try:
             if not name:
-                raise ValueError ("Name cannot be None")
+                raise ValueError("Name cannot be None")
             self.db.execute(
                 "INSERT INTO organizations (name, description) VALUES (%s, %s)",
                 (name, description),
@@ -33,10 +33,12 @@ class Organization:
             return e
         finally:
             self.db.close()
-    
+
     def filter_by_search(self, search):
         try:
-            return self.db.fetchmany("SELECT id, name FROM organizations WHERE name LIKE %s", (f"%{search}%",))
+            return self.db.fetchmany(
+                "SELECT id, name FROM organizations WHERE name LIKE %s", (f"%{search}%",)
+            )
         except Exception as e:
             return e
         finally:
@@ -175,7 +177,6 @@ class Meeting:
         end_time,
         organizations,
         status=None,
-
     ):
         try:
 
@@ -192,42 +193,18 @@ class Meeting:
                     status,
                 ),
             )
+
             if self.db.insert_success():
+
                 meeting_id = self.db.cursor.lastrowid
                 self.add_organizations(meeting_id, organizations)
                 self.db.commit()
+
         except Exception as e:
             self.db.rollback()
             return e
         finally:
             self.db.close()
-
-    
-    def insert_meeting_organizations(self, meeting_id, organizations):
-        if not isinstance(organizations, list):
-            raise ValueError("organizations_json must be a list of organization IDs")
-        
-        for organization_id in organizations:
-            self.db.execute(
-                "INSERT INTO meeting_organizations (meeting_id, organization_id) VALUES (%s, %s)",
-                (meeting_id, organization_id),
-            )
-        
-    def get_meeting_organizations(self, meeting_id):
-        try:
-            organization_ids= self.db.fetchandfilter(
-                "SELECT * FROM meeting_organizations WHERE meeting_id = %s", (meeting_id,)
-            )
-            organizations = []
-            for organization in organization_ids:
-                self.db.execute(
-                    "SELECT * FROM organizations WHERE id = %s", (organization["organization_id"],)
-                )
-                organizations.append(self.db.cursor.fetchone())
-            return organizations
-
-        except Exception as e:
-            return e
 
     def get_all(self):
         try:
@@ -236,19 +213,9 @@ class Meeting:
             for meeting in meetings:
                 meeting["start_time"] = str(meeting["start_time"])
                 meeting["end_time"] = str(meeting["end_time"])
-
-                if meeting.get("boardroom_id"):
-                    self.db.execute(
-                        "SELECT name FROM boardrooms WHERE id = %s", (meeting["boardroom_id"],)
-                    )
-                    boardroom = self.db.cursor.fetchone()
-                    meeting["boardroom_name"] = boardroom["name"] if boardroom else None
-
-                meeting["organizations"] = self.get_meeting_organizations(meeting["id"]) or []
             return meetings
         except Exception as e:
-            print("Error fetching all meetings: %s", e)
-            return {"msg": "An error occurred while fetching meetings"}, 500
+            return e
         finally:
             self.db.close()
 
@@ -258,7 +225,6 @@ class Meeting:
             meeting = self.db.cursor.fetchone()
             meeting["start_time"] = str(meeting["start_time"])
             meeting["end_time"] = str(meeting["end_time"])
-            meeting["organizations"] = self.get_meeting_organizations(meeting["id"]) or []
             return meeting
         except Exception as e:
             return e
