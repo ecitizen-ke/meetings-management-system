@@ -9,7 +9,6 @@ attendees_blueprint = Blueprint("attendees_blueprint", __name__)
 
 
 @attendees_blueprint.route("/api/v1/attendees", methods=["POST"])
-@jwt_required()
 def add():
     attendee = Attendee()
     try:
@@ -24,8 +23,21 @@ def add():
         phone = data.get("phone")
         meeting_id = data.get("meeting_id")
 
-        if not all([first_name, last_name, organization, designation, email, phone, meeting_id]):
-            return response("Missing required fields", 400)
+        missing_fields = [
+            field
+            for field in [
+                "first_name",
+                "last_name",
+                "organization",
+                "designation",
+                "email",
+                "phone",
+                "meeting_id",
+            ]
+            if field not in data
+        ]
+        if missing_fields:
+            return response(f"Missing required fields: {', '.join(missing_fields)}", 400)
 
         if not attendee.check_attendance(email, meeting_id):
             result = attendee.create(

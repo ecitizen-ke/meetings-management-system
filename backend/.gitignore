@@ -119,3 +119,6 @@ $RECYCLE.BIN/
 *.sqlite3
 .venv/
 bms/
+*.png
+*.pdf
+*.xlss

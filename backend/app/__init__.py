@@ -24,7 +24,7 @@ def initialize_extensions(app):
 
 def register_blueprints(app):
     from .v1.views.organizations import organizations_blueprint
-    from .v1.views.boardrooms import boardroom_blueprint
+    from .v1.views.venues import venue_blueprint
     from .v1.views.meetings import meetings_blueprint
     from .v1.views.attendees import attendees_blueprint
     from .v1.views.resources import resources_blueprint
@@ -35,7 +35,7 @@ def register_blueprints(app):
     from .v1.views.locations import locations_blueprint
 
     app.register_blueprint(organizations_blueprint)
-    app.register_blueprint(boardroom_blueprint)
+    app.register_blueprint(venue_blueprint)
     app.register_blueprint(meetings_blueprint)
     app.register_blueprint(attendees_blueprint)
     app.register_blueprint(roles_blueprint)

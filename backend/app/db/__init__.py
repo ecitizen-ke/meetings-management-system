@@ -34,6 +34,9 @@ class Database:
         if self.cursor.rowcount:
             return True
 
+    def reset_cursor(self):
+        return self.cursor.reset()
+
     def commit(self):
         self.conn.commit()
 
@@ -52,8 +55,7 @@ class Database:
                 self.cursor.execute(statement)  # Execute without parameters
             return self.cursor.fetchall()
         except Exception as e:
-            print(f"Database fetch error: {e}")  # Log any fetch error
-            return []
+            return e
 
     def fetchandfilter(self, statement, data):
         self.cursor.execute(statement, data)

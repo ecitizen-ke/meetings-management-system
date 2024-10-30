@@ -26,8 +26,23 @@ def create():
         phone = data.get("phone")
         password = data.get("password")
 
-        if not all([first_name, last_name, organization, designation, email, phone, password]):
-            return response("Missing required fields", 400)
+        missing_fields = [
+            field
+            for field in [
+                "first_name",
+                "last_name",
+                "organization",
+                "designation",
+                "email",
+                "phone",
+                "password",
+            ]
+            if field not in data
+        ]
+
+        if missing_fields:
+            return response(f"Missing required fields: {', '.join(missing_fields)}", 400)
+
         if not user.find_by_email(email):
             result = user.create(
                 first_name, last_name, organization, designation, email, phone, password
@@ -53,8 +68,9 @@ def login():
         email = data.get("email")
         password = data.get("password")
 
-        if not all([email, password]):
-            return response("Missing required fields", 400)
+        missing_fields = [field for field in ["email", "password"] if field not in data]
+        if missing_fields:
+            return response(f"Missing required fields: {', '.join(missing_fields)}", 400)
 
         role = user.get_role(email)
 
@@ -116,8 +132,10 @@ def assign():
             return response("Invalid JSON format or empty payload", 400)
         email = data["email"]
         role_name = data["role"]
-        if not all([email, role_name]):
-            return response("Missing required fields", 400)
+        missing_fields = [field for field in ["email", "role_name"] if field not in data]
+        if missing_fields:
+            return response(f"Missing required fields: {', '.join(missing_fields)}", 400)
+
         if user.find_by_email(email):
             result = user.assign_role(email, role_name)
             # user.assign_role(email, role)
