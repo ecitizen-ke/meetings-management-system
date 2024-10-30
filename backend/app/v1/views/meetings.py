@@ -1,5 +1,6 @@
 import json
 from flask import Blueprint, request
+
 from flask_jwt_extended import jwt_required
 from utils.responses import response, response_with_data
 from utils.exception import DatabaseException
