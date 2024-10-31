@@ -4,7 +4,7 @@ from ..models import Role
 from ..models import Permission
 from ..models import User
 from utils.exception import DatabaseException
-from utils.responses import response, response_with_data
+from utils.responses import response, response_with_data, no_data_found
 from utils.decorators import verify_role
 
 
@@ -41,13 +41,31 @@ def add():
 @jwt_required()
 def fetchall():
     role = Role()
-    return response_with_data("OK", role.get_all(), 200)
+    try:
+        data = role.get_all()
+        if not isinstance(data, Exception):
+            if not data:
+                return no_data_found()
+            return response_with_data("OK", data, 200)
+        else:
+            raise DatabaseException(str(data))
+    except DatabaseException as e:
+        return response("Something went wrong, " + str(e), 400)
 
 
 @roles_blueprint.route("/api/v1/roles/<int:id>", methods=["GET"])
 def fetch_by_id(id):
     role = Role()
-    return response_with_data("OK", role.get_permissions(id), 200)
+    try:
+        data = role.get_permissions(id)
+        if not isinstance(data, Exception):
+            if not data:
+                return no_data_found()
+            return response_with_data("OK", data, 200)
+        else:
+            raise DatabaseException(str(data))
+    except DatabaseException as e:
+        return response("Something went wrong, " + str(e), 400)
 
 
 @roles_blueprint.route("/api/v1/roles/<int:id>", methods=["DELETE"])
@@ -162,4 +180,13 @@ def create_permission():
 @roles_blueprint.route("/api/v1/permissions", methods=["GET"])
 def fetchall_permissions():
     permission = Permission()
-    return response_with_data("OK", permission.get_all(), 200)
+    try:
+        data = permission.get_all()
+        if not isinstance(data, Exception):
+            if not data:
+                return no_data_found()
+            return response_with_data("OK", data, 200)
+        else:
+            raise DatabaseException(str(data))
+    except DatabaseException as e:
+        return response("Something went wrong, " + str(e), 400)

@@ -2,7 +2,7 @@ from flask import Blueprint, request
 from flask_jwt_extended import jwt_required
 from ..models import Venue
 from utils.exception import DatabaseException
-from utils.responses import response, response_with_data
+from utils.responses import response, response_with_data, no_data_found
 
 
 venue_blueprint = Blueprint("venue_blueprint", __name__)
@@ -46,7 +46,13 @@ def create():
 def fetchall():
     venue = Venue()
     try:
-        return response_with_data("OK", venue.get_all(), 200)
+        data = venue.get_all()
+        if not isinstance(data, Exception):
+            if not data:
+                return no_data_found()
+            return response_with_data("OK", data, 200)
+        else:
+            raise DatabaseException(str(data))
     except DatabaseException as e:
         return response("Something went wrong, " + str(e), 400)
 
@@ -56,7 +62,14 @@ def fetchall():
 def fetchone(id):
     venue = Venue()
     try:
-        return response_with_data("OK", venue.get_by_id(id), 200)
+        data = venue.get_by_id(id)
+        if not isinstance(data, Exception):
+            if not data:
+                return no_data_found()
+            return response_with_data("OK", data, 200)
+        else:
+            raise DatabaseException(str(data))
+
     except DatabaseException as e:
         return response("Something went wrong, " + str(e), 400)
 
