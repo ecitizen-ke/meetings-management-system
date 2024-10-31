@@ -2,7 +2,7 @@ from flask import Blueprint, request
 from flask_jwt_extended import jwt_required
 from ..models import Organization
 from utils.exception import DatabaseException
-from utils.responses import response, response_with_data
+from utils.responses import response, no_data_found
 
 
 organizations_blueprint = Blueprint("organizations_blueprint", __name__)
@@ -33,21 +33,13 @@ def create():
 @jwt_required()
 def fetchall():
     organization = Organization()
-    return response_with_data("OK", organization.get_all(), 200)
-
-
-@organizations_blueprint.route("/api/v1/organizations-select", methods=["GET"])
-def get_organizations_select():
     try:
-        search = request.args.get("search", "")
-        organization = Organization()
-        organizations = organization.filter_by_search(search)
-        if not isinstance(organizations, list):
-            return response(str(organizations), 400)
-        organizations = [
-            {"value": org["id"], "label": org["name"]} for org in organizations
-        ]
-        return response_with_data("OK", organizations, 200)
+        res = organization.get_all()
+        if not isinstance(res, Exception):
+            if not res:
+                return no_data_found()
+            return response("OK", res, 200)
+        else:
+            raise DatabaseException(str(res))
     except DatabaseException as e:
         return response("Something went wrong, " + str(e), 400)
-    

@@ -4,7 +4,7 @@ from flask_jwt_extended import create_access_token, create_refresh_token, get_jw
 from ..models import User
 from ..models import Role
 from utils.exception import DatabaseException
-from utils.responses import response, response_with_data
+from utils.responses import response, response_with_data, no_data_found
 
 
 auth_blueprint = Blueprint("auth_blueprint", __name__)
@@ -138,7 +138,6 @@ def assign():
 
         if user.find_by_email(email):
             result = user.assign_role(email, role_name)
-            # user.assign_role(email, role)
             if isinstance(result, Exception):
                 return response("Role Assignment Failed" + str(result), 403)
             return response("User Role Assgined Successfully", 200)
@@ -153,6 +152,12 @@ def assign():
 def users():
     user = User()
     try:
-        return response_with_data("OK", user.get_users(), 200)
+        data = user.get_users()
+        if not isinstance(data, Exception):
+            if not data:
+                return no_data_found()
+            return response_with_data("OK", data, 200)
+        else:
+            raise DatabaseException(str(data))
     except DatabaseException as e:
         return response("Something went wrong, " + str(e), 400)

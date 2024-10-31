@@ -2,7 +2,7 @@ from flask import Blueprint, request
 from flask_jwt_extended import jwt_required
 from ..models import Attendee
 from utils.exception import DatabaseException
-from utils.responses import response, response_with_data
+from utils.responses import response, response_with_data, no_data_found
 
 
 attendees_blueprint = Blueprint("attendees_blueprint", __name__)
@@ -57,11 +57,29 @@ def add():
 @jwt_required()
 def fetchall():
     attendee = Attendee()
-    return response_with_data("OK", attendee.get_all(), 200)
+    try:
+        data = attendee.get_all()
+        if not isinstance(data, Exception):
+            if not data:
+                return no_data_found()
+            return response_with_data("OK", data, 200)
+        else:
+            raise DatabaseException(str(data))
+    except DatabaseException as e:
+        return response("Something went wrong, " + str(e), 400)
 
 
 @attendees_blueprint.route("/api/v1/attendees/<int:id>", methods=["GET"])
 @jwt_required()
 def fetch_by_meeting_id(id):
     attendee = Attendee()
-    return response_with_data("OK", attendee.get_by_meeting_id(id), 200)
+    try:
+        data = attendee.get_by_meeting_id(id)
+        if not isinstance(data, Exception):
+            if not data:
+                return no_data_found()
+            return response_with_data("OK", data, 200)
+        else:
+            raise DatabaseException(str(data))
+    except DatabaseException as e:
+        return response("Something went wrong, " + str(e), 400)

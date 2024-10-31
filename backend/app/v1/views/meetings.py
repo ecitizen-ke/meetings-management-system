@@ -2,7 +2,7 @@ import json
 from flask import Blueprint, request
 
 from flask_jwt_extended import jwt_required
-from utils.responses import response, response_with_data
+from utils.responses import response, response_with_data, no_data_found
 from utils.exception import DatabaseException
 from ..models import Meeting, Report
 
@@ -60,21 +60,48 @@ def create():
 @jwt_required()
 def fetchall():
     meetings = Meeting()
-    return response_with_data("OK", meetings.get_all(), 200)
+    try:
+        data = meetings.get_all()
+        if not isinstance(data, Exception):
+            if not data:
+                return no_data_found()
+            return response_with_data("OK", data, 200)
+        else:
+            raise DatabaseException(str(data))
+    except DatabaseException as e:
+        return response("Something went wrong, " + str(e), 400)
 
 
 @meetings_blueprint.route("/api/v1/meetings/<int:id>", methods=["GET"])
 @jwt_required()
 def fetchone(id):
     meetings = Meeting()
-    return response_with_data("OK", meetings.get_by_id(id), 200)
+    try:
+        data = meetings.get_by_id(id)
+        if not isinstance(data, Exception):
+            if not data:
+                return no_data_found()
+            return response_with_data("OK", data, 200)
+        else:
+            raise DatabaseException(str(data))
+    except DatabaseException as e:
+        return response("Something went wrong, " + str(e), 400)
 
 
 @meetings_blueprint.route("/api/v1/meetings/<int:id>/organizations", methods=["GET"])
 @jwt_required()
 def get_organizations_per_meeting(id):
     meetings = Meeting()
-    return response_with_data("OK", meetings.get_organizations_by_meeting(id), 200)
+    try:
+        data = meetings.get_organizations_by_meeting(id)
+        if not isinstance(data, Exception):
+            if not data:
+                return no_data_found()
+            return response_with_data("OK", data, 200)
+        else:
+            raise DatabaseException(str(data))
+    except DatabaseException as e:
+        return response("Something went wrong, " + str(e), 400)
 
 
 @meetings_blueprint.route("/api/v1/meetings/<int:meeting_id>", methods=["PATCH"])
