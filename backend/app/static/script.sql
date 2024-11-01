@@ -1,43 +1,16 @@
--- phpMyAdmin SQL Dump
--- version 5.0.4
--- https://www.phpmyadmin.net/
---
--- Host: localhost
--- Generation Time: Oct 08, 2024 at 09:03 AM
--- Server version: 10.4.17-MariaDB
--- PHP Version: 7.4.14
-
-SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
-SET time_zone = "+00:00";
 
 
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8mb4 */;
+INSERT INTO `organizations` (`name`, `description`) VALUES ('eCitizen', 'eCitizen ensures that Citizens, non-Citizens and Business entities can access Government Services online and make Payments electronically and conveniently, using their preferred method of payment, 24 hours a day and from wherever they may be in the world');
 
---
--- Database: `property`
---
+INSERT INTO `roles` (`name`,`description`) VALUES 
+('admin', 'A user with superuser system-wide access privileges'),
+('user', 'A user with limited system access privileges') ;
 
--- --------------------------------------------------------
+INSERT INTO `users` (`first_name`,`last_name`,`organization`,`designation`,`email`,`phone`,`password`) VALUES 
+('Maxwel', 'Barno', 'eCitizen', 'System Administrator', 'admin@ecitizen.go.ke', '0708223344','$pbkdf2-sha256$29000$B8DY29s7J0SodQ4hBEAIQQ$K8KgsYhCXdlk8yw9jJwkNaV8QecaQxSqHLHoLQuWyEY');
 
---
--- Table structure for table `locations`
---
-
--- CREATE TABLE `locations` (
---   `id` bigint(20) UNSIGNED NOT NULL,
---   `county` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
---   `town` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
---   `created_at` timestamp NULL DEFAULT NULL,
---   `updated_at` timestamp NULL DEFAULT NULL
--- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `locations`
---
+INSERT INTO `users_roles` (`user_id`, `role_id`) VALUES (1, 1);
 
 INSERT INTO `locations` (`county`, `town`) VALUES
 ('Baringo', 'Kabarnet'),

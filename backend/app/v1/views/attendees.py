@@ -3,6 +3,8 @@ from flask_jwt_extended import jwt_required
 from ..models import Attendee
 from utils.exception import DatabaseException
 from utils.responses import response, response_with_data, no_data_found
+from utils.validations import check_missing_fields
+from utils.decorators import roles_required
 
 
 attendees_blueprint = Blueprint("attendees_blueprint", __name__)
@@ -15,17 +17,9 @@ def add():
         data = request.get_json()
         if not data or not isinstance(data, dict):
             return response("Invalid JSON format or empty payload", 400)
-        first_name = data.get("first_name")
-        last_name = data.get("last_name")
-        organization = data.get("organization")
-        designation = data.get("designation")
-        email = data.get("email")
-        phone = data.get("phone")
-        meeting_id = data.get("meeting_id")
-
-        missing_fields = [
-            field
-            for field in [
+        missing_fields = check_missing_fields(
+            data,
+            [
                 "first_name",
                 "last_name",
                 "organization",
@@ -33,11 +27,17 @@ def add():
                 "email",
                 "phone",
                 "meeting_id",
-            ]
-            if field not in data
-        ]
+            ],
+        )
         if missing_fields:
-            return response(f"Missing required fields: {', '.join(missing_fields)}", 400)
+            return response(f"Field(s) {', '.join(missing_fields)} required!", 400)
+        first_name = data.get("first_name")
+        last_name = data.get("last_name")
+        organization = data.get("organization")
+        designation = data.get("designation")
+        email = data.get("email")
+        phone = data.get("phone")
+        meeting_id = data.get("meeting_id")
 
         if not attendee.check_attendance(email, meeting_id):
             result = attendee.create(
@@ -55,6 +55,7 @@ def add():
 
 @attendees_blueprint.route("/api/v1/attendees", methods=["GET"])
 @jwt_required()
+@roles_required(["admin"])
 def fetchall():
     attendee = Attendee()
     try:
@@ -71,6 +72,7 @@ def fetchall():
 
 @attendees_blueprint.route("/api/v1/attendees/<int:id>", methods=["GET"])
 @jwt_required()
+@roles_required(["admin"])
 def fetch_by_meeting_id(id):
     attendee = Attendee()
     try:

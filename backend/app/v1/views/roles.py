@@ -1,11 +1,10 @@
 from flask import Blueprint, request
 from flask_jwt_extended import jwt_required
 from ..models import Role
-from ..models import Permission
-from ..models import User
 from utils.exception import DatabaseException
 from utils.responses import response, response_with_data, no_data_found
-from utils.decorators import verify_role
+from utils.decorators import roles_required
+from utils.validations import check_missing_fields
 
 
 roles_blueprint = Blueprint("roles_blueprint", __name__)
@@ -13,20 +12,18 @@ roles_blueprint = Blueprint("roles_blueprint", __name__)
 
 @roles_blueprint.route("/api/v1/roles", methods=["POST"])
 @jwt_required()
-@verify_role("create-role")
-def add():
+@roles_required(["admin"])
+def create_role():
     role = Role()
     try:
         data = request.get_json()
         if not data or not isinstance(data, dict):
             return response("Invalid JSON format or empty payload!", 400)
-
+        missing_fields = check_missing_fields(data, ["name", "description"])
+        if missing_fields:
+            return response(f"Field(s) {', '.join(missing_fields)} required!", 400)
         name = data.get("name")
         description = data.get("description")
-
-        missing_fields = [field for field in ["name"] if field not in data]
-        if missing_fields:
-            return response(f"Missing required fields: {', '.join(missing_fields)}", 400)
         result = role.create(name, description)
 
         if not isinstance(result, Exception):
@@ -39,6 +36,7 @@ def add():
 
 @roles_blueprint.route("/api/v1/roles", methods=["GET"])
 @jwt_required()
+@roles_required(["admin"])
 def fetchall():
     role = Role()
     try:
@@ -54,6 +52,8 @@ def fetchall():
 
 
 @roles_blueprint.route("/api/v1/roles/<int:id>", methods=["GET"])
+@jwt_required()
+@roles_required(["admin"])
 def fetch_by_id(id):
     role = Role()
     try:
@@ -69,6 +69,8 @@ def fetch_by_id(id):
 
 
 @roles_blueprint.route("/api/v1/roles/<int:id>", methods=["DELETE"])
+@jwt_required()
+@roles_required(["admin"])
 def delete(id):
     role = Role()
     try:
@@ -82,6 +84,8 @@ def delete(id):
 
 
 @roles_blueprint.route("/api/v1/roles/<int:id>", methods=["PUT"])
+@jwt_required()
+@roles_required(["admin"])
 def update(id):
     role = Role()
     try:
@@ -89,12 +93,12 @@ def update(id):
         if not data or not isinstance(data, dict):
             return response("Invalid JSON format or empty payload!", 400)
 
+        missing_fields = check_missing_fields(data, ["name", "description"])
+        if missing_fields:
+            return response(f"Field(s) {', '.join(missing_fields)} required!", 400)
+
         name = data.get("name")
         description = data.get("description")
-
-        missing_fields = [field for field in ["name"] if field not in data]
-        if missing_fields:
-            return response(f"Missing required fields: {', '.join(missing_fields)}", 400)
         result = role.update(id, name, description)
         if not isinstance(result, Exception):
             return response("Role updated successfully!", 200)
@@ -104,7 +108,23 @@ def update(id):
         return response("Something went wrong, " + str(e), 400)
 
 
-@roles_blueprint.route("/api/v1/roles/assign-permissions", methods=["POST"])
+@roles_blueprint.route("/api/v1/roles/<string:role>/permissions", methods=["GET"])
+@jwt_required()
+@roles_required(["admin"])
+def get_permissions(role):
+    try:
+        data = Role().get_permissions(role)
+        if not isinstance(data, Exception):
+            return response_with_data("OK", data, 200)
+        else:
+            raise DatabaseException(str(data))
+    except DatabaseException as e:
+        return response("Something went wrong, " + str(e), 400)
+
+
+@roles_blueprint.route("/api/v1/roles/permissions/assign", methods=["POST"])
+@jwt_required()
+@roles_required(["admin"])
 def assign_permissions():
     role = Role()
     try:
@@ -112,81 +132,16 @@ def assign_permissions():
         if not data or not isinstance(data, dict):
             return response("Invalid JSON format or empty payload!", 400)
 
-        role_id = data.get("role_id")
+        missing_fields = check_missing_fields(data, ["role", "permissions"])
+        if missing_fields:
+            return response(f"Field(s) {', '.join(missing_fields)} required!", 400)
+        rol = data.get("role")
         permissions = data.get("permissions")
 
-        missing_fields = [field for field in ["role_id", "permissions"] if field not in data]
-        if missing_fields:
-            return response(f"Missing required fields: {', '.join(missing_fields)}", 400)
-
-        result = role.add_permission(role_id, permissions)
+        result = role.add_permission(rol, permissions)
         if not isinstance(result, Exception):
             return response("Permissions assigned successfully!", 200)
         else:
             raise DatabaseException(str(result))
-    except DatabaseException as e:
-        return response("Something went wrong, " + str(e), 400)
-
-
-@roles_blueprint.route("/api/v1/roles/assign-role", methods=["POST"])
-def assign_role():
-    user = User()
-    role = Role()
-    try:
-        data = request.get_json()
-        if not data or not isinstance(data, dict):
-            return response("Invalid JSON format or empty payload!", 400)
-
-        email = data.get("email")
-        role_name = data.get("role_name")
-
-        missing_fields = [field for field in ["email", "role_name"] if field not in data]
-        if missing_fields:
-            return response(f"Missing required fields: {', '.join(missing_fields)}", 400)
-        if user.find_by_email(email):
-            result = user.assign_role(email, role_name)
-            if isinstance(result, Exception):
-                return response("Role assignment failed" + str(result), 403)
-            return response("User role assgined Successfully", 200)
-        else:
-            return response("User not found!", 404)
-    except DatabaseException as e:
-        return response("Something went wrong, " + str(e), 400)
-
-
-@roles_blueprint.route("/api/v1/permissions", methods=["POST"])
-def create_permission():
-    permission = Permission()
-    try:
-        data = request.get_json()
-        if not data or not isinstance(data, dict):
-            return response("Invalid JSON format or empty payload!", 400)
-
-        perm = data.get("name")
-
-        missing_fields = [field for field in ["perm"] if field not in data]
-        if missing_fields:
-            return response(f"Missing required fields: {', '.join(missing_fields)}", 400)
-
-        result = permission.create(perm)
-        if not isinstance(result, Exception):
-            return response("Permission created successfully!", 201)
-        else:
-            raise DatabaseException(str(result))
-    except DatabaseException as e:
-        return response("Something went wrong, " + str(e), 400)
-
-
-@roles_blueprint.route("/api/v1/permissions", methods=["GET"])
-def fetchall_permissions():
-    permission = Permission()
-    try:
-        data = permission.get_all()
-        if not isinstance(data, Exception):
-            if not data:
-                return no_data_found()
-            return response_with_data("OK", data, 200)
-        else:
-            raise DatabaseException(str(data))
     except DatabaseException as e:
         return response("Something went wrong, " + str(e), 400)

@@ -3,6 +3,8 @@ from flask_jwt_extended import jwt_required
 from ..models import Venue
 from utils.exception import DatabaseException
 from utils.responses import response, response_with_data, no_data_found
+from utils.validations import check_missing_fields
+from utils.decorators import roles_required
 
 
 venue_blueprint = Blueprint("venue_blueprint", __name__)
@@ -10,6 +12,7 @@ venue_blueprint = Blueprint("venue_blueprint", __name__)
 
 @venue_blueprint.route("/api/v1/venues", methods=["POST"])
 @jwt_required()
+@roles_required(["admin"])
 def create():
     venue = Venue()
     try:
@@ -17,11 +20,9 @@ def create():
 
         if not data or not isinstance(data, dict):
             return response("Invalid JSON format or empty payload", 400)
-        missing_fields = [
-            field for field in ["name", "building", "town", "county"] if field not in data
-        ]
+        missing_fields = check_missing_fields(data, ["name", "building", "town", "county"])
         if missing_fields:
-            return response(f"Missing required fields: {', '.join(missing_fields)}", 400)
+            return response(f"Field(s) {', '.join(missing_fields)} required!", 400)
 
         name = data.get("name")
         building = data.get("building")
@@ -43,6 +44,7 @@ def create():
 
 @venue_blueprint.route("/api/v1/venues", methods=["GET"])
 @jwt_required()
+@roles_required(["admin"])
 def fetchall():
     venue = Venue()
     try:
@@ -59,6 +61,7 @@ def fetchall():
 
 @venue_blueprint.route("/api/v1/venues/<int:id>", methods=["GET"])
 @jwt_required()
+@roles_required(["admin"])
 def fetchone(id):
     venue = Venue()
     try:
@@ -76,6 +79,7 @@ def fetchone(id):
 
 @venue_blueprint.route("/api/v1/venues/<int:venue_id>", methods=["PATCH"])
 @jwt_required()
+@roles_required(["admin"])
 def update(venue_id):
 
     try:
@@ -84,15 +88,12 @@ def update(venue_id):
 
         if not data or not isinstance(data, dict):
             return response("Invalid JSON format or empty payload", 400)
-
-        required_fields = ["name", "building", "town", "county", "status"]
-        missing_fields = [field for field in required_fields if field not in data]
+        fields = ["name", "building", "town", "county", "status"]
+        missing_fields = check_missing_fields(data, fields)
         if missing_fields:
-            return response(f"Missing required fields: {', '.join(missing_fields)}", 400)
-
+            return response(f"Field(s) {', '.join(missing_fields)} required!", 400)
         if not venue.get_by_id(venue_id):
             return response("Meeting not found", 404)
-
         name = data.get("name")
         building = data.get("building")
         town = data.get("town")

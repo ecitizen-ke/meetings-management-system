@@ -1,10 +1,11 @@
 import json
 from flask import Blueprint, request
-
 from flask_jwt_extended import jwt_required
 from utils.responses import response, response_with_data, no_data_found
+from utils.validations import check_missing_fields
 from utils.exception import DatabaseException
 from ..models import Meeting, Report
+from utils.decorators import roles_required
 
 
 meetings_blueprint = Blueprint("meetings_blueprint", __name__)
@@ -12,6 +13,7 @@ meetings_blueprint = Blueprint("meetings_blueprint", __name__)
 
 @meetings_blueprint.route("/api/v1/meetings", methods=["POST"])
 @jwt_required()
+@roles_required(["admin"])
 def create():
     meeting = Meeting()
 
@@ -20,6 +22,17 @@ def create():
 
         if not data or not isinstance(data, dict):
             return response("Invalid JSON format or empty payload", 400)
+        fields = [
+            "title",
+            "description",
+            "meeting_date",
+            "start_time",
+            "end_time",
+            "organizations",
+        ]
+        missing_fields = check_missing_fields(data, fields)
+        if missing_fields:
+            return response(f"Field(s) {', '.join(missing_fields)} required!", 400)
 
         venue_id = data.get("venue_id")
         title = data.get("title")
@@ -30,17 +43,6 @@ def create():
         status = data.get("status")
         organizations = json.dumps(data.get("organizations"))
 
-        required_fields = [
-            "title",
-            "description",
-            "meeting_date",
-            "start_time",
-            "end_time",
-            "organizations",
-        ]
-        missing_fields = [field for field in required_fields if field not in data]
-        if missing_fields:
-            return response(f"Missing required fields: {', '.join(missing_fields)}", 400)
         meeting.create(
             venue_id,
             title,
@@ -58,6 +60,7 @@ def create():
 
 @meetings_blueprint.route("/api/v1/meetings", methods=["GET"])
 @jwt_required()
+@roles_required(["admin"])
 def fetchall():
     meetings = Meeting()
     try:
@@ -74,6 +77,7 @@ def fetchall():
 
 @meetings_blueprint.route("/api/v1/meetings/<int:id>", methods=["GET"])
 @jwt_required()
+@roles_required(["admin"])
 def fetchone(id):
     meetings = Meeting()
     try:
@@ -90,6 +94,7 @@ def fetchone(id):
 
 @meetings_blueprint.route("/api/v1/meetings/<int:id>/organizations", methods=["GET"])
 @jwt_required()
+@roles_required(["admin"])
 def get_organizations_per_meeting(id):
     meetings = Meeting()
     try:
@@ -106,6 +111,7 @@ def get_organizations_per_meeting(id):
 
 @meetings_blueprint.route("/api/v1/meetings/<int:meeting_id>", methods=["PATCH"])
 @jwt_required()
+@roles_required(["admin"])
 def update(meeting_id):
     try:
         meeting = Meeting()
@@ -113,6 +119,18 @@ def update(meeting_id):
 
         if not data or not isinstance(data, dict):
             return response("Invalid JSON format or empty payload", 400)
+
+        fields = [
+            "title",
+            "description",
+            "meeting_date",
+            "start_time",
+            "end_time",
+            "organizations",
+        ]
+        missing_fields = check_missing_fields(data, fields)
+        if missing_fields:
+            return response(f"Field(s) {', '.join(missing_fields)} required!", 400)
 
         venue_id = data.get("venue_id")
         title = data.get("title")
@@ -122,18 +140,6 @@ def update(meeting_id):
         end_time = data.get("end_time")
         status = data.get("status")
         organizations = json.dumps(data.get("organizations"))
-
-        required_fields = [
-            "title",
-            "description",
-            "meeting_date",
-            "start_time",
-            "end_time",
-            "organizations",
-        ]
-        missing_fields = [field for field in required_fields if field not in data]
-        if missing_fields:
-            return response(f"Missing required fields: {', '.join(missing_fields)}", 400)
 
         if not meeting.get_by_id(meeting_id):
             return response("Meeting not found", 404)
@@ -157,15 +163,16 @@ def update(meeting_id):
 
 @meetings_blueprint.route("/api/v1/meetings/update-status/<int:meeting_id>", methods=["PATCH"])
 @jwt_required()
+@roles_required(["admin"])
 def update_status(meeting_id):
     try:
         meeting = Meeting()
         data = request.get_json()
         status = data["status"]
 
-        missing_fields = [field for field in ["status"] if field not in data]
+        missing_fields = check_missing_fields(data, ["status"])
         if missing_fields:
-            return response(f"Missing required fields: {', '.join(missing_fields)}", 400)
+            return response(f"Field(s) {', '.join(missing_fields)} required!", 400)
 
         if not meeting.get_by_id(meeting_id):
             return response("Meeting not found", 404)
@@ -177,6 +184,7 @@ def update_status(meeting_id):
 
 @meetings_blueprint.route("/api/v1/meetings/<int:id>", methods=["DELETE"])
 @jwt_required()
+@roles_required(["admin"])
 def delete(id):
     meeting = Meeting()
     try:
@@ -190,6 +198,7 @@ def delete(id):
 
 @meetings_blueprint.route("/api/v1/meetings/summary", methods=["GET"])
 @jwt_required()
+@roles_required(["admin"])
 def summerize():
     report = Report()
     try:

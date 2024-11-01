@@ -1,28 +1,30 @@
 from functools import wraps
-from flask_jwt_extended import get_jwt_identity, get_jwt
-from app.v1.models import User
+from flask_jwt_extended import get_jwt, get_jwt_identity
 from utils.responses import response
+from app.v1.models import User
 
 
-def verify_role(required_permission=None):
+def roles_required(required_roles=None):
     def wrapper(func):
         @wraps(func)
         def decorated_view(*args, **kwargs):
-            user = User()
-            user_email = get_jwt_identity()
-            role_name = get_jwt()["role"]["name"]
-            user_has_role = user.has_role(user_email, role_name)
-            if not user_has_role:
-                return response("You do not have the required role to perform this action", 403)
+            current_user_role = get_jwt()["role"]["name"]
+            if current_user_role not in required_roles:
+                return response("You do not have the permission to perform this action", 403)
+            return func(*args, **kwargs)
 
-            if required_permission:
-                role_has_permission = user.has_permission(user_email, required_permission)
-                if not role_has_permission:
-                    return response(
-                        "You do not have the required permission to perform this action", 403
-                    )
+        return decorated_view
 
-            # If all checks pass, proceed to the function
+    return wrapper
+
+
+def permission_required(required_permission=None):
+    def wrapper(func):
+        @wraps(func)
+        def decorated_view(*args, **kwargs):
+            user_permissions = User().get_permissions(get_jwt_identity())
+            if required_permission not in user_permissions:
+                return response("You do not have the permission to perform this action", 403)
             return func(*args, **kwargs)
 
         return decorated_view

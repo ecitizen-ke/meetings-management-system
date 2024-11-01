@@ -1,8 +1,8 @@
 import json
-from app.db import Database
 from datetime import datetime
-from utils import combine_date_time
 from passlib.hash import pbkdf2_sha256 as sha256
+from app.db import Database
+from utils import combine_date_time, json_to_list
 
 
 class Organization:
@@ -11,8 +11,6 @@ class Organization:
 
     def create(self, name, description):
         try:
-            if not name:
-                raise ValueError("Name cannot be None")
             self.db.execute(
                 "INSERT INTO organizations (name, description) VALUES (%s, %s)",
                 (name, description),
@@ -384,6 +382,243 @@ class Attendee:
             return e
 
 
+class User:
+
+    def __init__(self):
+        self.db = Database()
+
+    def create(self, first_name, last_name, organization, designation, email, phone, password):
+        """Save user details to users table in the database"""
+        try:
+            self.db.execute(
+                "INSERT INTO users (first_name, last_name, organization, designation, email, phone, password) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+                (
+                    first_name,
+                    last_name,
+                    organization,
+                    designation,
+                    email,
+                    phone,
+                    User.generate_hash(password),
+                ),
+            )
+            if self.db.insert_success():
+                self.db.commit()
+                User().assign_role(email, "user")
+        except Exception as e:
+            self.db.rollback()
+            return e
+        finally:
+            self.db.close()
+
+    def find_by_email(self, email):
+        try:
+            return self.db.fetchone("SELECT * FROM users WHERE email = %s", (email,))
+        except Exception as e:
+            return e
+
+    def login(self, email, password):
+        user = self.find_by_email(email)
+        try:
+            if user is not None and User.verify_hash(password, user.get("password")):
+                return self.db.fetchone(
+                    "SELECT * FROM users WHERE email=%s;",
+                    (email,),
+                )
+        except Exception as e:
+            return e
+        finally:
+            self.db.close()
+
+    def assign_role(self, email, role_name):
+        """Fetch all users in the database table"""
+        try:
+            role = self.db.fetchone("SELECT id FROM roles WHERE name = %s", (role_name,))
+            user = self.db.fetchone("SELECT id FROM users WHERE email = %s", (email,))
+            if role:
+                self.db.execute(
+                    "INSERT INTO users_roles (user_id, role_id) VALUES (%s, %s)",
+                    (user["id"], role["id"]),
+                )
+                self.db.commit()
+        except Exception as e:
+            self.db.rollback()
+            return e
+        finally:
+            self.db.close()
+
+    def get_users(self):
+        """Fetch all users in the database table"""
+        try:
+            return self.db.fetchmany(
+                "SELECT id, first_name, organization, designation, email, phone, created_on, updated_on FROM users"
+            )
+        except Exception as e:
+            self.db.rollback()
+            return e
+        finally:
+            self.db.close()
+
+    def has_role(self, email, role_name):
+        try:
+            role = self.db.fetchone("SELECT id FROM roles WHERE name = %s", (role_name,))
+            user = self.db.fetchone("SELECT id FROM users WHERE email = %s", (email,))
+            if not role or not user:
+                return False
+
+            user_roles = self.db.fetchone(
+                "SELECT * FROM users_roles WHERE user_id = %s AND role_id = %s",
+                (user["id"], role["id"]),
+            )
+            if user_roles:
+                return True
+            else:
+                return False
+
+        except Exception as e:
+            return e
+        finally:
+            self.db.close()
+
+    def add_permission(self, email, permission):
+        try:
+            perm = self.db.fetchone("SELECT * FROM permissions WHERE name = %s", (permission,))
+            print(perm)
+
+            user = self.db.fetchone("SELECT * FROM users WHERE email = %s", (email,))
+            if permission:
+                self.db.execute(
+                    "INSERT INTO users_permissions (user_id, permission_id) VALUES (%s, %s)",
+                    (user["id"], perm["id"]),
+                )
+                if self.db.insert_success():
+                    self.db.commit()
+
+        except Exception as e:
+            self.db.rollback()
+            return e
+        finally:
+            self.db.close()
+
+    def has_permission(self, email, permission_name):
+        try:
+
+            permission = self.db.fetchone(
+                "SELECT id FROM permissions WHERE name = %s", (permission_name,)
+            )
+
+            user = self.db.fetchone("SELECT id FROM users WHERE email = %s", (email,))
+            if not permission or not user:
+                return False  # Permission or User not found
+
+            role = self.db.fetchone(
+                "SELECT role_id FROM users_roles WHERE user_id = %s", (user["id"],)
+            )
+            if not role:
+                return False  # User has no assigned roles
+
+            role_permissions = self.db.fetchone(
+                "SELECT * FROM roles_permissions WHERE role_id = %s AND permission_id = %s",
+                (role["role_id"], permission["id"]),
+            )
+            if role_permissions:
+                return True
+            else:
+                return False
+        except Exception as e:
+            return e
+        finally:
+            self.db.close()
+
+    def get_role(self, email):
+        try:
+            user = self.db.fetchone("SELECT id FROM users WHERE email = %s", (email,))
+            if not user:
+                return None  # User
+
+            role = self.db.fetchone(
+                "SELECT role_id FROM users_roles WHERE user_id = %s", (user["id"],)
+            )
+
+            if not role:
+                return None  # User has no assigned roles
+
+            return self.db.fetchone("SELECT name FROM roles WHERE id = %s", (role["role_id"],))
+
+        except Exception as e:
+            return e
+
+    def get_permissions(self, email):
+        try:
+            user = self.db.fetchone("SELECT id FROM users WHERE email = %s", (email,))
+            if not user:
+                return None
+
+            results = self.db.fetchmany(
+                "select permissions.name FROM permissions INNER JOIN roles_permissions ON permissions.id=roles_permissions.permission_id INNER JOIN users_roles ON roles_permissions.role_id=users_roles.role_id INNER JOIN users ON users_roles.user_id=users.id WHERE users.id=%s",
+                (user["id"],),
+            )
+
+            delegated = self.db.fetchmany(
+                "select permissions.name FROM permissions INNER JOIN users_permissions ON permissions.id=users_permissions.permission_id INNER JOIN users ON users_permissions.user_id=users.id WHERE users.id=%s",
+                (user["id"],),
+            )
+
+            delegated_permissions = json_to_list(delegated, ["name"])
+            native_permissions = json_to_list(results, ["name"])
+
+            if delegated_permissions:
+                return native_permissions + delegated_permissions
+            else:
+                return native_permissions
+
+        except Exception as e:
+            return e
+
+    @staticmethod
+    def generate_hash(password):
+        return sha256.hash(password)
+
+    @staticmethod
+    def verify_hash(password, hash):
+        return sha256.verify(password, hash)
+
+
+class Report:
+
+    def __init__(self):
+        self.meetings = Meeting()
+
+    def meetings_summary(self):
+        meetings_status = {"pending": 0, "ongoing": 0, "complete": 0}
+        current_date_time = datetime.now()
+        current_date = current_date_time.date()
+        for meeting in self.meetings.get_all():
+            meeting_date = meeting["meeting_date"]
+            start = meeting["start_time"]
+            end = meeting["end_time"]
+            # construct date time from a given date and time
+            start_date_time = combine_date_time(meeting_date, start)
+            end_date_time = combine_date_time(meeting_date, end)
+            if meeting_date < current_date:
+                meetings_status["complete"] += 1
+                # Meeting().update_status(meeting["id"], "complete")
+            elif meeting_date == current_date:
+                if start_date_time <= current_date_time <= end_date_time:
+                    meetings_status["ongoing"] += 1
+                    # Meeting().update_status(meeting["id"], "ongoing")
+                elif current_date_time < start_date_time:
+                    meetings_status["pending"] += 1
+                    # Meeting().update_status(meeting["id"], "pending")
+                elif current_date_time > end_date_time:
+                    meetings_status["complete"] += 1
+                    # Meeting().update_status(meeting["id"], "complete")
+            else:
+                meetings_status["pending"] += 1
+                # self.meetings.update_status(meeting["id"], "pending")
+        return meetings_status
+
+
 class Role:
     def __init__(self):
         self.db = Database()
@@ -432,12 +667,16 @@ class Role:
         finally:
             self.db.close()
 
-    def add_permission(self, role_id, permissions):
+    def add_permission(self, role, permissions):
         try:
-            for permission in permissions:
+            role = self.db.fetchone("SELECT * FROM roles WHERE name = %s", (role,))
+
+            for perm in permissions:
+                permission = self.db.fetchone("SELECT * FROM permissions WHERE name = %s", (perm,))
+
                 self.db.execute(
                     "INSERT INTO roles_permissions (role_id, permission_id) VALUES (%s, %s)",
-                    (role_id, permission),
+                    (role["id"], permission["id"]),
                 )
             self.db.commit()
         except Exception as e:
@@ -457,11 +696,14 @@ class Role:
         finally:
             self.db.close()
 
-    def get_permissions(self, role_id):
+    def get_permissions(self, role):
         try:
-            return self.db.fetchmany(
-                "SELECT * FROM roles_permissions WHERE role_id = %s", (role_id,)
+            role = self.db.fetchone("SELECT * FROM roles WHERE name = %s", (role,))
+            results = self.db.fetchmany(
+                "SELECT permissions.name FROM permissions INNER JOIN roles_permissions ON permissions.id=roles_permissions.permission_id WHERE role_id = %s",
+                (role["id"],),
             )
+            return json_to_list(results, ["name"])
         except Exception as e:
             return e
         finally:
@@ -491,11 +733,15 @@ class Permission:
         finally:
             self.db.close()
 
-    def assign_permission_to_role(self, role_id, permission_id):
+    def assign_permission_to_role(self, role, permission):
         try:
+            role = self.db.fetchone("SELECT * FROM roles WHERE name = %s", (role,))
+            permission = self.db.fetchone(
+                "SELECT * FROM permissions WHERE name = %s", (permission,)
+            )
             self.db.execute(
                 "INSERT INTO roles_permissions (role_id, permission_id) VALUES (%s, %s)",
-                (role_id, permission_id),
+                (role["id"], permission["id"]),
             )
             if self.db.insert_success():
                 self.db.commit()
@@ -504,190 +750,3 @@ class Permission:
             return e
         finally:
             self.db.close()
-
-
-class User:
-
-    def __init__(self):
-        self.db = Database()
-
-    def create(self, first_name, last_name, organization, designation, email, phone, password):
-        """Save user details to users table in the database"""
-        try:
-            self.db.execute(
-                "INSERT INTO users (first_name, last_name, organization, designation, email, phone, password) VALUES (%s, %s, %s, %s, %s, %s, %s)",
-                (
-                    first_name,
-                    last_name,
-                    organization,
-                    designation,
-                    email,
-                    phone,
-                    User.generate_hash(password),
-                ),
-            )
-            if self.db.insert_success():
-                self.db.commit()
-        except Exception as e:
-            self.db.rollback()
-            return e
-        finally:
-            self.db.close()
-
-    def find_by_email(self, email):
-        try:
-            return self.db.fetchone("SELECT * FROM users WHERE email = %s", (email,))
-        except Exception as e:
-            return e
-
-    def login(self, email, password):
-        user = self.find_by_email(email)
-        try:
-            if user is not None and User.verify_hash(password, user.get("password")):
-                return self.db.fetchone(
-                    "SELECT * FROM users WHERE email=%s;",
-                    (email,),
-                )
-        except Exception as e:
-            return e
-        finally:
-            self.db.close()
-
-    def assign_role(self, email, role_name):
-        """Fetch all users in the database table"""
-        try:
-            role = self.db.fetchone("SELECT id FROM roles WHERE name = %s", (role_name,))
-            user = self.db.fetchone("SELECT id FROM users WHERE email = %s", (email,))
-            if role:
-                self.db.execute(
-                    "INSERT INTO users_roles (user_id, role_id) VALUES (%s, %s)",
-                    (user["id"], role["id"]),
-                )
-                self.db.commit()
-        except Exception as e:
-            self.db.rollback()
-            return e
-        finally:
-            self.db.close()
-
-    def get_users(self):
-        """Fetch all users in the database table"""
-        try:
-            return self.db.fetchmany("SELECT * FROM users")
-        except Exception as e:
-            self.db.rollback()
-            return e
-        finally:
-            self.db.close()
-
-    def has_role(self, email, role_name):
-        try:
-            role = self.db.fetchone("SELECT id FROM roles WHERE name = %s", (role_name,))
-            user = self.db.fetchone("SELECT id FROM users WHERE email = %s", (email,))
-            if not role or not user:
-                return False
-
-            user_roles = self.db.fetchone(
-                "SELECT * FROM users_roles WHERE user_id = %s AND role_id = %s",
-                (user["id"], role["id"]),
-            )
-            if user_roles:
-                return True
-            else:
-                return False
-
-        except Exception as e:
-            return e
-        finally:
-            self.db.close()
-
-    def has_permission(self, email, permission_name):
-        try:
-
-            permission = self.db.fetchone(
-                "SELECT id FROM permissions WHERE name = %s", (permission_name,)
-            )
-
-            user = self.db.fetchone("SELECT id FROM users WHERE email = %s", (email,))
-            if not permission or not user:
-                return False  # Permission or User not found
-
-            role = self.db.fetchone(
-                "SELECT role_id FROM users_roles WHERE user_id = %s", (user["id"],)
-            )
-            if not role:
-                return False  # User has no assigned roles
-
-            role_permissions = self.db.fetchone(
-                "SELECT * FROM roles_permissions WHERE role_id = %s AND permission_id = %s",
-                (role["role_id"], permission["id"]),
-            )
-            if role_permissions:
-                return True
-            else:
-                return False
-        except Exception as e:
-            return e
-        finally:
-            self.db.close()
-
-    def get_role(self, email):
-        try:
-            # return email
-            user = self.db.fetchone("SELECT id FROM users WHERE email = %s", (email,))
-            if not user:
-                return None  # User
-
-            role = self.db.fetchone(
-                "SELECT role_id FROM users_roles WHERE user_id = %s", (user["id"],)
-            )
-            if not role:
-                return None  # User has no assigned roles
-
-            return self.db.fetchone("SELECT name FROM roles WHERE id = %s", (role["role_id"],))
-
-        except Exception as e:
-            return e
-
-    @staticmethod
-    def generate_hash(password):
-        return sha256.hash(password)
-
-    @staticmethod
-    def verify_hash(password, hash):
-        return sha256.verify(password, hash)
-
-
-class Report:
-
-    def __init__(self):
-        self.meetings = Meeting()
-
-    def meetings_summary(self):
-        meetings_status = {"pending": 0, "ongoing": 0, "complete": 0}
-        current_date_time = datetime.now()
-        current_date = current_date_time.date()
-        for meeting in self.meetings.get_all():
-            meeting_date = meeting["meeting_date"]
-            start = meeting["start_time"]
-            end = meeting["end_time"]
-            # construct date time from a given date and time
-            start_date_time = combine_date_time(meeting_date, start)
-            end_date_time = combine_date_time(meeting_date, end)
-            if meeting_date < current_date:
-                meetings_status["complete"] += 1
-                # Meeting().update_status(meeting["id"], "complete")
-            elif meeting_date == current_date:
-                if start_date_time <= current_date_time <= end_date_time:
-                    meetings_status["ongoing"] += 1
-                    # Meeting().update_status(meeting["id"], "ongoing")
-                elif current_date_time < start_date_time:
-                    meetings_status["pending"] += 1
-                    # Meeting().update_status(meeting["id"], "pending")
-                elif current_date_time > end_date_time:
-                    meetings_status["complete"] += 1
-                    # Meeting().update_status(meeting["id"], "complete")
-            else:
-                meetings_status["pending"] += 1
-                # self.meetings.update_status(meeting["id"], "pending")
-        return meetings_status
