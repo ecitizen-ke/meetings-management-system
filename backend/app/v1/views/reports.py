@@ -4,12 +4,15 @@ from utils import generate_excel_file, generate_pdf_file
 from ..models import Attendee, Meeting
 from utils.exception import DatabaseException
 from utils.responses import response
+from utils.decorators import roles_required
+
 
 reports_blueprint = Blueprint("reports_blueprint", __name__)
 
 
 @reports_blueprint.route("/api/v1/reports/excel/<int:id>", methods=["GET"])
 @jwt_required()
+@roles_required(["admin"])
 def generate_excel_reports(id):
     attendees = Attendee().get_by_meeting_id(id)
     try:
@@ -24,6 +27,7 @@ def generate_excel_reports(id):
 
 @reports_blueprint.route("/api/v1/reports/pdf/<int:id>", methods=["GET"])
 @jwt_required()
+@roles_required(["admin"])
 def generate_pdf_reports(id):
     attendees = Attendee().get_by_meeting_id(id)
     meeting = Meeting().get_by_id(id)

@@ -3,11 +3,15 @@ from flask_jwt_extended import jwt_required
 from ..models import Location
 from utils.exception import DatabaseException
 from utils.responses import response, response_with_data, no_data_found
+from utils.decorators import roles_required
+
 
 locations_blueprint = Blueprint("locations_blueprint", __name__)
 
 
 @locations_blueprint.route("/api/v1/locations", methods=["GET"])
+@jwt_required()
+@roles_required(["admin"])
 def fetchall():
     locations = Location()
     try:

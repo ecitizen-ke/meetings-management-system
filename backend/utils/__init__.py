@@ -1,5 +1,6 @@
 import os
 import csv
+import re
 from flask import current_app as app
 from pandas import DataFrame
 from qrcode import QRCode, constants
@@ -177,9 +178,37 @@ def combine_date_time(date_string, time_string):
     return datetime.combine(date_string, parse_time(time_string))
 
 
+def json_to_list(json_data, key_list):
+    """Convert dictionary object to list object"""
+    list_data = []
+    for res in json_data:
+        item = [res.get(k) for k in key_list]
+        list_data.append(item[0])
+    return list_data
+
+
+def execute_sql_script(cursor, sql_script):
+    statement = ""
+    for line in open(sql_script):
+        # ignore sql comment lines
+        if re.match(r"--", line):
+            continue
+        # keep appending lines that do not end with ";"
+        if not re.search(r";$", line):
+            statement = statement + line
+        # if a line ends with ';', then execute statement and reset for the next statement
+        else:
+            statement = statement + line
+            try:
+                cursor.execute(statement)
+            except Exception as e:
+                return e
+            statement = ""
+
+
 statements = {
-    "organizations": "CREATE TABLE IF NOT EXISTS organizations (id INT AUTO_INCREMENT PRIMARY KEY,name VARCHAR(100) NOT NULL,description TEXT,created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,updated_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP);",
-    "users": "CREATE TABLE IF NOT EXISTS users (id INT AUTO_INCREMENT PRIMARY KEY,first_name VARCHAR(100) NOT NULL,last_name VARCHAR(100) NOT NULL, organization VARCHAR(100) NOT NULL, designation VARCHAR(100) NOT NULL, email VARCHAR(100) NOT NULL, phone VARCHAR(30), password VARCHAR(255) NOT NULL, created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,updated_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP);",
+    "organizations": "CREATE TABLE IF NOT EXISTS organizations (id INT AUTO_INCREMENT PRIMARY KEY,name VARCHAR(100) NOT NULL UNIQUE,description TEXT,created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,updated_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP);",
+    "users": "CREATE TABLE IF NOT EXISTS users (id INT AUTO_INCREMENT PRIMARY KEY,first_name VARCHAR(100) NOT NULL,last_name VARCHAR(100) NOT NULL, organization VARCHAR(100) NOT NULL, designation VARCHAR(100) NOT NULL, email VARCHAR(100) NOT NULL UNIQUE, phone VARCHAR(30), password VARCHAR(255) NOT NULL, created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,updated_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP);",
     "roles": "CREATE TABLE IF NOT EXISTS roles (id INT AUTO_INCREMENT PRIMARY KEY,name VARCHAR(50) NOT NULL UNIQUE,description TEXT,created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,updated_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP);",
     "users_roles": "CREATE TABLE IF NOT EXISTS users_roles (user_id INT NOT NULL,role_id INT NOT NULL,PRIMARY KEY (user_id, role_id),FOREIGN KEY (user_id) REFERENCES users(id),FOREIGN KEY (role_id) REFERENCES roles(id),created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,updated_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP );",
     "permissions": "CREATE TABLE IF NOT EXISTS permissions (id INT AUTO_INCREMENT PRIMARY KEY,name VARCHAR(50) NOT NULL UNIQUE,created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,updated_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP);",
@@ -189,4 +218,5 @@ statements = {
     "meetings": "CREATE TABLE IF NOT EXISTS meetings (id INT AUTO_INCREMENT PRIMARY KEY, venue_id INT NOT NULL,title VARCHAR(100) NOT NULL, description TEXT, meeting_date DATE NOT NULL,start_time TIME NOT NULL,end_time TIME NOT NULL, FOREIGN KEY (venue_id) REFERENCES venues(id), organizations JSON, resources JSON,status ENUM('draft', 'ongoing', 'complete', 'rescheduled','pending', 'cancelled') DEFAULT 'pending', created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,updated_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP);",
     "attendees": "CREATE TABLE IF NOT EXISTS attendees (id INT AUTO_INCREMENT PRIMARY KEY,first_name VARCHAR(100) NOT NULL,last_name VARCHAR(100) NOT NULL, organization VARCHAR(100), designation VARCHAR(100) NOT NULL, email VARCHAR(100) NOT NULL, phone VARCHAR(30), meeting_id INT NOT NULL, FOREIGN KEY (meeting_id) REFERENCES meetings(id),created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,updated_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP)",
     "meetings_organizations": "CREATE TABLE IF NOT EXISTS meetings_organizations (meeting_id INT NOT NULL,organization_id INT NOT NULL, PRIMARY KEY (meeting_id, organization_id), FOREIGN KEY (meeting_id) REFERENCES meetings(id), FOREIGN KEY (organization_id) REFERENCES organizations(id),created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,updated_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP);",
+    "users_permissions": "CREATE TABLE IF NOT EXISTS users_permissions (user_id INT NOT NULL,permission_id INT NOT NULL,PRIMARY KEY (user_id, permission_id),FOREIGN KEY (user_id) REFERENCES users(id),FOREIGN KEY (permission_id) REFERENCES permissions(id),created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,updated_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP);",
 }
