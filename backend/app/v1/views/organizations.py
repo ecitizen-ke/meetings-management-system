@@ -94,7 +94,8 @@ def delete_organization(id):
     except Exception as e:
         return response("Something went wrong, " + str(e), 400)
 
-@organizations_blueprint.route("/api/v1/organizations-select", methods=["GET"])
+
+@organizations_blueprint.route("/api/v1/organizations-search", methods=["GET"])
 @jwt_required()
 def search_organization():
     organization = Organization()

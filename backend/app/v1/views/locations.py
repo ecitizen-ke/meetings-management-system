@@ -26,7 +26,7 @@ def fetchall():
         return response("Something went wrong, " + str(e), 400)
 
 
-@locations_blueprint.route("/api/v1/location-towns", methods=["GET"])
+@locations_blueprint.route("/api/v1/location-search", methods=["GET"])
 @jwt_required()
 def get_locations_select():
     county = request.args.get("county", None)
