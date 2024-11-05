@@ -55,20 +55,6 @@ class Organization:
         finally:
             self.db.close()
 
-    def delete_organization(self, id):
-        try:
-            if not id:
-                raise ValueError("ID cannot be None")
-            if not self.db.fetchone("SELECT * FROM organizations WHERE id = %s", (id,)):
-                raise ValueError("Organization does not exist")
-            self.db.execute("DELETE FROM organizations WHERE id = %s", (id,))
-            self.db.commit()
-        except Exception as e:
-            self.db.rollback()
-            return e
-        finally:
-            self.db.close()
-
     def get_by_id(self, id):
         try:
             return self.db.fetchone("SELECT * FROM organizations WHERE id = %s", (id,))
@@ -160,6 +146,7 @@ class Venue:
 
         try:
 
+            status = "available" if status == "" or status is None else status
             # check if location exists
             res = Location().filter_by_county_and_search(county, town)
             if not res:
@@ -208,7 +195,10 @@ class Venue:
 
     def get_all(self):
         try:
-            return self.db.fetchmany("SELECT * FROM venues")
+            venues = self.db.fetchmany("SELECT * FROM venues")
+            for venue in venues:
+                venue["location"] = Location().get_by_id(venue["location_id"])
+            return venues
         except Exception as e:
             return e
         finally:
@@ -216,7 +206,9 @@ class Venue:
 
     def get_by_id(self, id):
         try:
-            return self.db.fetchone("SELECT * FROM venues WHERE id = %s", (id,))
+            venue = self.db.fetchone("SELECT * FROM venues WHERE id = %s", (id,))
+            venue["location"] = Location().get_by_id(venue["location_id"])
+            return venue
         except Exception as e:
             return e
 
@@ -271,6 +263,10 @@ class Meeting:
             for meeting in meetings:
                 meeting["start_time"] = str(meeting["start_time"])
                 meeting["end_time"] = str(meeting["end_time"])
+                meeting["organizations"] = self.get_organizations_by_meeting(meeting["id"])
+                meeting["venue"] = Venue().get_by_id(meeting["venue_id"])
+                meeting["meeting_date"] = str(meeting["meeting_date"])
+
             return meetings
         except Exception as e:
             return e
@@ -283,6 +279,9 @@ class Meeting:
             meeting = self.db.cursor.fetchone()
             meeting["start_time"] = str(meeting["start_time"])
             meeting["end_time"] = str(meeting["end_time"])
+            meeting["organizations"] = self.get_organizations_by_meeting(meeting["id"])
+            meeting["venue"] = Venue().get_by_id(meeting["venue_id"])
+            meeting["meeting_date"] = str(meeting["meeting_date"])
             return meeting
         except Exception as e:
             return e
@@ -369,6 +368,26 @@ class Meeting:
 
         except Exception as e:
             return e
+        
+    def is_date_valid(self, meeting_date):
+        current_date = datetime.now().date()
+        try:
+            meeting_date = datetime.strptime(meeting_date, "%Y-%m-%d").date()
+        except ValueError:
+            return False
+        if meeting_date < current_date:
+            return False
+        return True
+    
+    def is_time_valid(self, start_time, end_time):
+        try:
+            start_time = datetime.strptime(start_time, "%H:%M:%S").time()
+            end_time = datetime.strptime(end_time, "%H:%M:%S").time()
+        except ValueError:
+            return False
+        if start_time >= end_time:
+            return False
+        return True
 
 
 class Resource:
