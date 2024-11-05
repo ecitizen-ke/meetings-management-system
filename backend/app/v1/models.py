@@ -41,7 +41,7 @@ class Organization:
             return e
         finally:
             self.db.close()
-    
+
     def update_organization(self, id, name, description):
         try:
             self.db.execute(
@@ -54,13 +54,13 @@ class Organization:
             return e
         finally:
             self.db.close()
-    
+
     def delete_organization(self, id):
         try:
             if not id:
-                raise ValueError ("ID cannot be None")
+                raise ValueError("ID cannot be None")
             if not self.db.fetchone("SELECT * FROM organizations WHERE id = %s", (id,)):
-                raise ValueError ("Organization does not exist")
+                raise ValueError("Organization does not exist")
             self.db.execute("DELETE FROM organizations WHERE id = %s", (id,))
             self.db.commit()
         except Exception as e:
@@ -68,13 +68,13 @@ class Organization:
             return e
         finally:
             self.db.close()
-        
+
     def get_by_id(self, id):
         try:
             return self.db.fetchone("SELECT * FROM organizations WHERE id = %s", (id,))
         except Exception as e:
             return e
-    
+
     def update_organization(self, id, name, description):
         try:
             self.db.execute(
@@ -87,13 +87,13 @@ class Organization:
             return e
         finally:
             self.db.close()
-    
+
     def delete_organization(self, id):
         try:
             if not id:
-                raise ValueError ("ID cannot be None")
+                raise ValueError("ID cannot be None")
             if not self.db.fetchone("SELECT * FROM organizations WHERE id = %s", (id,)):
-                raise ValueError ("Organization does not exist")
+                raise ValueError("Organization does not exist")
             self.db.execute("DELETE FROM organizations WHERE id = %s", (id,))
             self.db.commit()
         except Exception as e:
@@ -150,6 +150,7 @@ class Location:
             return e
         finally:
             self.db.close()
+
 
 class Venue:
     def __init__(self):
