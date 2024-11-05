@@ -13,7 +13,7 @@ class Database:
         self.conn = connect(
             host=self.host, database=self.db, user=self.user, password=self.password
         )
-        self.cursor = self.conn.cursor(dictionary=True)
+        self.cursor = self.conn.cursor(dictionary=True, buffered=True)
 
     def create_tables(self):
         for statement in statements.values():
