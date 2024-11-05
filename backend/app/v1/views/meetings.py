@@ -31,9 +31,15 @@ def create():
             "organizations",
         ]
         missing_fields = check_missing_fields(data, fields)
+        #check for missing fields and return error message
         if missing_fields:
             return response(f"Field(s) {', '.join(missing_fields)} required!", 400)
-
+        # check meeting date is in the future
+        if not meeting.is_date_valid(data.get("meeting_date")):
+            return response ("Meeting date should be in the future", 400)
+        # check start time is before end time
+        if not meeting.is_time_valid(data.get("start_time"), data.get("end_time")):
+            return response ("Start time should be before end time", 400)
         venue_id = data.get("venue_id")
         title = data.get("title")
         description = data.get("description")
