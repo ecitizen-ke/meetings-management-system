@@ -42,19 +42,6 @@ class Organization:
         finally:
             self.db.close()
 
-    def update_organization(self, id, name, description):
-        try:
-            self.db.execute(
-                "UPDATE organizations SET name = %s, description = %s WHERE id = %s",
-                (name, description, id),
-            )
-            self.db.commit()
-        except Exception as e:
-            self.db.rollback()
-            return e
-        finally:
-            self.db.close()
-
     def get_by_id(self, id):
         try:
             return self.db.fetchone("SELECT * FROM organizations WHERE id = %s", (id,))
@@ -159,6 +146,7 @@ class Venue:
                 )
             if self.db.insert_success():
                 self.db.commit()
+                return self.db.fetchone("SELECT * FROM venues WHERE id = %s", (self.db.cursor.lastrowid,))
         except Exception as e:
             self.db.rollback()
             return e
