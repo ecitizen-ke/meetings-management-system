@@ -34,7 +34,7 @@ def create():
 
         result = venue.create(name, building, town, county, status, longitude, latitude)
         if not isinstance(result, Exception):
-            return response("Venue added successfully!", 201)
+            return response_with_data("Venue added successfully!", result, 201)
         else:
             raise DatabaseException(str(result))
 
