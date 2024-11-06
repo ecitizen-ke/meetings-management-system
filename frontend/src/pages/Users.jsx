@@ -80,8 +80,12 @@ const Users = () => {
   // fetch users
   const fetchUsers = async () => {
     try {
-      const users = await getData(`${Config.API_URL}/users`, customHeaders);
-      setUsers(users);
+      const { data } = await getData(
+        `${Config.API_URL}/auth/users`,
+        customHeaders
+      );
+      console.log(data);
+      setUsers(data);
     } catch (error) {
       handleApiError(error, dispatch);
     }
@@ -148,9 +152,9 @@ const Users = () => {
 
   const columns = [
     { field: 'id', headerName: '#', width: 70 },
-    { field: 'first_name', headerName: 'First Name', width: 220 },
+    { field: 'first_name', headerName: 'First Name', width: 150 },
     { field: 'last_name', headerName: 'Last Name', width: 220 },
-    { field: 'phone_number', headerName: 'Phone Number', width: 220 },
+    { field: 'phone', headerName: 'Phone Number', width: 220 },
     { field: 'email', headerName: 'Email Address', width: 220 },
     { field: 'designation', headerName: 'Designation', width: 220 },
 

@@ -13,6 +13,10 @@ export const getToken = () => {
   return localStorage.getItem('token');
 };
 
+export const getRefreshToken = () => {
+  return localStorage.getItem('refresh_token');
+};
+
 export const checkTokenExpiry = (dispatch) => {
   try {
     const token = localStorage.getItem('token');

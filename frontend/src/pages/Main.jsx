@@ -5,6 +5,7 @@ import {
   Grid,
   Typography,
   Button,
+  Alert,
 } from '@mui/material';
 import { green, red } from '@mui/material/colors';
 import React, { useEffect, useState } from 'react';
@@ -85,10 +86,9 @@ const Main = () => {
         Authorization: 'Bearer ' + getToken(),
         'Content-Type': 'application/json',
       };
-      const { complete, ongoing, pending } = await getData(
-        `${Config.API_URL}/meetings/summary`,
-        customHeaders
-      );
+      const {
+        data: { complete, ongoing, pending },
+      } = await getData(`${Config.API_URL}/meetings/summary`, customHeaders);
 
       setStats({
         complete,
@@ -105,12 +105,12 @@ const Main = () => {
         Authorization: 'Bearer ' + getToken(),
         'Content-Type': 'application/json',
       };
-      const { data } = await getData(
+      const response = await getData(
         `${Config.API_URL}/meetings`,
         customHeaders
       );
-      console.log(data);
-      setMeetings(data.reverse());
+      console.log(response);
+      // setMeetings(data);
     } catch (error) {
       console.log(error);
       handleApiError(error, dispatch);
@@ -218,17 +218,24 @@ const Main = () => {
       <br />
 
       <div style={{ width: '100%', marginTop: '35px' }}>
-        <DataGrid
-          rows={meetings}
-          columns={columns}
-          initialState={{
-            pagination: {
-              paginationModel: { page: 0, pageSize: 10 },
-            },
-          }}
-          pageSizeOptions={[5, 10]}
-          checkboxSelection
-        />
+        {meetings.length > 0 ? (
+          <DataGrid
+            rows={meetings}
+            columns={columns}
+            initialState={{
+              pagination: {
+                paginationModel: { page: 0, pageSize: 10 },
+              },
+            }}
+            pageSizeOptions={[5, 10]}
+            localeText={{ noRowsLabel: 'No data available' }}
+            // checkboxSelection
+          />
+        ) : (
+          <Alert severity='info' color='warning'>
+            No Meetings added yet
+          </Alert>
+        )}
       </div>
     </div>
   );
