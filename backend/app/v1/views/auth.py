@@ -2,6 +2,7 @@ from flask import Blueprint, request
 from flask_jwt_extended import jwt_required
 from flask_jwt_extended import create_access_token, create_refresh_token, get_jwt_identity
 from ..models import User
+from ..models import Role
 from utils.exception import DatabaseException
 from utils.responses import response, response_with_data, no_data_found
 from utils.validations import check_missing_fields
@@ -124,6 +125,7 @@ def refresh():
 @roles_required(["admin"])
 def assign():
     user = User()
+    role = Role()
     try:
         data = request.get_json()
         if not data or not isinstance(data, dict):
@@ -135,6 +137,8 @@ def assign():
         role_name = data["role"]
 
         if user.find_by_email(email):
+            if not role.find_by_name(role_name):
+                return response("Role not found!", 404)
             result = user.assign_role(email, role_name)
             if isinstance(result, Exception):
                 return response("Role assignment failed!" + str(result), 403)
