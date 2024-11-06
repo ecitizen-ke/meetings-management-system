@@ -187,6 +187,11 @@ def json_to_list(json_data, key_list):
     return list_data
 
 
+def parse_integer_from_string(string):
+    integers = [int(i) for i in string.split() if i.isdigit()]
+    return integers[0]
+
+
 def execute_sql_script(cursor, sql_script):
     statement = ""
     for line in open(sql_script):

@@ -1,11 +1,12 @@
 import json
 from flask import Blueprint, request
 from flask_jwt_extended import jwt_required
+from utils import parse_integer_from_string
 from utils.responses import response, response_with_data, no_data_found
 from utils.validations import check_missing_fields
 from utils.exception import DatabaseException
-from ..models import Meeting, Report
 from utils.decorators import roles_required
+from ..models import Meeting, Report
 
 
 meetings_blueprint = Blueprint("meetings_blueprint", __name__)
@@ -49,7 +50,7 @@ def create():
         status = data.get("status")
         organizations = json.dumps(data.get("organizations"))
 
-        meeting.create(
+        data = meeting.create(
             venue_id,
             title,
             description,
@@ -59,8 +60,15 @@ def create():
             organizations,
             status,
         )
-        return response("Meeting added successfully", 201)
+
+        if not isinstance(data, Exception):
+            return response("Meeting created successfully!", 201)
+        else:
+            raise DatabaseException(data)
     except DatabaseException as e:
+        error_code = parse_integer_from_string(str(e))
+        if error_code == 1452:
+            return response("An organization id provided does not exist in the table!", 400)
         return response("Something went wrong, " + str(e), 400)
 
 
