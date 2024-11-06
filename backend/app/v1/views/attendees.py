@@ -1,6 +1,9 @@
 from flask import Blueprint, request
 from flask_jwt_extended import jwt_required
 from ..models import Attendee
+from ..models import Meeting
+from ..models import Venue
+from ..models import Organization
 from utils.exception import DatabaseException
 from utils.responses import response, response_with_data, no_data_found
 from utils.validations import check_missing_fields
@@ -8,6 +11,20 @@ from utils.decorators import roles_required
 
 
 attendees_blueprint = Blueprint("attendees_blueprint", __name__)
+
+@attendees_blueprint.route("/api/v1/attendees-meeting-details/<int:id>", methods=["GET"])
+def get_meeting_details(id):
+    meeting = Meeting()
+    try:
+        data = meeting.get_by_id(id)
+        if not isinstance(data, Exception):
+            if not data:
+                return no_data_found()
+            return response_with_data("OK", data, 200)
+        else:
+            raise DatabaseException(str(data))
+    except DatabaseException as e:
+        return response("Something went wrong, " + str(e), 400)
 
 
 @attendees_blueprint.route("/api/v1/attendees", methods=["POST"])
