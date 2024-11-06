@@ -175,7 +175,7 @@ def check_time_difference(time_string):
 
 
 def combine_date_time(date_string, time_string):
-    return datetime.combine(date_string, parse_time(time_string))
+    return datetime.combine(parse_date(date_string), parse_time(time_string))
 
 
 def json_to_list(json_data, key_list):
