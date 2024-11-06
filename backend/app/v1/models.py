@@ -48,19 +48,6 @@ class Organization:
         except Exception as e:
             return e
 
-    def update_organization(self, id, name, description):
-        try:
-            self.db.execute(
-                "UPDATE organizations SET name = %s, description = %s WHERE id = %s",
-                (name, description, id),
-            )
-            self.db.commit()
-        except Exception as e:
-            self.db.rollback()
-            return e
-        finally:
-            self.db.close()
-
     def delete_organization(self, id):
         try:
             if not id:
@@ -146,7 +133,9 @@ class Venue:
                 )
             if self.db.insert_success():
                 self.db.commit()
-                return self.db.fetchone("SELECT * FROM venues WHERE id = %s", (self.db.cursor.lastrowid,))
+                return self.db.fetchone(
+                    "SELECT * FROM venues WHERE id = %s", (self.db.cursor.lastrowid,)
+                )
         except Exception as e:
             self.db.rollback()
             return e
@@ -356,7 +345,7 @@ class Meeting:
 
         except Exception as e:
             return e
-        
+
     def is_date_valid(self, meeting_date):
         current_date = datetime.now().date()
         try:
@@ -366,7 +355,7 @@ class Meeting:
         if meeting_date < current_date:
             return False
         return True
-    
+
     def is_time_valid(self, start_time, end_time):
         try:
             start_time = datetime.strptime(start_time, "%H:%M:%S").time()
@@ -517,9 +506,18 @@ class User:
     def get_users(self):
         """Fetch all users in the database table"""
         try:
-            return self.db.fetchmany(
-                "SELECT id, first_name, organization, designation, email, phone, created_on, updated_on FROM users"
+            fetch = self.db.fetchmany(
+                "SELECT users.id, users.first_name, users.organization, users.designation, users.email, users.phone, roles.id as role, users.created_on, users.updated_on FROM users INNER JOIN users_roles ON users.id=users_roles.user_id INNER JOIN roles ON users_roles.role_id=roles.id"
             )
+            roles = self.db.fetchmany("SELECT id, name, description FROM roles")
+            users = []
+            for user in fetch:
+                for role in roles:
+                    if user["role"] == role["id"]:
+                        user.update({"role": role})
+                users.append(user)
+            return users
+
         except Exception as e:
             self.db.rollback()
             return e
