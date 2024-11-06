@@ -124,6 +124,7 @@ const Login = () => {
                   fullWidth={true}
                   id='outlined-basic'
                   label='Email Address'
+                  defaultValue={`admin@ecitizen.go.ke`}
                   variant='outlined'
                   placeholder='Enter your email address'
                   type='email'
@@ -171,6 +172,7 @@ const Login = () => {
                   id='outlined'
                   label='Password'
                   variant='outlined'
+                  defaultValue={`password`}
                   placeholder='Password'
                   type={!showPassword ? 'password' : 'text'}
                   {...register('password', {

@@ -1,32 +1,32 @@
-import { createBrowserRouter } from "react-router-dom";
-import Dashboard from "./pages/Dashboard";
-import Login from "./pages/auth/Login";
-import Meeting from "./pages/Meeting";
-import NotFound from "./pages/NotFound";
-import Master from "./pages/Master";
-import Users from "./pages/Users";
-import AppSetting from "./pages/AppSetting";
-import Landing from "./pages/Landing";
-import QrPage from "./pages/QrPage";
-import Attendees from "./pages/Attendees";
-import Main from "./pages/Main";
-import Department from "./pages/Department";
-import EditMeeting from "./pages/EditMeeting";
-import EditVenue from "./pages/EditVenue";
-import { Suspense } from "react";
-import Venue from "./pages/Venue";
-import Organizations from "./pages/Organizations";
-import Register from "./pages/auth/Register";
-import Roles from "./pages/Roles";
+import { createBrowserRouter } from 'react-router-dom';
+import Dashboard from './pages/Dashboard';
+import Login from './pages/auth/Login';
+import NotFound from './pages/NotFound';
+import Master from './pages/Master';
+import Users from './pages/Users';
+import AppSetting from './pages/AppSetting';
+import Landing from './pages/Landing';
+import QrPage from './pages/QrPage';
+import Attendees from './pages/Attendees';
+import Main from './pages/Main';
+import EditMeeting from './pages/meetings/EditMeeting';
+import EditVenue from './pages/EditVenue';
+import { Suspense } from 'react';
+import Venue from './pages/Venue';
+import Organizations from './pages/Organizations';
+import Register from './pages/auth/Register';
+import Roles from './pages/Roles';
+import Meeting from './pages/meetings/Meeting';
+import CreateMeeting from './pages/meetings/CreateMeeting';
 
 function Loading() {
   return (
     <div
       style={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        height: "100vh",
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
         zIndex: 9999999,
       }}
     >
@@ -38,18 +38,18 @@ function Loading() {
 export const AppRouter = createBrowserRouter([
   // landing page for the form
   {
-    path: "/meeting/:id",
+    path: '/meetings/:id',
     exact: true,
     element: <Landing />,
   },
   {
-    path: "/attendance/:id",
+    path: '/attendance/:id',
     exact: true,
     element: <QrPage />,
   },
 
   {
-    path: "/",
+    path: '/',
     exact: true,
     element: (
       <Master>
@@ -58,15 +58,15 @@ export const AppRouter = createBrowserRouter([
     ),
   },
   {
-    path: "/login",
+    path: '/login',
     element: <Login />,
   },
   {
-    path: "/register",
+    path: '/register',
     element: <Register />,
   },
   {
-    path: "/dashboard",
+    path: '/dashboard',
     element: (
       <Suspense fallback={<Loading />}>
         <Dashboard />
@@ -74,11 +74,11 @@ export const AppRouter = createBrowserRouter([
     ),
     children: [
       {
-        path: "/dashboard",
+        path: '/dashboard',
         element: <Main />,
       },
       {
-        path: "/dashboard/meetings",
+        path: '/dashboard/meetings',
         element: (
           <Suspense fallback={<Loading />}>
             <Meeting />,
@@ -86,43 +86,44 @@ export const AppRouter = createBrowserRouter([
         ),
       },
       {
-        path: "/dashboard/meeting/:id",
+        path: '/dashboard/create-meeting',
+        exact: true,
+        element: <CreateMeeting />,
+      },
+      {
+        path: '/dashboard/meeting/:id',
         exact: true,
         element: <EditMeeting />,
       },
       {
-        path: "/dashboard/attendees/:id",
+        path: '/dashboard/attendees/:id',
         exact: true,
         element: <Attendees />,
       },
       {
-        path: "/dashboard/users",
+        path: '/dashboard/users',
         element: <Users />,
       },
       {
-        path: "/dashboard/venues",
+        path: '/dashboard/venues',
         element: <Venue />,
       },
       {
-        path: "/dashboard/venue/:id",
+        path: '/dashboard/venue/:id',
         element: <EditVenue />,
       },
       {
-        path: "/dashboard/departments",
-        element: <Department />,
-      },
-      {
-        path: "/dashboard/organizations",
+        path: '/dashboard/organizations',
         element: <Organizations />,
       },
       {
-        path: "/dashboard/roles",
+        path: '/dashboard/roles',
         element: <Roles />,
       },
     ],
   },
   {
-    path: "*",
+    path: '*',
     element: <NotFound />,
   },
 ]);

@@ -25,12 +25,15 @@ import { getToken } from '../utils/helpers';
 import { useTokenRefresh } from '../hooks/useTokenRefresh';
 import axios from 'axios';
 import Select from 'react-select';
-import VenueComponent from '../components/VenueComponent';
+import {
+  resetVenueOther,
+  setCreatedVenue,
+} from '../redux/features/venue/venueSlice';
 let location_id = null;
 let townInputVal = null;
 let venue_id = null;
 const center = { lat: 37.7749, lng: -122.4194 };
-const Venue = () => {
+const VenueComponent = ({ isNewVenue }) => {
   const customHeaders = {
     Authorization: 'Bearer ' + getToken(),
     'Content-Type': 'application/json',
@@ -162,56 +165,6 @@ const Venue = () => {
     fetchCounties();
   }, [token]);
 
-  const style = {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    width: '45%',
-    bgcolor: 'background.paper',
-    boxShadow: 24,
-    p: 4,
-  };
-
-  const columns = [
-    { field: 'id', headerName: '#', width: 70 },
-    { field: 'name', headerName: 'Location', width: 300 },
-    { field: 'building', headerName: 'Venue', width: 220 },
-    { field: 'status', headerName: 'Status', width: 200 },
-    {
-      field: 'actions',
-      headerName: '',
-      width: 350,
-      sortable: false,
-      filterable: false,
-      renderCell: (params) => (
-        <>
-          <div>
-            <Button
-              variant='contained'
-              color='primary'
-              size='small'
-              style={{ marginRight: 8 }}
-              onClick={() => handleEdit(params.row)}
-            >
-              Edit
-            </Button>
-
-            <Button
-              style={{ marginRight: 8 }}
-              variant='contained'
-              color='secondary'
-              size='small'
-              onClick={() => handleDelete(params.row.id)}
-            >
-              Delete
-            </Button>
-          </div>
-        </>
-      ),
-    },
-  ];
-
   // handle manual town input
   const handleTownInput = (e) => {
     const town = e.target.value.trim();
@@ -252,18 +205,35 @@ const Venue = () => {
     });
   };
 
-  const deleteBoardroom = async (id) => {
+  //   create venue
+  const onSubmit = async (data) => {
     try {
-      const result = await deleteData(
-        `${Config.API_URL}/delete-boardroom/${id}`,
+      data['longitude'] = position.lat;
+      data['latitude'] = position.lng;
+      data['name'] = position.location;
+      data['county'] = county;
+      data['town'] = town;
+      data['status'] = 'available'; //todo: advice on status
+      const result = await postData(
+        `${Config.API_URL}/venues`,
+        data,
         customHeaders
       );
+
+      console.log(result);
       dispatch(
         showNotification({
           message: result.message,
           type: 'success', // success, error, warning, info
         })
       );
+      dispatch(
+        setCreatedVenue({
+          venue: data,
+        })
+      );
+      dispatch(resetVenueOther());
+      console.log(result);
       setTimeout(() => dispatch(hideNotification()), 3000);
     } catch (error) {
       dispatch(
@@ -272,98 +242,155 @@ const Venue = () => {
           type: 'error', // success, error, warning, info
         })
       );
+
       setTimeout(() => dispatch(hideNotification()), 3000);
     }
   };
 
   return (
     <>
-      <div className='meetings-header'>
-        <div>
-          <h3>
-            Venues &nbsp;
-            <Badge
-              max={10}
-              badgeContent={venues?.length}
-              color='secondary'
-            ></Badge>
-          </h3>
+      <form onSubmit={handleSubmit(onSubmit)} action='' method='post'>
+        <label htmlFor=''>Location</label>
+        <input
+          type='text'
+          className='form-control w-100'
+          placeholder='Type location...'
+          value={search}
+          onChange={handleSearchChange}
+          style={{
+            width: '300px',
+            height: '40px',
+            padding: '10px',
+            marginBottom: '10px',
+          }}
+        />
+        <div style={{ position: 'relative' }}>
+          {locSuggestions.length > 0 && (
+            <ul
+              style={{
+                position: 'absolute',
+                top: '100%',
+                left: 0,
+                width: '300px',
+                listStyleType: 'none',
+                padding: '0',
+                border: '1px solid #ddd',
+                backgroundColor: '#fff',
+                maxHeight: '150px',
+                overflowY: 'auto',
+                zIndex: 1000,
+              }}
+            >
+              {locSuggestions.map((suggestion) => (
+                <li
+                  key={suggestion.geometry.lat + suggestion.geometry.lng}
+                  onClick={() => handleLocSuggestionClick(suggestion)}
+                  style={{ padding: '10px', cursor: 'pointer' }}
+                >
+                  {suggestion.formatted}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
 
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
-        >
-          <div>
-            <Button
-              onClick={handleOpen}
-              variant='contained'
-              endIcon={<Add />}
-              color='secondary'
+        <br />
+
+        <Box className='my-2'>
+          <TextField
+            fullWidth={true}
+            id='outlined-basic'
+            label='Building'
+            variant='outlined'
+            {...register('building', {
+              required: 'This field is required',
+            })}
+            error={errors.building && true}
+          />
+          {errors.building && (
+            <span
+              style={{
+                color: 'crimson',
+              }}
             >
-              Add New Venue
-            </Button>
+              {errors.building.message}
+            </span>
+          )}
+        </Box>
+        <br />
+
+        <div className='row mb-3'>
+          <div className='col-lg-6'>
+            <label htmlFor=''>County</label>
+            <Select
+              getOptionLabel={(option) => option.label}
+              getOptionValue={(option) => option.value}
+              options={counties}
+              onChange={async (countyObj) => {
+                // reset already filtered towns
+                setTowns([]);
+                setNoTownOption(false);
+                townInputVal = null;
+                filterCounty(countyObj.value);
+                setCounty(countyObj.value);
+                // get towns
+                const { data } = await getData(
+                  `${Config.API_URL}/location-search?county=${countyObj.value}`,
+                  customHeaders
+                );
+
+                setTowns([...data, ...towns]);
+              }}
+            />
+          </div>
+          <div style={{ position: 'relative' }} className='col-lg-6'>
+            <label htmlFor=''>Town</label>
+            <Select
+              getOptionLabel={(option) => option.label}
+              getOptionValue={(option) => option.value}
+              options={towns}
+              onChange={(selectedOptions) => {
+                console.log(selectedOptions);
+                if (selectedOptions.value === 'Other') {
+                  setNoTownOption(true);
+                } else {
+                  setNoTownOption(false);
+                }
+              }}
+            />
+          </div>
+          <div className='col-lg-12 my-3'>
+            {noTownOption && (
+              <input
+                className='form-control mt-2 rounded-0'
+                type='text'
+                onChange={(value) => handleTownInput(value)}
+                placeholder='Please specify town name'
+                style={{
+                  width: '100%',
+                  padding: '8px',
+                  boxSizing: 'border-box',
+                }}
+              />
+            )}
           </div>
         </div>
-      </div>
 
-      <Notification />
-
-      {/* venues Table */}
-      <div style={{ width: '100%', marginTop: '35px' }}>
-        <DataGrid
-          rows={venues}
-          columns={columns}
-          initialState={{
-            pagination: {
-              paginationModel: { page: 0, pageSize: 10 },
-            },
-          }}
-          pageSizeOptions={[5, 10]}
-          // checkboxSelection
-        />
-      </div>
-
-      {/* Add boardroom modal */}
-
-      <Modal
-        open={open}
-        onClose={handleClose}
-        aria-labelledby='modal-modal-title'
-        aria-describedby='modal-modal-description'
-      >
-        <Box sx={style}>
-          <Box
-            flexDirection={`row`}
-            justifyContent={`space-between`}
-            display={`flex`}
-            alignItems={`center`}
-          >
-            <div>
-              <h2>New Venue</h2>
-            </div>
-            <div>
-              <Button
-                variant='contained'
-                onClick={handleClose}
-                color='secondary'
-              >
-                Close
-              </Button>
-            </div>
-          </Box>
-
-          <Divider />
-          <br />
-          <br />
-          <VenueComponent />
-        </Box>
-      </Modal>
+        <br />
+        <Button
+          disabled={isSubmitting}
+          variant='contained'
+          fullWidth={true}
+          color='primary'
+          type='submit'
+        >
+          {isSubmitting ? 'Please wait ...' : 'Save Venue'}
+        </Button>
+        <br />
+        <br />
+      </form>
     </>
   );
 };
 
-export default Venue;
+export default VenueComponent;

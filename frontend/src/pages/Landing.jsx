@@ -32,7 +32,11 @@ const Landing = () => {
     try {
       // Fetch meeting details
 
-      const resp = await fetch(`${Config.API_URL}/meetings/${id}`);
+      const resp = await fetch(`${Config.API_URL}/meetings/${id}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
 
       // Check if the response is OK (status code 200-299)
       if (resp.ok) {
@@ -82,6 +86,7 @@ const Landing = () => {
       console.log(data);
       const result = await postData(`${Config.API_URL}/attendees`, data, {
         'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
       });
       setOpenToast(true);
       setIsRegistered(true);
