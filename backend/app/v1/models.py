@@ -492,28 +492,23 @@ class User:
             role = self.db.fetchone("SELECT id FROM roles WHERE name = %s", (role_name,))
             user = self.db.fetchone("SELECT id FROM users WHERE email = %s", (email,))
 
-            if not role:
-                return "Role does not exist"
-            if not user:
-                return "User does not exist"
-
             # Check if the user has any role assigned
-            user_role = self.db.fetchone("SELECT role_id FROM users_roles WHERE user_id = %s", (user["id"],))
+            user_role = self.db.fetchone(
+                "SELECT role_id FROM users_roles WHERE user_id = %s", (user["id"],)
+            )
 
             if user_role:
                 self.db.execute(
                     "UPDATE users_roles SET role_id = %s WHERE user_id = %s",
-                    (role["id"], user["id"])
+                    (role["id"], user["id"]),
                 )
                 self.db.commit()
-                return "Role updated successfully"
             else:
                 self.db.execute(
                     "INSERT INTO users_roles (user_id, role_id) VALUES (%s, %s)",
                     (user["id"], role["id"]),
                 )
                 self.db.commit()
-                return "Role assigned successfully"
 
         except Exception as e:
             self.db.rollback()
@@ -789,13 +784,13 @@ class Role:
             return e
         finally:
             self.db.close()
-    
+
     def find_by_name(self, name):
         try:
             return self.db.fetchone("SELECT * FROM roles WHERE name = %s", (name,))
         except Exception as e:
             return e
-      
+
 
 class Permission:
     def __init__(self):
