@@ -2,7 +2,7 @@ import json
 from datetime import datetime
 from passlib.hash import pbkdf2_sha256 as sha256
 from app.db import Database
-from utils import combine_date_time, json_to_list
+from utils import combine_date_time, json_to_list, parse_date
 
 
 class Organization:
@@ -665,22 +665,22 @@ class Report:
             # construct date time from a given date and time
             start_date_time = combine_date_time(meeting_date, start)
             end_date_time = combine_date_time(meeting_date, end)
-            if meeting_date < current_date:
+            if parse_date(meeting_date) < current_date:
                 meetings_status["complete"] += 1
-                # Meeting().update_status(meeting["id"], "complete")
-            elif meeting_date == current_date:
+                Meeting().update_status(meeting["id"], "complete")
+            elif parse_date(meeting_date) == current_date:
                 if start_date_time <= current_date_time <= end_date_time:
                     meetings_status["ongoing"] += 1
-                    # Meeting().update_status(meeting["id"], "ongoing")
+                    Meeting().update_status(meeting["id"], "ongoing")
                 elif current_date_time < start_date_time:
                     meetings_status["pending"] += 1
-                    # Meeting().update_status(meeting["id"], "pending")
+                    Meeting().update_status(meeting["id"], "pending")
                 elif current_date_time > end_date_time:
                     meetings_status["complete"] += 1
-                    # Meeting().update_status(meeting["id"], "complete")
+                    Meeting().update_status(meeting["id"], "complete")
             else:
                 meetings_status["pending"] += 1
-                # self.meetings.update_status(meeting["id"], "pending")
+                self.meetings.update_status(meeting["id"], "pending")
         return meetings_status
 
 
