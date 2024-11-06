@@ -12,8 +12,8 @@ import {
   Typography,
 } from '@mui/material';
 import React, { useEffect, useState } from 'react';
-import { getData, postData, putData } from '../utils/api';
-import { Config } from '../Config';
+import { getData, postData, putData } from '../../utils/api';
+import { Config } from '../../Config';
 import { useNavigate, useParams } from 'react-router';
 import { useForm } from 'react-hook-form';
 import { Edit } from '@mui/icons-material';
@@ -22,10 +22,11 @@ import moment from 'moment';
 import {
   hideNotification,
   showNotification,
-} from '../redux/features/notifications/notificationSlice';
-import Notification from '../components/Notification';
-import { handleApiError } from '../utils/errorHandler';
-import { getToken, showMessage } from '../utils/helpers';
+} from '../../redux/features/notifications/notificationSlice';
+import Notification from '../../components/Notification';
+import { handleApiError } from '../../utils/errorHandler';
+import { getToken, showMessage } from '../../utils/helpers';
+import { useTokenRefresh } from '../../hooks/useTokenRefresh';
 const customHeaders = {
   Authorization: 'Bearer ' + getToken(),
   'Content-Type': 'application/json',
@@ -36,6 +37,7 @@ const EditMeeting = () => {
   const [boardrooms, setBoardrooms] = useState([]);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const token = useTokenRefresh(getToken());
 
   const {
     register,

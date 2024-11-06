@@ -33,7 +33,6 @@ import { Box, Container } from '@mui/material';
 import Profile from '../components/Profile';
 import { useDispatch } from 'react-redux';
 import { logout } from '../redux/features/auth/authSlice';
-import Department from '../pages/Department';
 const Sidebar = () => {
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [isClosing, setIsClosing] = React.useState(false);
@@ -71,6 +70,8 @@ const Sidebar = () => {
       if (result.isConfirmed) {
         // todo: logout user
         localStorage.removeItem('user');
+        localStorage.removeItem('token');
+        localStorage.removeItem('refresh_token');
         dispatch(logout());
         navigate('/login');
       }
