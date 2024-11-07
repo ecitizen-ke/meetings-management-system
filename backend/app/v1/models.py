@@ -400,10 +400,21 @@ class Attendee:
     def __init__(self):
         self.db = Database()
 
-    def create(self, first_name, last_name, organization, designation, email, phone, meeting_id):
+    def create(
+        self, meeting_id, first_name, last_name, organization, designation, email, phone, signature
+    ):
         try:
-            statement = "INSERT INTO attendees (first_name, last_name, organization, designation, email, phone,meeting_id) VALUES (%s, %s, %s, %s, %s, %s, %s)"
-            data = (first_name, last_name, organization, designation, email, phone, meeting_id)
+            statement = "INSERT INTO attendees (meeting_id, first_name, last_name, organization, designation, email, phone, signature) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
+            data = (
+                meeting_id,
+                first_name,
+                last_name,
+                organization,
+                designation,
+                email,
+                phone,
+                signature,
+            )
             self.db.execute(statement, data)
             if self.db.insert_success():
                 self.db.commit()
