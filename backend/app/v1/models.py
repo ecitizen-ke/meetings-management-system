@@ -254,12 +254,13 @@ class Meeting:
         try:
             self.db.execute("SELECT * FROM meetings WHERE id = %s", (id,))
             meeting = self.db.cursor.fetchone()
-            meeting["start_time"] = str(meeting["start_time"])
-            meeting["end_time"] = str(meeting["end_time"])
-            meeting["organizations"] = self.get_organizations_by_meeting(meeting["id"])
-            meeting["venue"] = Venue().get_by_id(meeting["venue_id"])
-            meeting["meeting_date"] = str(meeting["meeting_date"])
-            return meeting
+            if meeting:
+                meeting["start_time"] = str(meeting["start_time"])
+                meeting["end_time"] = str(meeting["end_time"])
+                meeting["organizations"] = self.get_organizations_by_meeting(meeting["id"])
+                meeting["venue"] = Venue().get_by_id(meeting["venue_id"])
+                meeting["meeting_date"] = str(meeting["meeting_date"])
+                return meeting
         except Exception as e:
             return e
 
