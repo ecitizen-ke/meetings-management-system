@@ -101,10 +101,10 @@ class Location:
         finally:
             self.db.close()
 
-    def filter_by_county_and_search(self, county, search):
+    def search_locations(self, county, town):
         try:
-            query = "SELECT id, town FROM locations WHERE county LIKE %s AND town LIKE %s ORDER BY town ASC LIMIT 10"
-            params = (f"%{county}%", f"%{search}%")
+            query = "SELECT id, town FROM locations WHERE county LIKE %s AND town LIKE %s"
+            params = (f"%{county}%", f"%{town}%")
             return self.db.fetchandfilter(query, params)
         except Exception as e:
             return e
@@ -121,16 +121,21 @@ class Venue:
         try:
 
             status = "available" if status == "" or status is None else status
-            # check if location exists
-            res = Location().filter_by_county_and_search(county, town)
-            if not res:
 
-                return Location().create(county, town)
-            else:
-                self.db.execute(
-                    "INSERT INTO venues (name, building, location_id, status, longitude, latitude) VALUES (%s, %s, %s, %s, %s, %s)",
-                    (name, building, res[0]["id"], status, longitude, latitude),
-                )
+            res = Location().search_locations(county, town)
+            # check if location exists
+            if not res:
+                # create location
+                Location().create(county, town)
+                res = Location().search_locations(county, town)
+
+            # fetch location ID from search result
+            location_id = res[0]["id"]
+            self.db.execute(
+                "INSERT INTO venues (name, building, location_id, status, longitude, latitude) VALUES (%s, %s, %s, %s, %s, %s)",
+                (name, building, location_id, status, longitude, latitude),
+            )
+
             if self.db.insert_success():
                 self.db.commit()
                 return self.db.fetchone(
@@ -147,13 +152,13 @@ class Venue:
         try:
 
             # check if location exists
-            res = Location().filter_by_county_and_search(county, town)
+            res = Location().search_locations(county, town)
 
             location_id = None
 
             if not res:
                 Location().create(county, town)
-                res = Location().filter_by_county_and_search(county, town)
+                res = Location().search_locations(county, town)
                 location_id = res[0]["id"]
             else:
                 location_id = res[0]["id"]
