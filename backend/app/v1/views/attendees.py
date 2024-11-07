@@ -23,13 +23,14 @@ def add():
         missing_fields = check_missing_fields(
             data,
             [
+                "meeting_id",
                 "first_name",
                 "last_name",
                 "organization",
                 "designation",
                 "email",
                 "phone",
-                "meeting_id",
+                "signature",
             ],
         )
         if missing_fields:
@@ -41,10 +42,18 @@ def add():
         email = data.get("email")
         phone = data.get("phone")
         meeting_id = data.get("meeting_id")
+        signature = data.get("signature")
 
         if not attendee.check_attendance(email, meeting_id):
             result = attendee.create(
-                first_name, last_name, organization, designation, email, phone, meeting_id
+                meeting_id,
+                first_name,
+                last_name,
+                organization,
+                designation,
+                email,
+                phone,
+                signature,
             )
             if not isinstance(result, Exception):
                 return response("Attendee added successfully", 201)
