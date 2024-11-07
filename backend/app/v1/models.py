@@ -683,33 +683,44 @@ class Report:
         self.meetings = Meeting()
 
     def meetings_summary(self):
-        meetings_status = {"pending": 0, "ongoing": 0, "complete": 0}
-        current_date_time = datetime.now()
-        current_date = current_date_time.date()
-        for meeting in self.meetings.get_all():
-            meeting_date = meeting["meeting_date"]
-            start = meeting["start_time"]
-            end = meeting["end_time"]
-            # construct date time from a given date and time
-            start_date_time = combine_date_time(meeting_date, start)
-            end_date_time = combine_date_time(meeting_date, end)
-            if parse_date(meeting_date) < current_date:
-                meetings_status["complete"] += 1
-                Meeting().update_status(meeting["id"], "complete")
-            elif parse_date(meeting_date) == current_date:
-                if start_date_time <= current_date_time <= end_date_time:
-                    meetings_status["ongoing"] += 1
-                    Meeting().update_status(meeting["id"], "ongoing")
-                elif current_date_time < start_date_time:
-                    meetings_status["pending"] += 1
-                    Meeting().update_status(meeting["id"], "pending")
-                elif current_date_time > end_date_time:
+
+        try:
+            meetings_status = {"pending": 0, "ongoing": 0, "complete": 0}
+            current_date_time = datetime.now()
+            current_date = current_date_time.date()
+            for meeting in self.meetings.get_all():
+                meeting_date = meeting["meeting_date"]
+                start = meeting["start_time"]
+                end = meeting["end_time"]
+                # construct date time from a given date and time
+                start_date_time = combine_date_time(meeting_date, start)
+                end_date_time = combine_date_time(meeting_date, end)
+                if parse_date(meeting_date) < current_date:
                     meetings_status["complete"] += 1
                     Meeting().update_status(meeting["id"], "complete")
+<<<<<<< Updated upstream
+                elif parse_date(meeting_date) == current_date:
+                    if start_date_time <= current_date_time <= end_date_time:
+                        meetings_status["ongoing"] += 1
+                        Meeting().update_status(meeting["id"], "ongoing")
+                    elif current_date_time < start_date_time:
+                        meetings_status["pending"] += 1
+                        Meeting().update_status(meeting["id"], "pending")
+                    elif current_date_time > end_date_time:
+                        meetings_status["complete"] += 1
+                        Meeting().update_status(meeting["id"], "complete")
+                else:
+                    meetings_status["pending"] += 1
+                    Meeting().update_status(meeting["id"], "pending")
+            return meetings_status
+        except Exception as e:
+            return e
+=======
             else:
                 meetings_status["pending"] += 1
-                self.meetings.update_status(meeting["id"], "pending")
+                Meeting().update_status(meeting["id"], "pending")
         return meetings_status
+>>>>>>> Stashed changes
 
 
 class Role:
