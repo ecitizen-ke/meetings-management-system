@@ -537,7 +537,7 @@ class User:
         """Fetch all users in the database table"""
         try:
             fetch = self.db.fetchmany(
-                "SELECT users.id, users.first_name, users.organization, users.designation, users.email, users.phone, roles.id as role, users.created_on, users.updated_on FROM users INNER JOIN users_roles ON users.id=users_roles.user_id INNER JOIN roles ON users_roles.role_id=roles.id"
+                "SELECT users.id, users.first_name, users.last_name, users.organization, users.designation, users.email, users.phone, roles.id as role, users.created_on, users.updated_on FROM users INNER JOIN users_roles ON users.id=users_roles.user_id INNER JOIN roles ON users_roles.role_id=roles.id"
             )
             roles = self.db.fetchmany("SELECT id, name, description FROM roles")
             users = []
