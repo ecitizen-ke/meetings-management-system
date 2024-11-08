@@ -3,21 +3,22 @@ import Dashboard from './pages/Dashboard';
 import Login from './pages/auth/Login';
 import NotFound from './pages/NotFound';
 import Master from './pages/Master';
-import Users from './pages/Users';
+import Users from './pages/users/Users';
 import AppSetting from './pages/AppSetting';
 import Landing from './pages/Landing';
 import QrPage from './pages/QrPage';
-import Attendees from './pages/Attendees';
+import Attendees from './pages/attendees/Attendees';
 import Main from './pages/Main';
 import EditMeeting from './pages/meetings/EditMeeting';
-import EditVenue from './pages/EditVenue';
+import EditVenue from './pages/venues/EditVenue';
 import { Suspense } from 'react';
-import Venue from './pages/Venue';
-import Organizations from './pages/Organizations';
+import Venue from './pages/venues/Venue';
+import Organizations from './pages/organizations/Organizations';
 import Register from './pages/auth/Register';
 import Roles from './pages/Roles';
 import Meeting from './pages/meetings/Meeting';
 import CreateMeeting from './pages/meetings/CreateMeeting';
+import CreateUsers from './pages/users/CreateUsers';
 
 function Loading() {
   return (
@@ -103,6 +104,10 @@ export const AppRouter = createBrowserRouter([
       {
         path: '/dashboard/users',
         element: <Users />,
+      },
+      {
+        path: '/dashboard/create-users',
+        element: <CreateUsers />,
       },
       {
         path: '/dashboard/venues',

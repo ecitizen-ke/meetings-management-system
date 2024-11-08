@@ -8,20 +8,21 @@ import {
   Typography,
 } from '@mui/material';
 import React, { useEffect, useState } from 'react';
-import { getData, patchData, putData } from '../utils/api';
-import { Config } from '../Config';
+import { getData, patchData, putData } from '../../utils/api';
+import { Config } from '../../Config';
 import { useDispatch } from 'react-redux';
 import { useParams } from 'react-router';
 import { useForm } from 'react-hook-form';
 import { Edit } from '@mui/icons-material';
-import Notification from '../components/Notification';
+import Notification from '../../components/Notification';
 import {
   hideNotification,
   showNotification,
-} from '../redux/features/notifications/notificationSlice';
-import { getToken } from '../utils/helpers';
-import { useTokenRefresh } from '../hooks/useTokenRefresh';
+} from '../../redux/features/notifications/notificationSlice';
+import { getToken } from '../../utils/helpers';
+import { useTokenRefresh } from '../../hooks/useTokenRefresh';
 import axios from 'axios';
+import VenueComponent from '../../components/VenueComponent';
 
 const customHeaders = {
   Authorization: 'Bearer ' + getToken(),
@@ -237,174 +238,7 @@ const EditVenue = () => {
       <Grid container spacing={2}>
         <Grid item md={3} xs={12}></Grid>
         <Grid item md={6} xs={12}>
-          {venue && (
-            <form onSubmit={handleSubmit(handleUpdate)} action='' method='post'>
-              <label htmlFor=''>Location</label>
-              <input
-                type='text'
-                className='form-control w-100'
-                placeholder='Type location...'
-                value={search}
-                defaultValue={venue?.name}
-                onChange={handleSearchChange}
-                {...register('name', {
-                  required: 'This field is required',
-                })}
-                style={{
-                  width: '300px',
-                  height: '40px',
-                  padding: '10px',
-                  marginBottom: '10px',
-                }}
-              />
-              <div style={{ position: 'relative' }}>
-                {locSuggestions.length > 0 && (
-                  <ul
-                    style={{
-                      position: 'absolute',
-                      top: '100%',
-                      left: 0,
-                      width: '300px',
-                      listStyleType: 'none',
-                      padding: '0',
-                      border: '1px solid #ddd',
-                      backgroundColor: '#fff',
-                      maxHeight: '150px',
-                      overflowY: 'auto',
-                      zIndex: 1000,
-                    }}
-                  >
-                    {locSuggestions.map((suggestion) => (
-                      <li
-                        key={suggestion.geometry.lat + suggestion.geometry.lng}
-                        onClick={() => handleLocSuggestionClick(suggestion)}
-                        style={{ padding: '10px', cursor: 'pointer' }}
-                      >
-                        {suggestion.formatted}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-
-              <br />
-
-              <Box className='my-2'>
-                <TextField
-                  fullWidth={true}
-                  id='outlined-basic'
-                  label='Building'
-                  variant='outlined'
-                  defaultValue={venue?.building}
-                  {...register('building', {
-                    required: 'This field is required',
-                  })}
-                  error={errors.building && true}
-                />
-
-                {errors.building && (
-                  <span
-                    style={{
-                      color: 'crimson',
-                    }}
-                  >
-                    {errors.building.message}
-                  </span>
-                )}
-              </Box>
-              <br />
-              <div className='row'>
-                <div className='col-lg-6'>
-                  <label htmlFor=''>County</label>
-                  <select
-                    onChange={(e) => handleCountySelect(e)}
-                    className='form-control'
-                    {...register('county', {
-                      required: 'This field is required',
-                    })}
-                    name=''
-                    id=''
-                  >
-                    <option value=''>Select County</option>
-                    {counties.map((county) => (
-                      <option
-                        selected={county == venue?.county}
-                        key={county}
-                        value={county}
-                      >
-                        {county}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div style={{ position: 'relative' }} className='col-lg-6'>
-                  <label htmlFor=''>Town</label>
-                  <input
-                    className='form-control rounded-0'
-                    type='text'
-                    disabled={isDisabled}
-                    defaultValue={venue?.town}
-                    {...register('town', {
-                      required: 'This field is required',
-                    })}
-                    onKeyUp={handleInputChange}
-                    placeholder={`${
-                      isDisabled ? 'Select county first' : 'Type a town name...'
-                    }`}
-                    style={{
-                      width: '100%',
-                      padding: '8px',
-                      boxSizing: 'border-box',
-                    }}
-                  />
-                  {suggestions.length > 0 && (
-                    <ul
-                      style={{
-                        position: 'absolute',
-                        top: '100%',
-                        left: 0,
-                        right: 0,
-                        backgroundColor: 'white',
-                        border: '1px solid #ccc',
-                        listStyle: 'none',
-                        margin: 0,
-                        padding: 0,
-                        zIndex: 1000,
-                      }}
-                    >
-                      {suggestions.map((suggestion, index) => (
-                        <li
-                          key={index}
-                          onClick={() =>
-                            handleSuggestionClick(suggestion.value)
-                          }
-                          style={{
-                            padding: '8px',
-                            cursor: 'pointer',
-                            borderBottom: '1px solid #eee',
-                          }}
-                        >
-                          {suggestion.value}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-                <div className='col-lg-4'></div>
-              </div>
-
-              <br />
-              <Button
-                disabled={isSubmitting}
-                fullWidth={true}
-                variant='contained'
-                color='primary'
-                type='submit'
-              >
-                {isSubmitting ? 'Please wait ...' : 'Save'}
-              </Button>
-            </form>
-          )}
+          {venue && <VenueComponent venue={venue} />}
         </Grid>
         <Grid item md={3} xs={12}></Grid>
       </Grid>

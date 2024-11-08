@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router';
-import { Config } from '../Config';
+import { Config } from '../../Config';
 import { DataGrid } from '@mui/x-data-grid';
 import { Badge, Button, IconButton, Menu, MenuItem } from '@mui/material';
 import {
@@ -12,19 +12,20 @@ import {
   Share,
   TableBarSharp,
 } from '@mui/icons-material';
-import { handleApiError } from '../utils/errorHandler';
+import { handleApiError } from '../../utils/errorHandler';
 import { useDispatch } from 'react-redux';
-import { getData } from '../utils/api';
+import { getData } from '../../utils/api';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
-import logo from '../assets/logo.jpg';
+import logo from '../../assets/logo.jpg';
 import moment from 'moment';
-import { getToken } from '../utils/helpers';
-const customHeaders = {
-  Authorization: 'Bearer ' + getToken(),
-  'Content-Type': 'application/json',
-};
+import { getToken } from '../../utils/helpers';
+
 const Attendees = () => {
+  const customHeaders = {
+    Authorization: 'Bearer ' + getToken(),
+    'Content-Type': 'application/json',
+  };
   const [attendees, setAttendees] = useState([]);
   const [meeting, setMeeting] = useState(null);
   const params = useParams();
@@ -48,7 +49,7 @@ const Attendees = () => {
       );
       setAttendees(data);
     } catch (error) {
-      handleApiError(error);
+      handleApiError(error, dispatch);
     }
   };
 
@@ -87,120 +88,145 @@ const Attendees = () => {
     { field: 'designation', headerName: 'Designation', width: 220 },
     { field: 'email', headerName: 'Email', width: 240 },
     { field: 'phone', headerName: 'Phone Number', width: 220 },
-    { field: 'signature', headerName: 'Signature', width: 200 },
+    {
+      field: 'signature',
+      headerName: 'Signature',
+      width: 200,
+      renderCell: (params) => {
+        return params.row.signature ? (
+          <img src={params.row.signature} alt='signature' width='100' />
+        ) : (
+          'No Signature'
+        );
+      },
+    },
   ];
 
-  const generatePdfReport = () => {
+  const generatePdfReport = async () => {
     const doc = new jsPDF({
       orientation: 'l',
     });
 
-    // Load the logo and convert to base64
+    // Load the logo
     const img = new Image();
     img.src = logo;
-    img.onload = function () {
-      const aspectRatio = img.width / img.height;
-      const width = 50; // Desired width
-      const height = width / aspectRatio; // Adjust height based on aspect ratio
 
-      doc.addImage(img, 'jpg', 120, 10, width, height);
+    await new Promise((resolve) => {
+      img.onload = resolve;
+    });
 
-      // Set font size and center the title
-      const pageWidth = doc.internal.pageSize.getWidth();
-      doc.setFontSize(14);
-      doc.text(
-        'MINISTRY OF INTERIOR AND NATIONAL ADMNISTRATION',
-        pageWidth / 2,
-        30,
-        {
-          align: 'center',
+    const aspectRatio = img.width / img.height;
+    const width = 50;
+    const height = width / aspectRatio;
+    doc.addImage(img, 'jpg', 120, 10, width, height);
+
+    const pageWidth = doc.internal.pageSize.getWidth();
+    doc.setFontSize(14);
+    doc.text(
+      'MINISTRY OF INTERIOR AND NATIONAL ADMINISTRATION',
+      pageWidth / 2,
+      30,
+      {
+        align: 'center',
+      }
+    );
+    doc.text(
+      'STATE DEPARTMENT FOR IMMIGRATION AND CITIZEN SERVICES',
+      pageWidth / 2,
+      35,
+      {
+        align: 'center',
+      }
+    );
+
+    doc.text(`MEETING: ${meeting.title}`, 14, 45);
+    doc.text(`VENUE: ${meeting.venue.building}`, 14, 50);
+    doc.text(
+      `DATE:  ${new Date(meeting.meeting_date).toLocaleDateString()}`,
+      14,
+      60
+    );
+    doc.text(
+      `TIME: ${moment(meeting.start_time, 'HH:mm:ss').format(
+        'HH:mm A'
+      )} - ${moment(meeting.end_time, 'HH:mm:ss').format('HH:mm A')}`,
+      14,
+      65
+    );
+    doc.text(`LIST OF ATTENDEES:`, 14, 72);
+    doc.setFontSize(10);
+
+    const tableColumn = [
+      'NO',
+      'Names',
+      'Organization',
+      'Designation',
+      'Phone',
+      'Email',
+      'Signature',
+    ];
+
+    const tableRows = attendees.map((item, index) => [
+      index + 1,
+      `${item.first_name} ${item.last_name}`,
+      item.organization,
+      item.designation,
+      item.phone,
+      item.email,
+      '', // Placeholder for the signature column
+    ]);
+
+    doc.autoTable({
+      head: [tableColumn],
+      body: tableRows,
+      startY: 75,
+      headStyles: {
+        fillColor: [17, 180, 73],
+        textColor: [255, 255, 255],
+        fontSize: 12,
+        fontStyle: 'bold',
+      },
+      bodyStyles: {
+        lineWidth: 0.1,
+        lineColor: [0, 0, 0],
+      },
+      styles: {
+        cellPadding: 3,
+        valign: 'middle',
+      },
+      columnStyles: {
+        0: { cellWidth: 12 },
+        1: { cellWidth: 40 },
+        2: { cellWidth: 55 },
+        3: { cellWidth: 40 },
+        4: { cellWidth: 30 },
+        5: { cellWidth: 50 },
+        6: { cellWidth: 35 },
+      },
+      didDrawCell: (data) => {
+        // Check if the cell is in the body (not the header) and in the "Signature" column
+        if (
+          data.section === 'body' &&
+          data.column.index === 6 &&
+          attendees[data.row.index].signature
+        ) {
+          const signatureImg = attendees[data.row.index].signature;
+
+          doc.addImage(
+            signatureImg,
+            'JPEG',
+            data.cell.x + 1,
+            data.cell.y + 1,
+            30, // Adjust width
+            10 // Adjust height
+          );
         }
-      );
-      doc.text(
-        'STATE DEPARTMENT FOR IMMIGRATION AND CITIZEN SERVICES',
-        pageWidth / 2,
-        35,
-        {
-          align: 'center',
-        }
-      );
+      },
+    });
 
-      doc.text(`MEETING: ${meeting.title}`, 14, 45);
-      doc.text(`VENUE: ${meeting.location}`, 14, 50);
-      // doc.text(`LOCATION: ${meeting.location ?? ""}`, 14, 63);todo:
-      doc.text(
-        `DATE:  ${new Date(meeting.meeting_date).toLocaleDateString()}`,
-        14,
-        60
-      );
-      doc.text(
-        `TIME: ${
-          moment(meeting.start_time, 'HH:mm:ss').format('HH:mm A') +
-          ' - ' +
-          moment(meeting.end_time, 'HH:mm:ss').format('HH:mm A')
-        }`,
-        14,
-        65
-      );
-      // doc.text(`-: ${meeting.end_time}`, 90, 60);
-      doc.text(`LIST OF ATTENDEES:`, 14, 72);
-      doc.setFontSize(10);
-      // doc.text(`${meeting.description}`, 14, 110, { maxWidth: 180 }); // Text wrapping
-
-      // Add table
-      const tableColumn = [
-        'NO',
-        'Names',
-        // "Department",
-        'Organization',
-        'Designation',
-        'Phone',
-        'Email',
-        'Signature',
-      ];
-      const tableRows = attendees.map((item, index) => [
-        index + 1, // Row number (index)
-        item.first_name + ' ' + item.last_name,
-        item.organization,
-        item.designation, // Designation
-        item.phone, //Phone
-        item.email, // Email
-        item.signature, //signature
-        //item.department, // Department
-      ]);
-
-      doc.autoTable({
-        head: [tableColumn],
-        body: tableRows,
-        startY: 75, // Start table below the title and logo -Y axis
-        headStyles: {
-          fillColor: [17, 180, 73], // Set the background color of the header (RGB format)
-          textColor: [255, 255, 255], // Set the text color to white
-          fontSize: 12, // Optional: Set the font size
-          fontStyle: 'bold', // Optional: Set the font style
-        },
-        bodyStyles: {
-          lineWidth: 0.1, // Line thickness for the border of the body cells
-          lineColor: [0, 0, 0], // Border color for the body cells
-        },
-        styles: {
-          cellPadding: 3, // Padding inside each cell
-          valign: 'middle', // Vertically align the text in the middle
-        },
-        columnStyles: {
-          0: { cellWidth: 12 }, // First column (index) width
-          1: { cellWidth: 40 }, // Names
-          2: { cellWidth: 55 }, // Organization
-          3: { cellWidth: 40 }, // Designation
-          4: { cellWidth: 30 }, // phone number
-          5: { cellWidth: 50 }, // email
-          6: { cellWidth: 35 }, // signature
-        },
-      });
-      setAnchorEl(null);
-      // Save the generated PDF
-      doc.save(meeting.title + '-report.pdf');
-    };
+    setAnchorEl(null);
+    const time = Math.floor(Date.now() / 1000);
+    doc.save(`${meeting.title}-${time}-report.pdf`);
   };
 
   const generateXcel = async () => {

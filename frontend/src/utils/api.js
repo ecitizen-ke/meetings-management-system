@@ -16,7 +16,7 @@ export const postData = async (url, data, headers = {}) => {
     } else if (error.request) {
       console.error('No response received:', error.request);
     } else {
-      console.error('Error in request setup:', error.message);
+      console.error('Error in request setup:', error.msg);
     }
     throw error;
   }

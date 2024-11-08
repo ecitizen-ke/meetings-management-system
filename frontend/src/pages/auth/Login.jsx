@@ -225,16 +225,6 @@ const Login = () => {
               </Button>
               <br />
               <br />
-              <div className='text-center'>
-                <Link
-                  variant='secondary'
-                  component={RouterLink}
-                  underline='none'
-                  to={`/register`}
-                >
-                  Signup
-                </Link>
-              </div>
             </form>
           </div>
         </div>
