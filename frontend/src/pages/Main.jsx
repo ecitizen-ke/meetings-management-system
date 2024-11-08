@@ -18,10 +18,13 @@ import { useNavigate } from 'react-router';
 import Notification from '../components/Notification';
 import { handleApiError } from '../utils/errorHandler';
 import { getToken } from '../utils/helpers';
+import { useTokenRefresh } from '../hooks/useTokenRefresh';
 
 const Main = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const token = useTokenRefresh(getToken());
+
   const [stats, setStats] = useState({
     complete: 0,
     ongoing: 0,
@@ -109,8 +112,7 @@ const Main = () => {
         `${Config.API_URL}/meetings`,
         customHeaders
       );
-      console.log(response);
-      // setMeetings(data);
+      setMeetings(response.data);
     } catch (error) {
       console.log(error);
       handleApiError(error, dispatch);
@@ -119,7 +121,7 @@ const Main = () => {
   useEffect(() => {
     fetchStats();
     fetchMeetings();
-  }, []);
+  }, [token]);
   return (
     <div>
       <Grid container spacing={2}>

@@ -10,63 +10,34 @@ import {
 } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Config } from '../Config';
+import { Config } from '../../Config';
 import { DataGrid } from '@mui/x-data-grid';
 import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router';
-import { deleteData, getData, postData } from '../utils/api';
+import { deleteData, getData, postData } from '../../utils/api';
 import {
   hideNotification,
   showNotification,
-} from '../redux/features/notifications/notificationSlice';
-import Notification from '../components/Notification';
-import { useDispatch } from 'react-redux';
-import { getToken } from '../utils/helpers';
-import { useTokenRefresh } from '../hooks/useTokenRefresh';
-import axios from 'axios';
-import Select from 'react-select';
-import VenueComponent from '../components/VenueComponent';
-let location_id = null;
-let townInputVal = null;
-let venue_id = null;
-const center = { lat: 37.7749, lng: -122.4194 };
+} from '../../redux/features/notifications/notificationSlice';
+import Notification from '../../components/Notification';
+import { useDispatch, useSelector } from 'react-redux';
+import { getToken } from '../../utils/helpers';
+import { useTokenRefresh } from '../../hooks/useTokenRefresh';
+import VenueComponent from '../../components/VenueComponent';
+import { closeModal, openModal } from '../../redux/features/venue/venueSlice';
 const Venue = () => {
   const customHeaders = {
     Authorization: 'Bearer ' + getToken(),
     'Content-Type': 'application/json',
   };
   const [open, setOpen] = useState(false);
-  const handleOpen = () => setOpen(true);
-  const handleClose = () => setOpen(false);
+
   const [venues, setVenues] = useState([]);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const token = useTokenRefresh(getToken());
-  const [counties, setCounties] = useState([]);
-  const [suggestions, setSuggestions] = useState([]);
-  const [town, setTown] = useState('');
-  const [county, setCounty] = useState('');
   const [countyData, setCountyData] = useState([]);
-  const [isDisabled, setIsDisabled] = useState(true);
-  const [position, setPosition] = useState(center);
-  const [locSuggestions, setLocSuggestions] = useState([]);
-  const [search, setSearch] = useState('');
-  const [noTownOption, setNoTownOption] = useState(false);
-  const [towns, setTowns] = useState([
-    {
-      label: 'Other (Specify)',
-      value: 'Other',
-    },
-  ]);
-
-  const {
-    register,
-    handleSubmit,
-    watch,
-    reset,
-    formState: { errors, isSubmitting },
-  } = useForm();
-
+  const venue = useSelector((state) => state.venue);
   const fetchVenues = async () => {
     try {
       const response = await getData(`${Config.API_URL}/venues`, customHeaders);
@@ -84,83 +55,15 @@ const Venue = () => {
       setTimeout(() => dispatch(hideNotification()), 3000);
     }
   };
-  const fetchCounties = async () => {
-    try {
-      const response = await getData(
-        `${Config.API_URL}/locations`,
-        customHeaders
-      );
-      const data = response.data;
-      setCountyData(data);
-      const groupedCounties = data.reduce((acc, county) => {
-        if (!acc[county.county]) {
-          acc[county.county] = [];
-        }
-        // Push the current county to the array for this county name
-        acc[county.county].push(county);
-        return acc;
-      }, {});
-      console.log(response);
-      const countyArray = Object.keys(groupedCounties);
-
-      const countiesFormatted = [];
-      countyArray.forEach((county) => {
-        const countyObj = {
-          label: '',
-          value: '',
-        };
-        countyObj.label = county;
-        countyObj.value = county;
-        countiesFormatted.push(countyObj);
-      });
-      setCounties(countiesFormatted);
-    } catch (error) {
-      console.log(error);
-      dispatch(
-        showNotification({
-          message: error.message,
-          type: 'error', // success, error, warning, info
-        })
-      );
-
-      setTimeout(() => dispatch(hideNotification()), 3000);
-    }
+  const handleOpen = () => {
+    dispatch(openModal());
   };
-  const handleSearchChange = async (e) => {
-    const query = e.target.value;
-    setSearch(query);
-
-    if (query.length < 3) {
-      setLocSuggestions([]);
-      return;
-    }
-
-    const response = await axios.get(
-      'https://api.opencagedata.com/geocode/v1/json',
-      {
-        params: {
-          q: query,
-          key: 'c89593580d7f46d7af4e2b4d83e239ef',
-          limit: 5,
-          countrycode: 'KE',
-        },
-      }
-    );
-
-    setLocSuggestions(response.data.results);
-  };
-
-  const handleLocSuggestionClick = (suggestion) => {
-    console.log(suggestion);
-    const { lat, lng } = suggestion.geometry;
-    setPosition({ lat, lng, location: suggestion.formatted });
-    setLocSuggestions([]);
-    setSearch(suggestion.formatted);
+  const handleClose = () => {
+    dispatch(closeModal());
   };
   useEffect(() => {
     fetchVenues();
-    fetchCounties();
-  }, [token]);
+  }, [token, venue]);
 
   const style = {
     position: 'absolute',
@@ -211,17 +114,6 @@ const Venue = () => {
       ),
     },
   ];
-
-  // handle manual town input
-  const handleTownInput = (e) => {
-    const town = e.target.value.trim();
-    if (town) {
-      setTown(town);
-    } else {
-      setTown('');
-    }
-  };
-
   const filterCounty = (cty) => {
     const filteredCounty = countyData.filter((county) => county.county === cty);
     if (filterCounty.length > 0) {
@@ -245,35 +137,31 @@ const Venue = () => {
       confirmButtonColor: '#398e3d',
       cancelButtonColor: '#d33',
       confirmButtonText: 'Yes, delete it!',
-    }).then((result) => {
+    }).then(async (result) => {
       if (result.isConfirmed) {
-        deleteBoardroom(id);
+        try {
+          const result = await deleteData(
+            `${Config.API_URL}/venues/delete/${id}`,
+            customHeaders
+          );
+          dispatch(
+            showNotification({
+              message: result.message,
+              type: 'success', // success, error, warning, info
+            })
+          );
+          setTimeout(() => dispatch(hideNotification()), 3000);
+        } catch (error) {
+          dispatch(
+            showNotification({
+              message: error.response.data.message,
+              type: 'error', // success, error, warning, info
+            })
+          );
+          setTimeout(() => dispatch(hideNotification()), 3000);
+        }
       }
     });
-  };
-
-  const deleteBoardroom = async (id) => {
-    try {
-      const result = await deleteData(
-        `${Config.API_URL}/delete-boardroom/${id}`,
-        customHeaders
-      );
-      dispatch(
-        showNotification({
-          message: result.message,
-          type: 'success', // success, error, warning, info
-        })
-      );
-      setTimeout(() => dispatch(hideNotification()), 3000);
-    } catch (error) {
-      dispatch(
-        showNotification({
-          message: error.response.data.message,
-          type: 'error', // success, error, warning, info
-        })
-      );
-      setTimeout(() => dispatch(hideNotification()), 3000);
-    }
   };
 
   return (
@@ -330,7 +218,7 @@ const Venue = () => {
       {/* Add boardroom modal */}
 
       <Modal
-        open={open}
+        open={venue.venueModal}
         onClose={handleClose}
         aria-labelledby='modal-modal-title'
         aria-describedby='modal-modal-description'

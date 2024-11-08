@@ -64,8 +64,6 @@ let venue_id = null;
 let new_venue = null;
 const Meeting = () => {
   const [open, setOpen] = useState(false);
-  const handleOpen = () => setOpen(true);
-  const handleClose = () => setOpen(false);
   const [meetings, setMeetings] = useState([]);
   const [openToast, setOpenToast] = useState(false);
   const [organizations, setOrganizations] = useState([

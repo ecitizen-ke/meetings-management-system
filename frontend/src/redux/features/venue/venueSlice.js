@@ -3,6 +3,7 @@ import { createSlice } from '@reduxjs/toolkit';
 const initialState = {
   created_venue: null,
   venueOther: false,
+  venueModal: false,
 };
 
 const venueSlice = createSlice({
@@ -21,6 +22,12 @@ const venueSlice = createSlice({
     resetVenueOther: (state) => {
       state.venueOther = false;
     },
+    openModal: (state, action) => {
+      state.venueModal = true;
+    },
+    closeModal: (state, action) => {
+      state.venueModal = false;
+    },
   },
 });
 
@@ -29,5 +36,7 @@ export const {
   toggleVenueOther,
   resetVenueOther,
   resetCreatedVenue,
+  openModal,
+  closeModal,
 } = venueSlice.actions;
 export default venueSlice.reducer;

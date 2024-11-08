@@ -10,17 +10,17 @@ import {
   Typography,
 } from '@mui/material';
 import React, { useEffect, useState } from 'react';
-import Notification from '../components/Notification';
+import Notification from '../../components/Notification';
 import { Add, Edit } from '@mui/icons-material';
 import { useForm } from 'react-hook-form';
 import { DataGrid } from '@mui/x-data-grid';
 import Swal from 'sweetalert2';
-import { getData, postData } from '../utils/api';
-import { Config } from '../Config';
-import { handleApiError } from '../utils/errorHandler';
+import { getData, postData } from '../../utils/api';
+import { Config } from '../../Config';
+import { handleApiError } from '../../utils/errorHandler';
 import { useDispatch } from 'react-redux';
-import { getToken, showMessage } from '../utils/helpers';
-import { useTokenRefresh } from '../hooks/useTokenRefresh';
+import { getToken, showMessage } from '../../utils/helpers';
+import { useTokenRefresh } from '../../hooks/useTokenRefresh';
 
 const Organizations = () => {
   const [organizations, setOrganizations] = useState([]);
@@ -253,7 +253,7 @@ const Organizations = () => {
                 id='outlined-basic'
                 label='Name'
                 variant='outlined'
-                {...register('organization', {
+                {...register('name', {
                   required: 'This field is required',
                 })}
                 error={errors.name && true}

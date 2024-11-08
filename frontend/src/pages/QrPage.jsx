@@ -142,7 +142,7 @@ export default function QrPage() {
               meeting && moment(meeting.meeting_date).format('MMMM D, YYYY')
             }`}
             title={meeting && meeting.title}
-            subheader={`Venue: ${meeting && meeting.boardroom_name}`}
+            subheader={`Venue: ${meeting && meeting.venue.building}`}
           />
 
           <CardMedia component='img' image={qrLink} alt='QR ' />

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Divider from '@mui/material/Divider';
 import Drawer from '@mui/material/Drawer';
 import IconButton from '@mui/material/IconButton';
@@ -27,9 +27,10 @@ import {
   MeetingRoom,
   Room,
   Settings,
+  SettingsAccessibility,
   SupervisedUserCircle,
 } from '@mui/icons-material';
-import { Box, Container } from '@mui/material';
+import { Box, Button, Container, Menu, MenuItem } from '@mui/material';
 import Profile from '../components/Profile';
 import { useDispatch } from 'react-redux';
 import { logout } from '../redux/features/auth/authSlice';
@@ -38,6 +39,14 @@ const Sidebar = () => {
   const [isClosing, setIsClosing] = React.useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const [anchorEl, setAnchorEl] = useState(null);
+  const open = Boolean(anchorEl);
+  const handleClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
 
   const drawerWidth = 240;
 
@@ -76,6 +85,10 @@ const Sidebar = () => {
         navigate('/login');
       }
     });
+  };
+  const handleNavigate = (path) => {
+    handleClose();
+    navigate('/dashboard/' + path);
   };
 
   const navigateTo = (item) => {
@@ -119,12 +132,6 @@ const Sidebar = () => {
       path: '/dashboard/users',
       slug: 'users',
     },
-    {
-      text: 'Roles',
-      icon: <LockClockSharp color='primary' />,
-      path: '/dashboard/roles',
-      slug: 'roles',
-    },
   ];
 
   const drawer = (
@@ -157,6 +164,30 @@ const Sidebar = () => {
             </ListItem>
           </NavLink>
         ))}
+
+        <ListItem disablePadding>
+          <ListItemButton onClick={handleClick}>
+            <ListItemIcon>
+              <Settings color='primary' />
+            </ListItemIcon>
+            <ListItemText primary={`User Management`} />
+          </ListItemButton>
+          <Menu
+            id='basic-menu'
+            anchorEl={anchorEl}
+            open={open}
+            onClose={handleClose}
+            MenuListProps={{
+              'aria-labelledby': 'basic-button',
+            }}
+          >
+            <MenuItem onClick={() => handleNavigate('roles')}>Roles</MenuItem>
+            <MenuItem onClick={() => handleNavigate('permissions')}>
+              Permissions
+            </MenuItem>
+          </Menu>
+        </ListItem>
+
         <ListItem onClick={() => handleLogout()} disablePadding>
           <ListItemButton>
             <ListItemIcon>

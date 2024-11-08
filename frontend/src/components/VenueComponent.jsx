@@ -26,6 +26,7 @@ import { useTokenRefresh } from '../hooks/useTokenRefresh';
 import axios from 'axios';
 import Select from 'react-select';
 import {
+  closeModal,
   resetVenueOther,
   setCreatedVenue,
 } from '../redux/features/venue/venueSlice';
@@ -33,7 +34,7 @@ let location_id = null;
 let townInputVal = null;
 let venue_id = null;
 const center = { lat: 37.7749, lng: -122.4194 };
-const VenueComponent = ({ isNewVenue }) => {
+const VenueComponent = ({ venue }) => {
   const customHeaders = {
     Authorization: 'Bearer ' + getToken(),
     'Content-Type': 'application/json',
@@ -185,26 +186,6 @@ const VenueComponent = ({ isNewVenue }) => {
     return filteredCounty;
   };
 
-  const handleEdit = (data) => {
-    navigate('/dashboard/venue/' + data.id);
-  };
-
-  const handleDelete = (id) => {
-    Swal.fire({
-      title: 'Are you sure?',
-      text: "You won't be able to revert this!",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#398e3d',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Yes, delete it!',
-    }).then((result) => {
-      if (result.isConfirmed) {
-        deleteBoardroom(id);
-      }
-    });
-  };
-
   //   create venue
   const onSubmit = async (data) => {
     try {
@@ -214,6 +195,7 @@ const VenueComponent = ({ isNewVenue }) => {
       data['county'] = county;
       data['town'] = town;
       data['status'] = 'available'; //todo: advice on status
+      console.log(data);
       const result = await postData(
         `${Config.API_URL}/venues`,
         data,
@@ -232,6 +214,7 @@ const VenueComponent = ({ isNewVenue }) => {
           venue: data,
         })
       );
+      dispatch(closeModal());
       dispatch(resetVenueOther());
       console.log(result);
       setTimeout(() => dispatch(hideNotification()), 3000);
@@ -250,12 +233,13 @@ const VenueComponent = ({ isNewVenue }) => {
   return (
     <>
       <form onSubmit={handleSubmit(onSubmit)} action='' method='post'>
-        <label htmlFor=''>Location</label>
+        <label htmlFor=''>Venue</label>
         <input
           type='text'
           className='form-control w-100'
-          placeholder='Type location...'
+          placeholder='Type venue...'
           value={search}
+          defaultValue={`venue && venue.name`}
           onChange={handleSearchChange}
           style={{
             width: '300px',
