@@ -23,8 +23,8 @@ class Database:
                         result.fetchall()  # Fetch any results to complete execution
                 self.conn.commit()
             except Exception as e:
-                print(f"An error occurred: {e}")
                 self.conn.rollback()
+                return e
 
     def seed(self):
         file = os.path.join(app.root_path, "static/script.sql")
