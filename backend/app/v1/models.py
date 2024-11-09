@@ -19,7 +19,6 @@ class Organization:
                 self.db.commit()
         except Exception as e:
             self.db.rollback()
-            print("Database error:", e)
             return e
         finally:
             self.db.close()
@@ -162,7 +161,6 @@ class Venue:
                 location_id = res[0]["id"]
             else:
                 location_id = res[0]["id"]
-            print(location_id)
             self.db.execute(
                 """UPDATE venues SET name=%s, building=%s, location_id=%s, status=%s, longitude=%s, latitude=%s WHERE id=%s""",
                 (name, building, location_id, status, longitude, latitude, venue_id),
@@ -509,23 +507,23 @@ class User:
             role = self.db.fetchone("SELECT id FROM roles WHERE name = %s", (role_name,))
             user = self.db.fetchone("SELECT id FROM users WHERE email = %s", (email,))
 
-            # Check if the user has any role assigned
-            user_role = self.db.fetchone(
-                "SELECT role_id FROM users_roles WHERE user_id = %s", (user["id"],)
-            )
-
-            if user_role:
-                self.db.execute(
-                    "UPDATE users_roles SET role_id = %s WHERE user_id = %s",
-                    (role["id"], user["id"]),
+            if user and role:
+                # Check if the user has any role assigned
+                user_role = self.db.fetchone(
+                    "SELECT role_id FROM users_roles WHERE user_id = %s", (user["id"],)
                 )
-                self.db.commit()
-            else:
-                self.db.execute(
-                    "INSERT INTO users_roles (user_id, role_id) VALUES (%s, %s)",
-                    (user["id"], role["id"]),
-                )
-                self.db.commit()
+                if user_role:
+                    self.db.execute(
+                        "UPDATE users_roles SET role_id = %s WHERE user_id = %s",
+                        (role["id"], user["id"]),
+                    )
+                    self.db.commit()
+                else:
+                    self.db.execute(
+                        "INSERT INTO users_roles (user_id, role_id) VALUES (%s, %s)",
+                        (user["id"], role["id"]),
+                    )
+                    self.db.commit()
 
         except Exception as e:
             self.db.rollback()
@@ -540,52 +538,68 @@ class User:
                 "SELECT users.id, users.first_name, users.last_name, users.organization, users.designation, users.email, users.phone, roles.id as role, users.created_on, users.updated_on FROM users INNER JOIN users_roles ON users.id=users_roles.user_id INNER JOIN roles ON users_roles.role_id=roles.id"
             )
             roles = self.db.fetchmany("SELECT id, name, description FROM roles")
-            users = []
-            for user in fetch:
-                for role in roles:
-                    if user["role"] == role["id"]:
-                        user.update({"role": role})
-                users.append(user)
-            return users
-
+            if fetch and roles:
+                users = []
+                for user in fetch:
+                    for role in roles:
+                        if user["role"] == role["id"]:
+                            user.update({"role": role})
+                    users.append(user)
+                return users
         except Exception as e:
             self.db.rollback()
             return e
         finally:
             self.db.close()
 
+    def get_role(self, email):
+        try:
+            user = self.db.fetchone("SELECT id FROM users WHERE email = %s", (email,))
+            if user:
+                role = self.db.fetchone(
+                    "SELECT role_id FROM users_roles WHERE user_id = %s", (user["id"],)
+                )
+                if role:
+                    return self.db.fetchone(
+                        "SELECT name FROM roles WHERE id = %s", (role["role_id"],)
+                    )
+        except Exception as e:
+            return e
+
     def has_role(self, email, role_name):
         try:
             role = self.db.fetchone("SELECT id FROM roles WHERE name = %s", (role_name,))
             user = self.db.fetchone("SELECT id FROM users WHERE email = %s", (email,))
-            if not role or not user:
-                return False
-
-            user_roles = self.db.fetchone(
-                "SELECT * FROM users_roles WHERE user_id = %s AND role_id = %s",
-                (user["id"], role["id"]),
-            )
-            if user_roles:
-                return True
-            else:
-                return False
-
+            if user and role:
+                user_roles = self.db.fetchone(
+                    "SELECT * FROM users_roles WHERE user_id = %s AND role_id = %s",
+                    (user["id"], role["id"]),
+                )
+                if user_roles:
+                    return True
         except Exception as e:
             return e
 
     def add_permission(self, email, permission):
         try:
             perm = self.db.fetchone("SELECT * FROM permissions WHERE name = %s", (permission,))
-            print(perm)
-
             user = self.db.fetchone("SELECT * FROM users WHERE email = %s", (email,))
-            if permission:
-                self.db.execute(
-                    "INSERT INTO users_permissions (user_id, permission_id) VALUES (%s, %s)",
+            if perm and user:
+                # check if permission exists
+                data = self.db.execute(
+                    "SELECT * FROM users_permissions WHERE user_id=%s AND permission_id=%s",
                     (user["id"], perm["id"]),
                 )
-                if self.db.insert_success():
-                    self.db.commit()
+                if data:
+                    return False
+                else:
+                    self.db.execute(
+                        "INSERT INTO users_permissions (user_id, permission_id) VALUES (%s, %s)",
+                        (user["id"], perm["id"]),
+                    )
+                    if self.db.insert_success():
+                        self.db.commit()
+                        return True
 
         except Exception as e:
             self.db.rollback()
@@ -595,78 +609,71 @@ class User:
 
     def has_permission(self, email, permission_name):
         try:
-
+            user = self.db.fetchone("SELECT id FROM users WHERE email = %s", (email,))
             permission = self.db.fetchone(
                 "SELECT id FROM permissions WHERE name = %s", (permission_name,)
             )
-
-            user = self.db.fetchone("SELECT id FROM users WHERE email = %s", (email,))
-            if not permission or not user:
-                return False  # Permission or User not found
-
-            role = self.db.fetchone(
-                "SELECT role_id FROM users_roles WHERE user_id = %s", (user["id"],)
-            )
-            if not role:
-                return False  # User has no assigned roles
-
-            role_permissions = self.db.fetchone(
-                "SELECT * FROM roles_permissions WHERE role_id = %s AND permission_id = %s",
-                (role["role_id"], permission["id"]),
-            )
-            if role_permissions:
-                return True
-            else:
-                return False
+            if user and permission:
+                role = self.db.fetchone(
+                    "SELECT role_id FROM users_roles WHERE user_id = %s", (user["id"],)
+                )
+                if role:
+                    role_permissions = self.db.fetchone(
+                        "SELECT * FROM roles_permissions WHERE role_id = %s AND permission_id = %s",
+                        (role["role_id"], permission["id"]),
+                    )
+                    delegated_permission = self.db.fetchone(
+                        "SELECT id FROM users_permissions WHERE permission_id = %s",
+                        permission["id"],
+                    )
+                    if role_permissions or delegated_permission:
+                        return True
         except Exception as e:
             return e
         finally:
             self.db.close()
 
-    def get_role(self, email):
-        try:
-            user = self.db.fetchone("SELECT id FROM users WHERE email = %s", (email,))
-            if not user:
-                return None  # User
-
-            role = self.db.fetchone(
-                "SELECT role_id FROM users_roles WHERE user_id = %s", (user["id"],)
-            )
-
-            if not role:
-                return None  # User has no assigned roles
-
-            return self.db.fetchone("SELECT name FROM roles WHERE id = %s", (role["role_id"],))
-
-        except Exception as e:
-            return e
-
     def get_permissions(self, email):
         try:
             user = self.db.fetchone("SELECT id FROM users WHERE email = %s", (email,))
-            if not user:
-                return None
-
-            results = self.db.fetchmany(
-                "select permissions.name FROM permissions INNER JOIN roles_permissions ON permissions.id=roles_permissions.permission_id INNER JOIN users_roles ON roles_permissions.role_id=users_roles.role_id INNER JOIN users ON users_roles.user_id=users.id WHERE users.id=%s",
-                (user["id"],),
-            )
-
-            delegated = self.db.fetchmany(
-                "select permissions.name FROM permissions INNER JOIN users_permissions ON permissions.id=users_permissions.permission_id INNER JOIN users ON users_permissions.user_id=users.id WHERE users.id=%s",
-                (user["id"],),
-            )
-
-            delegated_permissions = json_to_list(delegated, ["name"])
-            native_permissions = json_to_list(results, ["name"])
-
-            if delegated_permissions:
-                return native_permissions + delegated_permissions
-            else:
-                return native_permissions
-
+            if user:
+                results = self.db.fetchmany(
+                    "select permissions.name FROM permissions INNER JOIN roles_permissions ON permissions.id=roles_permissions.permission_id INNER JOIN users_roles ON roles_permissions.role_id=users_roles.role_id INNER JOIN users ON users_roles.user_id=users.id WHERE users.id=%s",
+                    (user["id"],),
+                )
+                delegated = self.db.fetchmany(
+                    "select permissions.name FROM permissions INNER JOIN users_permissions ON permissions.id=users_permissions.permission_id INNER JOIN users ON users_permissions.user_id=users.id WHERE users.id=%s",
+                    (user["id"],),
+                )
+                delegated_permissions = json_to_list(delegated, ["name"])
+                native_permissions = json_to_list(results, ["name"])
+                if delegated_permissions:
+                    return native_permissions + delegated_permissions
+                else:
+                    return native_permissions
         except Exception as e:
             return e
+
+    def remove_permission(self, email, permission):
+        try:
+            perm = self.db.fetchone("SELECT * FROM permissions WHERE name = %s", (permission,))
+            user = self.db.fetchone("SELECT * FROM users WHERE email = %s", (email,))
+            if perm and user:
+                self.db.execute(
+                    "DELETE FROM users_permissions WHERE permission_id=%s AND user_id=%s",
+                    (perm["id"], user["id"]),
+                )
+                if self.db.insert_success():
+                    self.db.commit()
+                    return True
+                else:
+                    return False
+
+        except Exception as e:
+            self.db.rollback()
+            return e
+        finally:
+            self.db.close()
 
     @staticmethod
     def generate_hash(password):
@@ -767,15 +774,25 @@ class Role:
     def add_permission(self, role, permissions):
         try:
             role = self.db.fetchone("SELECT * FROM roles WHERE name = %s", (role,))
+            if role:
+                for p in permissions:
+                    permission = self.db.fetchone("SELECT * FROM permissions WHERE name = %s", (p,))
+                    if permission:
+                        # check if permission exists for role
+                        data = self.db.execute(
+                            "SELECT * FROM roles_permissions WHERE role_id=%s AND permission_id=%s",
+                            (role["id"], permission["id"]),
+                        )
+                        if data:
+                            return False
+                        self.db.execute(
+                            "INSERT INTO roles_permissions (role_id, permission_id) VALUES (%s, %s)",
+                            (role["id"], permission["id"]),
+                        )
+                if self.db.insert_success():
+                    self.db.commit()
+                    return True
 
-            for perm in permissions:
-                permission = self.db.fetchone("SELECT * FROM permissions WHERE name = %s", (perm,))
-
-                self.db.execute(
-                    "INSERT INTO roles_permissions (role_id, permission_id) VALUES (%s, %s)",
-                    (role["id"], permission["id"]),
-                )
-            self.db.commit()
         except Exception as e:
             self.db.rollback()
             return e

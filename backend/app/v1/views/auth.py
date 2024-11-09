@@ -1,18 +1,19 @@
 from flask import Blueprint, request
 from flask_jwt_extended import jwt_required
 from flask_jwt_extended import create_access_token, create_refresh_token, get_jwt_identity
-from ..models import User
-from ..models import Role
+from utils import parse_integer_from_string
 from utils.exception import DatabaseException
 from utils.responses import response, response_with_data, no_data_found
 from utils.validations import check_missing_fields
 from utils.decorators import roles_required
+from ..models import User
+from ..models import Role
 
 
 auth_blueprint = Blueprint("auth_blueprint", __name__)
 
 
-@auth_blueprint.route("/api/v1/auth/register", methods=["POST"])
+@auth_blueprint.route("/api/v1/auth/users/register", methods=["POST"])
 @jwt_required()
 @roles_required(["admin"])
 def create():
@@ -59,7 +60,7 @@ def create():
         return response("Something went wrong, " + str(e), 400)
 
 
-@auth_blueprint.route("/api/v1/auth/login", methods=["POST"])
+@auth_blueprint.route("/api/v1/auth/users/login", methods=["POST"])
 def login():
     user = User()
     try:
@@ -101,7 +102,7 @@ def login():
         return response("Something went wrong, " + str(e), 400)
 
 
-@auth_blueprint.route("/api/v1/auth/refresh", methods=["POST"])
+@auth_blueprint.route("/api/v1/auth/users/login/refresh", methods=["POST"])
 @jwt_required(refresh=True)
 def refresh():
     current_user = get_jwt_identity()
@@ -120,7 +121,7 @@ def refresh():
         return response("Something went wrong, " + str(e), 400)
 
 
-@auth_blueprint.route("/api/v1/auth/assign", methods=["POST"])
+@auth_blueprint.route("/api/v1/auth/users/roles/assign", methods=["POST"])
 @jwt_required()
 @roles_required(["admin"])
 def assign():
@@ -166,7 +167,7 @@ def get_users():
         return response("Something went wrong, " + str(e), 400)
 
 
-@auth_blueprint.route("/api/v1/auth/role", methods=["GET"])
+@auth_blueprint.route("/api/v1/auth/users/role", methods=["GET"])
 @jwt_required()
 # @roles_required(["admin"])
 def get_role():
@@ -184,7 +185,7 @@ def get_role():
         return response("Something went wrong, " + str(e), 400)
 
 
-@auth_blueprint.route("/api/v1/auth/permissions", methods=["GET"])
+@auth_blueprint.route("/api/v1/auth/users/permissions", methods=["GET"])
 @jwt_required()
 @roles_required(["admin"])
 def get_permissions():
@@ -202,10 +203,10 @@ def get_permissions():
         return response("Something went wrong, " + str(e), 400)
 
 
-@auth_blueprint.route("/api/v1/auth/permissions/delegate", methods=["POST"])
+@auth_blueprint.route("/api/v1/auth/users/permissions/grant", methods=["POST"])
 @jwt_required()
 @roles_required(["admin"])
-def delegate_permission():
+def grant_permission():
     user = User()
     email = get_jwt_identity()
     data = request.get_json()
@@ -220,9 +221,42 @@ def delegate_permission():
     try:
         data = user.add_permission(email, permission)
         if not isinstance(data, Exception):
-            if not data:
-                return no_data_found()
-            return response_with_data("OK", data, 200)
+            if data:
+                return response_with_data("OK", "Permission granted!", 200)
+            return response_with_data("OK", "Permission already granted!", 409)
+        else:
+            raise DatabaseException(str(data))
+    except DatabaseException as e:
+        error_code = parse_integer_from_string(str(e))
+        if error_code == 1062:
+            return response("Permission already granted!", 409)
+        return response("Something went wrong, " + str(e), 400)
+
+
+@auth_blueprint.route("/api/v1/auth/users/permissions/revoke", methods=["POST"])
+@jwt_required()
+@roles_required(["admin"])
+def revoke_permission():
+    user = User()
+    email = get_jwt_identity()
+    data = request.get_json()
+    if not data or not isinstance(data, dict):
+        return response("Invalid JSON format or empty payload", 400)
+    missing_fields = check_missing_fields(data, ["email", "permission"])
+    if missing_fields:
+        return response(f"Field(s) {', '.join(missing_fields)} required!", 400)
+
+    permission = data["permission"]
+    email = data["email"]
+    try:
+        data = user.remove_permission(email, permission)
+        if not isinstance(data, Exception):
+            if data:
+                return response_with_data("OK", "Permission revoked!", 200)
+            else:
+                return response_with_data(
+                    "OK", "Permission already revoked or does not exist!", 400
+                )
         else:
             raise DatabaseException(str(data))
     except DatabaseException as e:

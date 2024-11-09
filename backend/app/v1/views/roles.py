@@ -1,10 +1,11 @@
 from flask import Blueprint, request
 from flask_jwt_extended import jwt_required
-from ..models import Role
+from utils import parse_integer_from_string
 from utils.exception import DatabaseException
 from utils.responses import response, response_with_data, no_data_found
 from utils.decorators import roles_required
 from utils.validations import check_missing_fields
+from ..models import Role
 
 
 roles_blueprint = Blueprint("roles_blueprint", __name__)
@@ -115,7 +116,9 @@ def get_permissions(role):
     try:
         data = Role().get_permissions(role)
         if not isinstance(data, Exception):
-            return response_with_data("OK", data, 200)
+            if data:
+                return response_with_data("OK", data, 200)
+            return no_data_found()
         else:
             raise DatabaseException(str(data))
     except DatabaseException as e:
@@ -140,8 +143,12 @@ def assign_permissions():
 
         result = role.add_permission(rol, permissions)
         if not isinstance(result, Exception):
-            return response("Permissions assigned successfully!", 200)
+            if result:
+                return response("Permissions assigned successfully!", 200)
         else:
             raise DatabaseException(str(result))
     except DatabaseException as e:
+        error_code = parse_integer_from_string(str(e))
+        if error_code == 1062:
+            return response("Permission already granted!", 409)
         return response("Something went wrong, " + str(e), 400)

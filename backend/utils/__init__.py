@@ -78,7 +78,6 @@ def generate_excel_file(data, meeting_id):
 
 
 def add_logo(pdf):
-    print("Width:", pdf.w)
     pdf.image(os.path.join(app.root_path, "static/logo.png"), x=122, y=8, w=50)
     pdf.ln(30)
 
