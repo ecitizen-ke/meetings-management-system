@@ -23,6 +23,7 @@ import Permissions from './pages/permissions/Permissions';
 import CreatePermission from './pages/permissions/CreatePermission';
 import AssignPermission from './pages/permissions/AssignPermission';
 import ViewPermissions from './pages/permissions/ViewPermissions';
+import AssignRole from './pages/users/AssignRole';
 
 function Loading() {
   return (
@@ -112,6 +113,10 @@ export const AppRouter = createBrowserRouter([
       {
         path: '/dashboard/create-users',
         element: <CreateUsers />,
+      },
+      {
+        path: '/dashboard/assign-role',
+        element: <AssignRole />,
       },
       {
         path: '/dashboard/venues',

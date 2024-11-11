@@ -131,7 +131,19 @@ const Users = () => {
             >
               Edit
             </Button>
-
+            <Button
+              style={{ marginRight: 8 }}
+              variant='contained'
+              color='info'
+              size='small'
+              onClick={() =>
+                navigate(
+                  `/dashboard/assign-role?email=${params.row.email}&&name=${params.row.first_name}`
+                )
+              }
+            >
+              Assign Role
+            </Button>
             <Button
               style={{ marginRight: 8 }}
               variant='contained'
