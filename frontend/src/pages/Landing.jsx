@@ -9,18 +9,24 @@ import { Snackbar } from '@mui/material';
 import SignPad from '../components/SignPad';
 import { useDispatch, useSelector } from 'react-redux';
 import { handleApiError } from '../utils/errorHandler';
-import { postData } from '../utils/api';
+import { getData, postData } from '../utils/api';
 import Swal from 'sweetalert2';
 import Select from 'react-select';
+import { getToken } from '../utils/helpers';
 
 const Landing = () => {
   const { id } = useParams();
   const [meeting, setMeeting] = useState(null);
   const [openToast, setOpenToast] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
+  const [organizations, setOrganizations] = useState([]);
+  const [selectedOrg, setSelectedOrg] = useState('');
   const sign = useSelector((state) => state.signature);
   const dispatch = useDispatch();
-
+  const customHeaders = {
+    Authorization: 'Bearer ' + getToken(),
+    'Content-Type': 'application/json',
+  };
   const {
     register,
     handleSubmit,
@@ -32,27 +38,22 @@ const Landing = () => {
   const fetchMeetingDetail = async () => {
     try {
       // Fetch meeting details
-
-      const resp = await fetch(`${Config.API_URL}/meetings/${id}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
+      const { data } = await getData(
+        `${Config.API_URL}/attendees/meeting/${id}`,
+        customHeaders
+      );
+      setMeeting(data);
+      let orgArray = [];
+      data.organizations.map((org) => {
+        let orgObj = {
+          label: '',
+          value: '',
+        };
+        orgObj.label = org.name;
+        orgObj.value = org.name;
+        orgArray.push(orgObj);
       });
-
-      // Check if the response is OK (status code 200-299)
-      if (resp.ok) {
-        const { data } = await resp.json(); // Parse the response as JSON
-        console.log(data);
-        setMeeting(data); // Set meeting details
-      } else {
-        console.error(
-          'Error fetching meeting details:',
-          resp.status,
-          resp.statusText
-        );
-        // Handle non-OK response status
-        throw new Error('Failed to fetch meeting details');
-      }
+      setOrganizations(orgArray);
     } catch (error) {
       console.error('An error occurred:', error.message);
       // Handle network errors or other exceptions
@@ -84,6 +85,22 @@ const Landing = () => {
     try {
       data['meeting_id'] = id;
       data['signature'] = sign.signatureImage;
+      if (!selectedOrg) {
+        Swal.fire({
+          // title: "Logout",
+          text: 'Please select orgnization ',
+          icon: 'warning',
+          // showCancelButton: true,
+          confirmButtonColor: '#398e3d',
+          // cancelButtonColor: "#d33",
+          confirmButtonText: 'ok',
+        }).then((result) => {
+          if (result.isConfirmed) {
+          }
+        });
+        return;
+      }
+      data['organization'] = selectedOrg;
       console.log(data);
       const result = await postData(`${Config.API_URL}/attendees`, data, {
         'Content-Type': 'application/json',
@@ -251,7 +268,10 @@ const Landing = () => {
                         id='email'
                         {...register('email', {
                           required: 'This field is required',
-                          pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                          pattern: {
+                            value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                            message: 'Please enter a valid email address',
+                          },
                           message: 'Please enter a valid email address',
                         })}
                         name='email'
@@ -295,38 +315,17 @@ const Landing = () => {
                       <label htmlFor='organization' className='form-label'>
                         Organization
                       </label>
-                      {/* <Select
+                      <Select
                         getOptionLabel={(option) => option.label}
                         getOptionValue={(option) => option.value}
-                        options={[
-                          {
-                            label: 'eCitizen',
-                            value: 'eCitizen',
-                          },
-                          {
-                            label: 'Other (Specify)',
-                            value: 'Other',
-                          },
-                        ]}
+                        options={organizations}
                         onChange={(selectedOptions) => {
                           if (selectedOptions.value === 'Other') {
                             // dispatch(toggleVenueOther());
                           } else {
-                            e;
-                            dispatch(resetVenueOther());
+                            setSelectedOrg(selectedOptions.value);
                           }
                         }}
-                      /> */}
-
-                      <input
-                        type='text'
-                        className='form-control rounded-0'
-                        id='organization'
-                        name='organization'
-                        {...register('organization', {
-                          required: 'This field is required',
-                        })}
-                        required
                       />
                     </div>
                     {/* <div className="my-3">

@@ -17,7 +17,7 @@ const refreshToken = async () => {
   try {
     // Make an API request to refresh the token
     const response = await postData(
-      `${Config.API_URL}/auth/refresh`,
+      `${Config.API_URL}/auth/users/login/refresh`,
       {},
       customHeaders
     );

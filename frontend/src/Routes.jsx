@@ -15,10 +15,14 @@ import { Suspense } from 'react';
 import Venue from './pages/venues/Venue';
 import Organizations from './pages/organizations/Organizations';
 import Register from './pages/auth/Register';
-import Roles from './pages/Roles';
+import Roles from './pages/roles/Roles';
 import Meeting from './pages/meetings/Meeting';
 import CreateMeeting from './pages/meetings/CreateMeeting';
 import CreateUsers from './pages/users/CreateUsers';
+import Permissions from './pages/permissions/Permissions';
+import CreatePermission from './pages/permissions/CreatePermission';
+import AssignPermission from './pages/permissions/AssignPermission';
+import ViewPermissions from './pages/permissions/ViewPermissions';
 
 function Loading() {
   return (
@@ -124,6 +128,26 @@ export const AppRouter = createBrowserRouter([
       {
         path: '/dashboard/roles',
         element: <Roles />,
+      },
+      {
+        path: '/dashboard/roles/assign-permission/:id/:role',
+        element: <AssignPermission />,
+      },
+      {
+        path: '/dashboard/permissions',
+        element: <Permissions />,
+      },
+      {
+        path: '/dashboard/create-permissions',
+        element: <CreatePermission />,
+      },
+      {
+        path: '/dashboard/create-permissions',
+        element: <CreatePermission />,
+      },
+      {
+        path: '/dashboard/roles/:name/permissions',
+        element: <ViewPermissions />,
       },
     ],
   },

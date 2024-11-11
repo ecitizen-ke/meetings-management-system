@@ -17,12 +17,14 @@ import { NavLink } from 'react-router-dom';
 import Swal from 'sweetalert2';
 
 import {
+  Accessibility,
   Build,
   Business,
   DashboardSharp,
   Grade,
   Grid3x3Sharp,
   LockClockSharp,
+  LockPerson,
   Logout,
   MeetingRoom,
   Room,
@@ -132,6 +134,18 @@ const Sidebar = () => {
       path: '/dashboard/users',
       slug: 'users',
     },
+    {
+      text: 'Roles',
+      icon: <Accessibility color='primary' />,
+      path: '/dashboard/roles',
+      slug: 'users',
+    },
+    {
+      text: 'Permissions',
+      icon: <LockPerson color='primary' />,
+      path: '/dashboard/permissions',
+      slug: 'users',
+    },
   ];
 
   const drawer = (
@@ -164,29 +178,6 @@ const Sidebar = () => {
             </ListItem>
           </NavLink>
         ))}
-
-        <ListItem disablePadding>
-          <ListItemButton onClick={handleClick}>
-            <ListItemIcon>
-              <Settings color='primary' />
-            </ListItemIcon>
-            <ListItemText primary={`User Management`} />
-          </ListItemButton>
-          <Menu
-            id='basic-menu'
-            anchorEl={anchorEl}
-            open={open}
-            onClose={handleClose}
-            MenuListProps={{
-              'aria-labelledby': 'basic-button',
-            }}
-          >
-            <MenuItem onClick={() => handleNavigate('roles')}>Roles</MenuItem>
-            <MenuItem onClick={() => handleNavigate('permissions')}>
-              Permissions
-            </MenuItem>
-          </Menu>
-        </ListItem>
 
         <ListItem onClick={() => handleLogout()} disablePadding>
           <ListItemButton>

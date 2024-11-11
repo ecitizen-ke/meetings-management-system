@@ -59,7 +59,10 @@ const Login = () => {
         email: e.email,
         password: e.password,
       };
-      const response = await postData(`${Config.API_URL}/auth/login`, user);
+      const response = await postData(
+        `${Config.API_URL}/auth/users/login`,
+        user
+      );
       console.log(response);
       const token = response.data.access_token;
       const refresh_token = response.data.refresh_token;
