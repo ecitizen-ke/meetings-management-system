@@ -37,7 +37,7 @@ const CreateUsers = () => {
     try {
       data['password'] = 'password';
       const result = await postData(
-        `${Config.API_URL}/auth/register`,
+        `${Config.API_URL}/auth/users/register`,
         data,
         customHeaders
       );

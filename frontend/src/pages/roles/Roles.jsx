@@ -4,28 +4,44 @@ import {
   Button,
   Divider,
   InputAdornment,
+  Menu,
+  MenuItem,
   Modal,
   TextField,
 } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { getData, postData } from '../utils/api';
-import { Config } from '../Config';
-import { handleApiError } from '../utils/errorHandler';
+import { getData, postData } from '../../utils/api';
+import { Config } from '../../Config';
+import { handleApiError } from '../../utils/errorHandler';
 import { useDispatch } from 'react-redux';
 import { DataGrid } from '@mui/x-data-grid';
-import { getToken } from '../utils/helpers';
-const customHeaders = {
-  Authorization: 'Bearer ' + getToken(),
-  'Content-Type': 'application/json',
-};
+import { getToken } from '../../utils/helpers';
+import { useNavigate } from 'react-router';
 
 const Roles = () => {
+  const customHeaders = {
+    Authorization: 'Bearer ' + getToken(),
+    'Content-Type': 'application/json',
+  };
   const [open, setOpen] = useState(false);
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
   const [roles, setRoles] = useState([]);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const [anchorEl, setAnchorEl] = React.useState(null);
+  const openMenu = Boolean(anchorEl);
+  const handleClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+  const viewPermissions = (role) => {
+    console.log(role);
+    // navigate(`/dashboard/roles/${role}/permissions`);
+  };
   const {
     register,
     handleSubmit,
@@ -71,7 +87,9 @@ const Roles = () => {
   useEffect(() => {
     fetchRoles();
   }, []);
-
+  const assignPermission = (roleName, roleId) => {
+    navigate('/dashboard/roles/assign-permission/' + roleId + '/' + roleName);
+  };
   const columns = [
     { field: 'id', headerName: '#', width: 70 },
     { field: 'name', headerName: 'Name', width: 220 },
@@ -82,29 +100,51 @@ const Roles = () => {
       width: 350,
       sortable: false,
       filterable: false,
-      renderCell: (params) => (
-        <>
-          <div>
+      renderCell: (params) => {
+        return (
+          <>
             <Button
-              variant='contained'
-              color='primary'
-              size='small'
-              style={{ marginRight: 8 }}
+              id='basic-button'
+              aria-controls={open ? 'basic-menu' : undefined}
+              aria-haspopup='true'
+              aria-expanded={open ? 'true' : undefined}
+              onClick={handleClick}
             >
-              Edit
+              Action
             </Button>
+            <Menu
+              id='basic-menu'
+              anchorEl={anchorEl}
+              open={openMenu}
+              onClose={handleMenuClose}
+              MenuListProps={{
+                'aria-labelledby': 'basic-button',
+              }}
+            >
+              <MenuItem
+                onClick={() => assignPermission(params.row.name, params.id)}
+              >
+                Assign Permission
+              </MenuItem>
+              <MenuItem onClick={() => viewPermissions(params.row)}>
+                View Permissions
+              </MenuItem>
+            </Menu>
 
-            <Button
-              style={{ marginRight: 8 }}
-              variant='contained'
-              color='secondary'
-              size='small'
-            >
-              Delete
-            </Button>
-          </div>
-        </>
-      ),
+            {/* <div>
+                <Button
+                  variant='contained'
+                  color='primary'
+                  size='small'
+                  style={{ marginRight: 8 }}
+                  onClick={() => assignPermission(params.row.name, params.id)}
+                >
+                  Assign Permission
+                </Button>
+              </div> */}
+          </>
+        );
+      },
     },
   ];
 
