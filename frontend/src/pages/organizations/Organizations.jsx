@@ -15,7 +15,7 @@ import { Add, Edit } from '@mui/icons-material';
 import { useForm } from 'react-hook-form';
 import { DataGrid } from '@mui/x-data-grid';
 import Swal from 'sweetalert2';
-import { getData, postData } from '../../utils/api';
+import { deleteData, getData, postData } from '../../utils/api';
 import { Config } from '../../Config';
 import { handleApiError } from '../../utils/errorHandler';
 import { useDispatch } from 'react-redux';
@@ -81,8 +81,19 @@ const Organizations = () => {
       confirmButtonColor: '#398e3d',
       cancelButtonColor: '#d33',
       confirmButtonText: 'Yes, delete it!',
-    }).then((result) => {
+    }).then(async (result) => {
       if (result.isConfirmed) {
+        try {
+          const result = await deleteData(
+            `${Config.API_URL}/organizations/${id}`,
+            customHeaders
+          );
+          fetchOrganizations();
+          showMessage(result.message, 'success', dispatch);
+        } catch (error) {
+          console.log(error);
+          handleApiError(error, dispatch);
+        }
       }
     });
   };
@@ -143,7 +154,7 @@ const Organizations = () => {
               variant='contained'
               color='secondary'
               size='small'
-              onClick={() => handleDelete(params.row)}
+              onClick={() => handleDelete(params.row.id)}
             >
               Delete
             </Button>

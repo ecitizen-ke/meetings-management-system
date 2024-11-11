@@ -39,8 +39,7 @@ const Roles = () => {
     setAnchorEl(null);
   };
   const viewPermissions = (role) => {
-    console.log(role);
-    // navigate(`/dashboard/roles/${role}/permissions`);
+    navigate(`/dashboard/roles/${role}/permissions`);
   };
   const {
     register,
@@ -97,13 +96,33 @@ const Roles = () => {
     {
       field: 'actions',
       headerName: '',
-      width: 350,
+      width: 400,
       sortable: false,
       filterable: false,
       renderCell: (params) => {
         return (
           <>
-            <Button
+            <div
+              className='btn-group'
+              role='group'
+              aria-label='Basic outlined example'
+            >
+              <button
+                type='button'
+                onClick={() => viewPermissions(params.row.name)}
+                className='btn rounded-0 btn-outline-success'
+              >
+                View Permissions
+              </button>
+              <button
+                onClick={() => assignPermission(params.row.name, params.id)}
+                type='button'
+                className='btn rounded-0 btn-outline-secondary'
+              >
+                Assign Permissions
+              </button>
+            </div>
+            {/* <Button
               id='basic-button'
               aria-controls={open ? 'basic-menu' : undefined}
               aria-haspopup='true'
@@ -126,10 +145,10 @@ const Roles = () => {
               >
                 Assign Permission
               </MenuItem>
-              <MenuItem onClick={() => viewPermissions(params.row)}>
+              <MenuItem onClick={() => viewPermissions(params)}>
                 View Permissions
               </MenuItem>
-            </Menu>
+            </Menu> */}
 
             {/* <div>
                 <Button
