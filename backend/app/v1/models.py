@@ -3,6 +3,7 @@ from datetime import datetime
 from passlib.hash import pbkdf2_sha256 as sha256
 from app.db import Database
 from utils import combine_date_time, json_to_list, parse_date
+import os
 
 
 class Organization:
@@ -437,7 +438,10 @@ class Attendee:
 
     def get_by_meeting_id(self, id):
         try:
-            return self.db.fetchandfilter("SELECT * FROM attendees WHERE meeting_id = %s", (id,))
+            attendees = self.db.fetchandfilter("SELECT * FROM attendees WHERE meeting_id = %s", (id,))
+            for attendee in attendees:
+                attendee["signature"] = os.getenv("APP_URL") + attendee["signature"]
+            return attendees       
         except Exception as e:
             return e
         finally:

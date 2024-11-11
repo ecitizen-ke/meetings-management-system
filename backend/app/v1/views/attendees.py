@@ -8,6 +8,8 @@ from utils.exception import DatabaseException
 from utils.responses import response, response_with_data, no_data_found
 from utils.validations import check_missing_fields
 from utils.decorators import roles_required
+from utils import store_file
+import base64
 
 
 attendees_blueprint = Blueprint("attendees_blueprint", __name__)
@@ -42,7 +44,13 @@ def add():
         email = data.get("email")
         phone = data.get("phone")
         meeting_id = data.get("meeting_id")
-        signature = data.get("signature")
+        signature_data = data.get("signature")
+        decoded_signature = base64.b64decode(signature_data.split(",")[1])
+        original_file_name = "signature.png"  # Placeholder or extract extension dynamically
+
+        signature_path = store_file(decoded_signature, meeting_id, original_file_name)
+
+        # return response_with_data("ok",{"signature_path": signature_path}, 201)
 
         if not attendee.check_attendance(email, meeting_id):
             result = attendee.create(
@@ -53,7 +61,7 @@ def add():
                 designation,
                 email,
                 phone,
-                signature,
+                signature_path,
             )
             if not isinstance(result, Exception):
                 return response("Attendee added successfully", 201)
