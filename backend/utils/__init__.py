@@ -8,6 +8,21 @@ from openpyxl import load_workbook
 from openpyxl.styles import Alignment, Border, Side, Font
 from fpdf import FPDF
 from datetime import datetime, timedelta
+import uuid
+from werkzeug.utils import secure_filename
+
+
+def store_file(file_data, meeting_id, original_file_name):
+    unique_string = str(uuid.uuid4())[:18]
+    file_name = f"{unique_string}_{secure_filename(original_file_name)}"
+    file_path = os.path.join(app.root_path, "static", "meetings", str(meeting_id), "attendees")
+     # file_path = os.path.join(app.config["IMAGE_PATH"], "meetings", str(meeting_id), "attendees")
+    os.makedirs(file_path, exist_ok=True)
+    full_file_path = os.path.join(file_path, file_name)
+    with open(full_file_path, "wb") as f:
+        f.write(file_data)
+    relative_path = f"/static/meetings/{meeting_id}/attendees/{file_name}"
+    return relative_path
 
 
 def create_file_path(meeting_id, file_name):

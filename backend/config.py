@@ -13,6 +13,8 @@ class Config:
     SECRET_KEY = os.getenv("SECRET_KEY")
     SERVER = os.getenv("SERVER")
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+    IMAGE_PATH = os.getenv("IMAGE_PATH")
+    APP_URL = os.getenv("APP_URL")
 
     # Additional configurations
     SQLALCHEMY_TRACK_MODIFICATIONS = False
