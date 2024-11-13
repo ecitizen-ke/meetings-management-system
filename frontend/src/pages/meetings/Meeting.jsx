@@ -220,6 +220,10 @@ const Meeting = () => {
               size='small'
               style={{ marginRight: 8 }}
               onClick={() => handleEdit(params.row.id)}
+              disabled={moment(params.row.meeting_date).isBefore(
+                moment(),
+                'day'
+              )}
             >
               Edit
             </Button>
