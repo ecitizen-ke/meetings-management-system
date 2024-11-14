@@ -32,9 +32,29 @@ const Main = () => {
   });
   const [meetings, setMeetings] = useState([]);
   const columns = [
-    { field: 'id', headerName: '#', width: 70 },
+    {
+      field: 'id',
+      headerName: '#',
+      width: 70,
+    },
     { field: 'title', headerName: 'Title', width: 220 },
-    { field: 'boardroom_name', headerName: 'Boardroom', width: 220 },
+    {
+      field: 'location',
+      headerName: 'Location',
+      width: 220,
+      renderCell: (params) => {
+        return params.row.venue?.location.county;
+      },
+    },
+
+    {
+      field: 'venue',
+      headerName: 'Venue',
+      width: 220,
+      renderCell: (params) => {
+        return params.row.venue?.building;
+      },
+    },
     { field: 'description', headerName: 'Description', width: 220 },
     {
       field: 'meeting_date',
@@ -47,7 +67,7 @@ const Main = () => {
     {
       field: 'start_time',
       headerName: 'Start Time',
-      width: 130,
+      width: 220,
       renderCell: (params) => (
         <div>{moment(params.row.start_time, 'HH:mm:ss').format('HH:mm A')}</div>
       ),
@@ -55,7 +75,7 @@ const Main = () => {
     {
       field: 'end_time',
       headerName: 'End Time',
-      width: 130,
+      width: 220,
       renderCell: (params) => (
         <div>{moment(params.row.end_time, 'HH:mm:ss').format('HH:mm A')}</div>
       ),
@@ -63,7 +83,7 @@ const Main = () => {
     {
       field: 'actions',
       headerName: '',
-      width: 350,
+      width: 430,
       sortable: false,
       filterable: false,
       renderCell: (params) => (

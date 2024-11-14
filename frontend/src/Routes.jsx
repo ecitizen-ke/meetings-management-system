@@ -24,6 +24,7 @@ import CreatePermission from './pages/permissions/CreatePermission';
 import AssignPermission from './pages/permissions/AssignPermission';
 import ViewPermissions from './pages/permissions/ViewPermissions';
 import AssignRole from './pages/users/AssignRole';
+import AttendanceRegistrationForm from './pages/AttendanceRegistrationForm';
 
 function Loading() {
   return (
@@ -46,7 +47,7 @@ export const AppRouter = createBrowserRouter([
   {
     path: '/meetings/:id',
     exact: true,
-    element: <Landing />,
+    element: <AttendanceRegistrationForm />,
   },
   {
     path: '/attendance/:id',
