@@ -10,11 +10,11 @@ class Organization:
     def __init__(self):
         self.db = Database()
 
-    def create(self, name, description):
+    def create(self, name, description, abbreviation=None):
         try:
             self.db.execute(
-                "INSERT INTO organizations (name, description) VALUES (%s, %s)",
-                (name, description),
+                "INSERT INTO organizations (name, description, abbreviation) VALUES (%s, %s, %s)",
+                (name, description, abbreviation),
             )
             if self.db.insert_success():
                 self.db.commit()
@@ -405,10 +405,10 @@ class Attendee:
         self.db = Database()
 
     def create(
-        self, meeting_id, first_name, last_name, organization, designation, email, phone, signature
+        self, meeting_id, first_name, last_name, organization, designation, email, phone, signature, salutation
     ):
         try:
-            statement = "INSERT INTO attendees (meeting_id, first_name, last_name, organization, designation, email, phone, signature) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
+            statement = "INSERT INTO attendees (meeting_id, first_name, last_name, organization, designation, email, phone, signature, salutation) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
             data = (
                 meeting_id,
                 first_name,
@@ -418,8 +418,12 @@ class Attendee:
                 email,
                 phone,
                 signature,
+                salutation,
             )
             self.db.execute(statement, data)
+            # check if organization exists
+            if not self.db.fetchone("SELECT * FROM organizations WHERE name = %s", (organization,)):
+                self._create_organization(organization)
             if self.db.insert_success():
                 self.db.commit()
         except Exception as e:
@@ -428,6 +432,17 @@ class Attendee:
         finally:
             self.db.close()
 
+    def _create_organization(self, organization_name):
+        try:
+            self.db.execute(
+                "INSERT INTO organizations (name, description, abbreviation) VALUES (%s, %s, %s)",
+                (organization_name, "Organization", "")
+            )
+            self.db.commit()
+        except Exception as e:
+            self.db.rollback()
+            raise e
+        
     def get_all(self):
         try:
             return self.db.fetchmany("SELECT * FROM attendees")

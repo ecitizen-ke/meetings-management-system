@@ -33,6 +33,7 @@ def add():
                 "email",
                 "phone",
                 "signature",
+                "salutation",
             ],
         )
         if missing_fields:
@@ -45,6 +46,7 @@ def add():
         phone = data.get("phone")
         meeting_id = data.get("meeting_id")
         signature_data = data.get("signature")
+        salutation = data.get("salutation")
         decoded_signature = base64.b64decode(signature_data.split(",")[1])
         original_file_name = "signature.png"  # Placeholder or extract extension dynamically
 
@@ -62,6 +64,7 @@ def add():
                 email,
                 phone,
                 signature_path,
+                salutation,
             )
             if not isinstance(result, Exception):
                 return response("Attendee added successfully", 201)
