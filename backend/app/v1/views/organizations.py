@@ -26,7 +26,8 @@ def create():
 
         name = data.get("name")
         description = data.get("description", "")
-        result = organization.create(name, description)
+        abbreviation = data.get("abbreviation", "")
+        result = organization.create(name, description, abbreviation)
         if not isinstance(result, Exception):
             return response("'Organization added successfully!", 201)
         else:
