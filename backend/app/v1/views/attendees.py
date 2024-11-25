@@ -2,8 +2,6 @@ from flask import Blueprint, request
 from flask_jwt_extended import jwt_required
 from ..models import Attendee
 from ..models import Meeting
-from ..models import Venue
-from ..models import Organization
 from utils.exception import DatabaseException
 from utils.responses import response, response_with_data, no_data_found
 from utils.validations import check_missing_fields
@@ -52,11 +50,10 @@ def add():
 
         signature_path = store_file(decoded_signature, meeting_id, original_file_name)
 
-        # return response_with_data("ok",{"signature_path": signature_path}, 201)
-
         if not attendee.check_attendance(email, meeting_id):
             result = attendee.create(
                 meeting_id,
+                salutation,
                 first_name,
                 last_name,
                 organization,
@@ -64,7 +61,6 @@ def add():
                 email,
                 phone,
                 signature_path,
-                salutation,
             )
             if not isinstance(result, Exception):
                 return response("Attendee added successfully", 201)
