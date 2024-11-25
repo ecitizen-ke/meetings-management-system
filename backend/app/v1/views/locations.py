@@ -41,9 +41,7 @@ def get_locations_select():
     if not isinstance(locations, list):
         return response(str(locations), 400)
     # format locaions for choices js library
-    locations = [
-        {"value": location["id"], "label": location["town"]} for location in locations
-    ]
+    locations = [{"value": location["id"], "label": location["town"]} for location in locations]
 
     return response_with_data("OK", locations, 200)
 

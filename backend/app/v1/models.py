@@ -117,11 +117,8 @@ class Venue:
         self.db = Database()
 
     def create(self, name, building, town, county, status, longitude, latitude):
-
         try:
-
             status = "available" if status == "" or status is None else status
-
             res = Location().search_locations(county, town)
             # check if location exists
             if not res:
@@ -148,14 +145,10 @@ class Venue:
             self.db.close()
 
     def update(self, name, building, town, county, status, longitude, latitude, venue_id):
-
         try:
-
             # check if location exists
             res = Location().search_locations(county, town)
-
             location_id = None
-
             if not res:
                 Location().create(county, town)
                 res = Location().search_locations(county, town)
@@ -405,10 +398,19 @@ class Attendee:
         self.db = Database()
 
     def create(
-        self, meeting_id, first_name, last_name, organization, designation, email, phone, signature, salutation
+        self,
+        meeting_id,
+        first_name,
+        last_name,
+        organization,
+        designation,
+        email,
+        phone,
+        signature,
+        salutation,
     ):
         try:
-            statement = "INSERT INTO attendees (meeting_id, first_name, last_name, organization, designation, email, phone, signature, salutation) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
+            statement = "INSERT INTO attendees (meeting_id,salutation, first_name, last_name, organization, designation, email, phone, signature) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
             data = (
                 meeting_id,
                 first_name,
@@ -436,13 +438,13 @@ class Attendee:
         try:
             self.db.execute(
                 "INSERT INTO organizations (name, description, abbreviation) VALUES (%s, %s, %s)",
-                (organization_name, "Organization", "")
+                (organization_name, "Organization", ""),
             )
             self.db.commit()
         except Exception as e:
             self.db.rollback()
             raise e
-        
+
     def get_all(self):
         try:
             return self.db.fetchmany("SELECT * FROM attendees")
@@ -453,10 +455,12 @@ class Attendee:
 
     def get_by_meeting_id(self, id):
         try:
-            attendees = self.db.fetchandfilter("SELECT * FROM attendees WHERE meeting_id = %s", (id,))
+            attendees = self.db.fetchandfilter(
+                "SELECT * FROM attendees WHERE meeting_id = %s", (id,)
+            )
             for attendee in attendees:
                 attendee["signature"] = os.getenv("APP_URL") + attendee["signature"]
-            return attendees       
+            return attendees
         except Exception as e:
             return e
         finally:
@@ -525,7 +529,6 @@ class User:
         try:
             role = self.db.fetchone("SELECT id FROM roles WHERE name = %s", (role_name,))
             user = self.db.fetchone("SELECT id FROM users WHERE email = %s", (email,))
-
             if user and role:
                 # Check if the user has any role assigned
                 user_role = self.db.fetchone(
@@ -687,7 +690,6 @@ class User:
                     return True
                 else:
                     return False
-
         except Exception as e:
             self.db.rollback()
             return e
@@ -709,7 +711,6 @@ class Report:
         self.meetings = Meeting()
 
     def meetings_summary(self):
-
         try:
             meetings_status = {"pending": 0, "ongoing": 0, "complete": 0}
             current_date_time = datetime.now()

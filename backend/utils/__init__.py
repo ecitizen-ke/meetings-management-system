@@ -16,7 +16,6 @@ def store_file(file_data, meeting_id, original_file_name):
     unique_string = str(uuid.uuid4())[:18]
     file_name = f"{unique_string}_{secure_filename(original_file_name)}"
     file_path = os.path.join(app.root_path, "static", "meetings", str(meeting_id), "attendees")
-     # file_path = os.path.join(app.config["IMAGE_PATH"], "meetings", str(meeting_id), "attendees")
     os.makedirs(file_path, exist_ok=True)
     full_file_path = os.path.join(file_path, file_name)
     with open(full_file_path, "wb") as f:
@@ -107,7 +106,6 @@ def add_pdf_title(pdf, meeting):
     )
     pdf.ln(10)
     pdf.set_font("Times", "B", 14)
-
     pdf.cell(0, 10, txt=f"Title: {meeting['title']}", ln=True)
     pdf.cell(0, 10, txt=f"Location: {meeting['location']}", ln=True)
     pdf.cell(0, 10, txt=f"Description: {meeting['description']}", ln=True)
@@ -226,7 +224,7 @@ def execute_sql_script(cursor, sql_script):
 
 
 statements = {
-    "organizations": "CREATE TABLE IF NOT EXISTS organizations (id INT AUTO_INCREMENT PRIMARY KEY,name VARCHAR(100) NOT NULL UNIQUE,description TEXT,created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,updated_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP);",
+    "organizations": "CREATE TABLE IF NOT EXISTS organizations (id INT AUTO_INCREMENT PRIMARY KEY,name VARCHAR(100) NOT NULL UNIQUE,abbreviation VARCHAR(20),description TEXT,created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,updated_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP);",
     "users": "CREATE TABLE IF NOT EXISTS users (id INT AUTO_INCREMENT PRIMARY KEY,first_name VARCHAR(100) NOT NULL,last_name VARCHAR(100) NOT NULL, organization VARCHAR(100) NOT NULL, designation VARCHAR(100) NOT NULL, email VARCHAR(100) NOT NULL UNIQUE, phone VARCHAR(30), password VARCHAR(255) NOT NULL, created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,updated_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP);",
     "roles": "CREATE TABLE IF NOT EXISTS roles (id INT AUTO_INCREMENT PRIMARY KEY,name VARCHAR(50) NOT NULL UNIQUE,description TEXT,created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,updated_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP);",
     "users_roles": "CREATE TABLE IF NOT EXISTS users_roles (user_id INT NOT NULL,role_id INT NOT NULL,PRIMARY KEY (user_id, role_id),FOREIGN KEY (user_id) REFERENCES users(id),FOREIGN KEY (role_id) REFERENCES roles(id),created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,updated_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP );",
@@ -235,9 +233,7 @@ statements = {
     "locations": "CREATE TABLE IF NOT EXISTS locations (id INT AUTO_INCREMENT PRIMARY KEY,town VARCHAR(100), county VARCHAR(254) NOT NULL,created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,updated_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP);",
     "venues": "CREATE TABLE IF NOT EXISTS venues (id INT AUTO_INCREMENT PRIMARY KEY, location_id INT NOT NULL, name VARCHAR(254) NOT NULL, building VARCHAR(100), FOREIGN KEY (location_id) REFERENCES locations(id), status ENUM('available','unavailable') DEFAULT 'available', longitude DECIMAL(10, 8), latitude DECIMAL(10, 8), created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,updated_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP);",
     "meetings": "CREATE TABLE IF NOT EXISTS meetings (id INT AUTO_INCREMENT PRIMARY KEY, venue_id INT NOT NULL,title VARCHAR(100) NOT NULL, description TEXT, meeting_date DATE NOT NULL,start_time TIME NOT NULL,end_time TIME NOT NULL, FOREIGN KEY (venue_id) REFERENCES venues(id), organizations JSON, resources JSON,status ENUM('draft', 'ongoing', 'complete', 'rescheduled','pending', 'cancelled') DEFAULT 'pending', created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,updated_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP);",
-    "attendees": "CREATE TABLE IF NOT EXISTS attendees (id INT AUTO_INCREMENT PRIMARY KEY,meeting_id INT NOT NULL, FOREIGN KEY (meeting_id) REFERENCES meetings(id), first_name VARCHAR(100) NOT NULL,last_name VARCHAR(100) NOT NULL, organization VARCHAR(100), designation VARCHAR(100) NOT NULL, email VARCHAR(100) NOT NULL, phone VARCHAR(30), signature TEXT,created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,updated_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP);",
+    "attendees": "CREATE TABLE IF NOT EXISTS attendees (id INT AUTO_INCREMENT PRIMARY KEY,meeting_id INT NOT NULL, FOREIGN KEY (meeting_id) REFERENCES meetings(id),salutation VARCHAR(10), first_name VARCHAR(100) NOT NULL,last_name VARCHAR(100) NOT NULL, organization VARCHAR(100), designation VARCHAR(100) NOT NULL, email VARCHAR(100) NOT NULL, phone VARCHAR(30), signature TEXT,created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,updated_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP);",
     "meetings_organizations": "CREATE TABLE IF NOT EXISTS meetings_organizations (meeting_id INT NOT NULL,organization_id INT NOT NULL, PRIMARY KEY (meeting_id, organization_id), FOREIGN KEY (meeting_id) REFERENCES meetings(id), FOREIGN KEY (organization_id) REFERENCES organizations(id),created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,updated_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP);",
     "users_permissions": "CREATE TABLE IF NOT EXISTS users_permissions (user_id INT NOT NULL,permission_id INT NOT NULL,PRIMARY KEY (user_id, permission_id),FOREIGN KEY (user_id) REFERENCES users(id),FOREIGN KEY (permission_id) REFERENCES permissions(id),created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,updated_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP);",
-    "alter_organizations": "ALTER TABLE organizations ADD COLUMN IF NOT EXISTS abbreviation VARCHAR(10) AFTER name;",
-    "alter_attendees": "ALTER TABLE attendees ADD COLUMN IF NOT EXISTS salutation VARCHAR(10) AFTER last_name;",
 }
