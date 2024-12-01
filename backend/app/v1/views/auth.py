@@ -8,7 +8,6 @@ from utils.validations import check_missing_fields
 from utils.decorators import roles_required
 from ..models import User
 from ..models import Role
-from datetime import timedelta
 
 
 auth_blueprint = Blueprint("auth_blueprint", __name__)
@@ -91,7 +90,6 @@ def login():
                         identity=result.get("email"),
                         additional_claims=claims,
                         fresh=True,
-                        expires_delta=timedelta(seconds=8),
                     ),
                     "refresh_token": create_refresh_token(identity=result.get("email")),
                 },
@@ -121,7 +119,6 @@ def refresh():
                 "access_token": create_access_token(
                     identity=current_user,
                     additional_claims=claims,
-                    expires_delta=timedelta(seconds=8),
                     fresh=False,
                 ),
             },
