@@ -80,7 +80,8 @@ def login():
         result = user.login(email, password)
         if result:
             claims = {
-                "name": result.get("first_name") + " " + result.get("last_name"),
+                "first_name": result.get("first_name"),
+                "last_name": result.get("last_name"),
                 "role": role,
             }
             return response_with_data(
@@ -109,7 +110,8 @@ def refresh():
     user = User().find_by_email(current_user)
     role = User().get_role(current_user)
     claims = {
-        "name": user.get("first_name") + " " + user.get("last_name"),
+        "first_name": user.get("first_name"),
+        "last_name": user.get("last_name"),
         "role": role,
     }
     try:
