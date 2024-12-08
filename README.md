@@ -1,4 +1,4 @@
-# BoardRoom-Management-System
+# eCitizen Boardroom Management System
 
 ## API
 
