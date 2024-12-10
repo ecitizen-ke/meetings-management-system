@@ -41,8 +41,6 @@ const Venue = () => {
   const fetchVenues = async () => {
     try {
       const response = await getData(`${Config.API_URL}/venues`, customHeaders);
-      console.log(response.data);
-
       setVenues(response.data);
     } catch (error) {
       console.log(error);

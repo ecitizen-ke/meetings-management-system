@@ -1,58 +1,60 @@
+import { Add, Edit } from '@mui/icons-material';
 import {
+  Badge,
   Box,
   Button,
   Divider,
-  Grid,
   InputAdornment,
+  Modal,
   TextField,
-  Typography,
 } from '@mui/material';
 import React, { useEffect, useState } from 'react';
-import { getData, patchData, putData } from '../../utils/api';
-import { Config } from '../../Config';
-import { useDispatch } from 'react-redux';
-import { useParams } from 'react-router';
 import { useForm } from 'react-hook-form';
-import { Edit } from '@mui/icons-material';
-import Notification from '../../components/Notification';
+import { DataGrid } from '@mui/x-data-grid';
+import Swal from 'sweetalert2';
+import { useNavigate, useParams } from 'react-router';
+import { deleteData, getData, postData } from '../../utils/api';
 import {
   hideNotification,
   showNotification,
 } from '../../redux/features/notifications/notificationSlice';
+import Notification from '../../components/Notification';
+import { useDispatch } from 'react-redux';
 import { getToken } from '../../utils/helpers';
 import { useTokenRefresh } from '../../hooks/useTokenRefresh';
 import axios from 'axios';
-import VenueComponent from '../../components/VenueComponent';
-
-const customHeaders = {
-  Authorization: 'Bearer ' + getToken(),
-  'Content-Type': 'application/json',
-};
-let location_id = null;
+import Select from 'react-select';
+import {
+  closeModal,
+  resetVenueOther,
+  setCreatedVenue,
+} from '../../redux/features/venue/venueSlice';
+import { Config } from '../../Config';
 const center = { lat: 37.7749, lng: -122.4194 };
-const EditVenue = () => {
-  const [venue, setVenue] = useState();
-  const dispatch = useDispatch();
-  const params = useParams();
-  const token = useTokenRefresh(getToken());
 
+const EditVenue = () => {
+  const customHeaders = {
+    Authorization: 'Bearer ' + getToken(),
+    'Content-Type': 'application/json',
+  };
+  const dispatch = useDispatch();
+  const token = useTokenRefresh(getToken());
   const [counties, setCounties] = useState([]);
-  const [suggestions, setSuggestions] = useState([]);
+  const [town, setTown] = useState('');
+  const [county, setCounty] = useState('');
   const [countyData, setCountyData] = useState([]);
-  const [isDisabled, setIsDisabled] = useState(true);
   const [position, setPosition] = useState(center);
   const [locSuggestions, setLocSuggestions] = useState([]);
   const [search, setSearch] = useState('');
-  const [venues, setVenues] = useState([]);
-
-  const {
-    register,
-    handleSubmit,
-    watch,
-    reset,
-    formState: { errors, isSubmitting },
-  } = useForm();
-
+  const [venue, setVenue] = useState(null);
+  const [noTownOption, setNoTownOption] = useState(false);
+  const params = useParams();
+  const [towns, setTowns] = useState([
+    {
+      label: 'Other (Specify)',
+      value: 'Other',
+    },
+  ]);
   const fetchCounties = async () => {
     try {
       const response = await getData(
@@ -60,7 +62,6 @@ const EditVenue = () => {
         customHeaders
       );
       const data = response.data;
-      console.log(data);
       setCountyData(data);
       const groupedCounties = data.reduce((acc, county) => {
         if (!acc[county.county]) {
@@ -71,15 +72,19 @@ const EditVenue = () => {
         return acc;
       }, {});
       console.log(response);
-      console.log(groupedCounties);
-      setCounties(Object.keys(groupedCounties));
-      // filter data to return name of the county based on id param
-      if (params.id) {
-        const venue = response.data.find((v) => v.id === parseInt(params.id));
-        setVenue(venue);
-        location_id = venue.id;
-        setIsDisabled(false);
-      }
+      const countyArray = Object.keys(groupedCounties);
+
+      const countiesFormatted = [];
+      countyArray.forEach((county) => {
+        const countyObj = {
+          label: '',
+          value: '',
+        };
+        countyObj.label = county;
+        countyObj.value = county;
+        countiesFormatted.push(countyObj);
+      });
+      setCounties(countiesFormatted);
     } catch (error) {
       console.log(error);
       dispatch(
@@ -88,44 +93,56 @@ const EditVenue = () => {
           type: 'error', // success, error, warning, info
         })
       );
+
       setTimeout(() => dispatch(hideNotification()), 3000);
     }
   };
-  const handleCountySelect = (e) => {
-    let selectedCounty = e.target.value;
-    setCounty(selectedCounty);
-    // filter the countyData , then retreive county id of the first county
-    const countyDataFiltered = countyData.filter(
-      (cnty) => cnty.county.toLowerCase() === selectedCounty.toLowerCase()
-    );
 
-    location_id = countyDataFiltered[0].id;
-    console.log(location_id);
-    setIsDisabled(false);
-  };
-  const handleInputChange = (e) => {
-    setTimeout(async () => {
-      const value = e.target.value;
-      setTown(value);
-
-      // Filter towns based on user input, case-insensitive
-      if (value && county) {
-        const results = await getData(
-          `${Config.API_URL}/location-towns?county=${county}&&search=${value}`,
-          customHeaders
-        );
-        console.log(results);
-        setSuggestions(results.data);
-      } else {
-        setSuggestions([]); // Clear suggestions when input is empty
+  const fetchVenue = async () => {
+    try {
+      const response = await getData(
+        `${Config.API_URL}/venues/${params.id}`,
+        customHeaders
+      );
+      const data = response.data;
+      if (data) {
+        reset({
+          building: venue?.building || '',
+          venue: venue?.name || '',
+          county: venue?.location?.county || '',
+          town: venue?.location?.town || '',
+          latitude: venue?.latitude || '',
+          longitude: venue?.longitude || '',
+          status: venue?.status || '',
+        });
       }
-    }, 3000);
+      console.log(data);
+      setVenue(data);
+    } catch (error) {
+      console.log(error);
+      dispatch(
+        showNotification({
+          message: error.message,
+          type: 'error', // success, error, warning, info
+        })
+      );
+
+      setTimeout(() => dispatch(hideNotification()), 3000);
+    }
   };
 
-  const handleSuggestionClick = (suggestion) => {
-    setTown(suggestion); // Set the input to the selected suggestion
-    setSuggestions([]); // Clear suggestions
-  };
+  const {
+    register,
+    handleSubmit,
+    watch,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm();
+
+  useEffect(() => {
+    fetchCounties();
+    fetchVenue();
+  }, [token]);
 
   const handleSearchChange = async (e) => {
     const query = e.target.value;
@@ -152,96 +169,183 @@ const EditVenue = () => {
   };
 
   const handleLocSuggestionClick = (suggestion) => {
-    console.log(suggestion);
     const { lat, lng } = suggestion.geometry;
     setPosition({ lat, lng, location: suggestion.formatted });
     setLocSuggestions([]);
     setSearch(suggestion.formatted);
   };
 
-  useEffect(() => {
-    fetchVenue(params.id);
-    fetchCounties();
-  }, []);
-
-  const fetchVenue = async (id) => {
-    // Fetch Venue data from API
-    try {
-      const result = await getData(
-        `${Config.API_URL}/venues/${id}`,
-        customHeaders
-      );
-      console.log(result);
-      setVenue(result.data);
-
-      setSearch(result.data.name);
-      // setCounty(result.data.county);
-    } catch (error) {
-      dispatch(
-        showNotification({
-          message: error.message,
-          type: 'error', // success, error, warning, info
-        })
-      );
-      setTimeout(() => dispatch(hideNotification(), 3000));
+  // handle manual town input
+  const handleTownInput = (e) => {
+    const town = e.target.value.trim();
+    if (town) {
+      setTown(town);
+    } else {
+      setTown('');
     }
   };
 
-  //   Update Venue
-  const handleUpdate = async (data) => {
-    data['status'] = 'available';
-    console.log(data);
+  const filterCounty = (cty) => {
+    const filteredCounty = countyData.filter((county) => county.county === cty);
+    let venue_id = null; // Declare venue_id here
+    if (filteredCounty.length > 0) {
+      venue_id = filteredCounty[0].id; // Retrieve id for the county
+    }
+    return filteredCounty;
+  };
 
+  //   create venue
+  const onSubmit = async (data) => {
     try {
-      const response = await patchData(
-        `${Config.API_URL}/venues/${params.id}`,
+      console.log(data);
+      return;
+      const result = await postData(
+        `${Config.API_URL}/venues`,
         data,
         customHeaders
       );
+
+      console.log(result);
       dispatch(
         showNotification({
-          message: response.msg,
+          message: result.message,
           type: 'success', // success, error, warning, info
         })
       );
-
+      dispatch(
+        setCreatedVenue({
+          venue: data,
+        })
+      );
+      dispatch(closeModal());
+      dispatch(resetVenueOther());
+      console.log(result);
       setTimeout(() => dispatch(hideNotification()), 3000);
     } catch (error) {
       dispatch(
         showNotification({
-          message: error.response.data.msg,
+          message: error.response.data.message,
           type: 'error', // success, error, warning, info
         })
       );
+
       setTimeout(() => dispatch(hideNotification()), 3000);
     }
   };
   return (
     <>
-      <div className='page-header'>
-        <div>
-          <Typography variant='h4'>Edit - {venue?.building}</Typography>
+      <form onSubmit={handleSubmit(onSubmit)} action='' method='post'>
+        <label htmlFor=''>Venue</label>
+        <input
+          type='text'
+          className='form-control w-100'
+          placeholder='Type venue...'
+          {...register('venue', {
+            required: 'This field is required',
+          })}
+          error={errors.building && true}
+          style={{
+            width: '300px',
+            height: '40px',
+            padding: '10px',
+            marginBottom: '10px',
+          }}
+        />
+
+        <br />
+
+        <Box className='my-2'>
+          <TextField
+            fullWidth
+            id='outlined-basic'
+            label='Building'
+            variant='outlined'
+            {...register('building', { required: 'This field is required' })}
+            error={!!errors.building}
+          />
+
+          {errors.building && (
+            <span
+              style={{
+                color: 'crimson',
+              }}
+            >
+              {errors.building.message}
+            </span>
+          )}
+        </Box>
+        <br />
+
+        <div className='row mb-3'>
+          <div className='col-lg-6'>
+            <label htmlFor=''>County</label>
+            <Select
+              getOptionLabel={(option) => option.label}
+              getOptionValue={(option) => option.value}
+              options={counties}
+              onChange={async (countyObj) => {
+                // reset already filtered towns
+                setTowns([]);
+                setNoTownOption(false);
+                townInputVal = null;
+                filterCounty(countyObj.value);
+                setCounty(countyObj.value);
+                // get towns
+                const { data } = await getData(
+                  `${Config.API_URL}/location-search?county=${countyObj.value}`,
+                  customHeaders
+                );
+
+                setTowns([...data, ...towns]);
+              }}
+            />
+          </div>
+          <div style={{ position: 'relative' }} className='col-lg-6'>
+            <label htmlFor=''>Town</label>
+            <Select
+              getOptionLabel={(option) => option.label}
+              getOptionValue={(option) => option.value}
+              options={towns}
+              onChange={(selectedOptions) => {
+                console.log(selectedOptions);
+                if (selectedOptions.value === 'Other') {
+                  setNoTownOption(true);
+                } else {
+                  setNoTownOption(false);
+                }
+              }}
+            />
+          </div>
+          <div className='col-lg-12 my-3'>
+            {noTownOption && (
+              <input
+                className='form-control mt-2 rounded-0'
+                type='text'
+                onChange={handleTownInput}
+                placeholder='Please specify town name'
+                style={{
+                  width: '100%',
+                  padding: '8px',
+                  boxSizing: 'border-box',
+                }}
+              />
+            )}
+          </div>
         </div>
 
-        <div>
-          <Button onClick={() => window.history.back()} variant='text'>
-            Back
-          </Button>
-        </div>
-      </div>
-      <br />
-      <Divider color='' />
-      <br />
-      <Notification />
-      <br />
-
-      <Grid container spacing={2}>
-        <Grid item md={3} xs={12}></Grid>
-        <Grid item md={6} xs={12}>
-          {venue && <VenueComponent venue={venue} />}
-        </Grid>
-        <Grid item md={3} xs={12}></Grid>
-      </Grid>
+        <br />
+        <Button
+          disabled={isSubmitting}
+          variant='contained'
+          fullWidth={true}
+          color='primary'
+          type='submit'
+        >
+          {isSubmitting ? 'Please wait ...' : 'Save Venue'}
+        </Button>
+        <br />
+        <br />
+      </form>
     </>
   );
 };

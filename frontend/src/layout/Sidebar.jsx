@@ -15,7 +15,7 @@ import Typography from '@mui/material/Typography';
 import { Outlet, useNavigate } from 'react-router';
 import { NavLink } from 'react-router-dom';
 import Swal from 'sweetalert2';
-
+import logo from '../assets/logo.svg';
 import {
   Accessibility,
   Build,
@@ -34,12 +34,13 @@ import {
 } from '@mui/icons-material';
 import { Box, Button, Container, Menu, MenuItem } from '@mui/material';
 import Profile from '../components/Profile';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../redux/features/auth/authSlice';
 const Sidebar = () => {
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [isClosing, setIsClosing] = React.useState(false);
   const navigate = useNavigate();
+
   const dispatch = useDispatch();
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
@@ -150,8 +151,12 @@ const Sidebar = () => {
 
   const drawer = (
     <div>
+      <Container className='profile-box'>
+        {/* <Avatar alt="User Profile" src={user} sx={{ width: 56, height: 56 }} /> */}
+        <img className='logo' src={logo} alt='Logo' />
+      </Container>
       {/* <Toolbar /> */}
-      <Profile />
+      {/* <Profile /> */}
       <Divider />
       <List>
         {menuItems.map((item, index) => (

@@ -39,64 +39,20 @@ import Swal from 'sweetalert2';
 import Notification from '../../components/Notification';
 import { handleApiError } from '../../utils/errorHandler';
 import { getToken, showMessage } from '../../utils/helpers';
-import { Link } from 'react-router-dom';
 import { useTokenRefresh } from '../../hooks/useTokenRefresh';
-import axios from 'axios';
-import Select from 'react-select';
-import AsyncSelect from 'react-select/async';
-import {
-  hideNotification,
-  showNotification,
-} from '../../redux/features/notifications/notificationSlice';
-const style = {
-  position: 'absolute',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
-  width: '45%',
-  bgcolor: 'background.paper',
-  boxShadow: 24,
-  p: 4,
-};
-let count = 0;
-let townInputVal = null;
-let venue_id = null;
-let new_venue = null;
 const Meeting = () => {
-  const [open, setOpen] = useState(false);
   const [meetings, setMeetings] = useState([]);
-  const [openToast, setOpenToast] = useState(false);
-  const [organizations, setOrganizations] = useState([
-    {
-      label: 'Other (Specify)',
-      value: 'Other',
-    },
-  ]);
-  const [typedOrgValue, setTypedOrgValue] = useState('');
   const dispatch = useDispatch();
-  const [manualEntry, setManualEntry] = useState(false);
   const navigate = useNavigate();
   const token = useTokenRefresh(getToken());
   const [countyData, setCountyData] = useState([]);
-  const [counties, setCounties] = useState([]);
-  const [venues, setVenues] = useState([
-    {
-      label: 'Other (Specify)',
-      value: 'Other',
-    },
-  ]);
-  const [venueOther, setVenueOther] = useState(false);
 
-  const [noTownOption, setNoTownOption] = useState(false);
-
-  const [anchorEl, setAnchorEl] = React.useState(null);
   const customHeaders = {
     Authorization: 'Bearer ' + getToken(),
     'Content-Type': 'application/json',
   };
 
   useEffect(() => {
-    fetchCounties();
     fetchMeetings();
     if (token) {
     }
@@ -140,11 +96,11 @@ const Meeting = () => {
       if (result.isConfirmed) {
         deleteData(`${Config.API_URL}/meetings/${id}`, customHeaders)
           .then((result) => {
-            setOpenToast(true);
             fetchMeetings();
             showMessage(result.message, 'success', dispatch);
           })
           .catch((error) => {
+            console.log(error);
             handleApiError(error, dispatch);
           });
       }
@@ -264,62 +220,6 @@ const Meeting = () => {
       ),
     },
   ];
-
-  // handle manual town input
-  const handleTownInput = (e) => {
-    const town = e.target.value.trim();
-    if (town) {
-      townInputVal = town;
-    } else {
-      townInputVal = null;
-    }
-  };
-  const handleOrgInputChange = (inputValue) => {
-    setTypedOrgValue(inputValue);
-  };
-
-  const fetchCounties = async () => {
-    try {
-      const response = await getData(
-        `${Config.API_URL}/locations`,
-        customHeaders
-      );
-      const data = response.data;
-      setCountyData(data);
-      const groupedCounties = data.reduce((acc, county) => {
-        if (!acc[county.county]) {
-          acc[county.county] = [];
-        }
-        // Push the current county to the array for this county name
-        acc[county.county].push(county);
-        return acc;
-      }, {});
-      console.log(response);
-      const countyArray = Object.keys(groupedCounties);
-
-      const countiesFormatted = [];
-      countyArray.forEach((county) => {
-        const countyObj = {
-          label: '',
-          value: '',
-        };
-        countyObj.label = county;
-        countyObj.value = county;
-        countiesFormatted.push(countyObj);
-      });
-      setCounties(countiesFormatted);
-    } catch (error) {
-      console.log(error);
-      dispatch(
-        showNotification({
-          message: error.message,
-          type: 'error', // success, error, warning, info
-        })
-      );
-
-      setTimeout(() => dispatch(hideNotification()), 3000);
-    }
-  };
 
   const filterCounty = (cty) => {
     const filteredCounty = countyData.filter((county) => county.county === cty);

@@ -93,7 +93,7 @@ const AttendanceRegistrationForm = () => {
     try {
       data['meeting_id'] = id;
       data['signature'] = sign.signatureImage;
-
+      data['salutation'] = 'Mr.';
       if (!selectedOrg) {
         Swal.fire({
           // title: "Logout",
@@ -359,6 +359,52 @@ const AttendanceRegistrationForm = () => {
                         }}
                       >
                         {errors.phone.message}
+                      </span>
+                    )}
+                    <div className='my-3'>
+                      <label htmlFor='organization' className='form-label'>
+                        Organization
+                      </label>
+                      <Select
+                        getOptionLabel={(option) => option.label}
+                        getOptionValue={(option) => option.value}
+                        options={organizations}
+                        // onInputChange={handleInputChange}
+                        // inputValue={inputValue}
+                        onChange={(selectedOptions) => {
+                          if (selectedOptions.value === 'Other') {
+                            // dispatch(toggleVenueOther());
+                            setSuggestionVisibility(false);
+                            setOrgOther(true);
+                          } else {
+                            setSelectedOrg(selectedOptions.value);
+                            setOrgOther(false);
+                          }
+                        }}
+                      />
+                    </div>
+                    <div className='my-3'>
+                      <label htmlFor='salutation' className='form-label'>
+                        Salutation
+                      </label>
+                      <input
+                        type='text'
+                        className='form-control rounded-0'
+                        id='salutation'
+                        name='salutation'
+                        {...register('salutation', {
+                          required: 'This field is required',
+                        })}
+                        required
+                      />
+                    </div>
+                    {errors.salutation && (
+                      <span
+                        style={{
+                          color: 'crimson',
+                        }}
+                      >
+                        {errors.salutation.message}
                       </span>
                     )}
                     <div className='my-3'>

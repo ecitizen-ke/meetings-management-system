@@ -4,8 +4,6 @@ import Login from './pages/auth/Login';
 import NotFound from './pages/NotFound';
 import Master from './pages/Master';
 import Users from './pages/users/Users';
-import AppSetting from './pages/AppSetting';
-import Landing from './pages/Landing';
 import QrPage from './pages/QrPage';
 import Attendees from './pages/attendees/Attendees';
 import Main from './pages/Main';
@@ -142,10 +140,6 @@ export const AppRouter = createBrowserRouter([
       {
         path: '/dashboard/permissions',
         element: <Permissions />,
-      },
-      {
-        path: '/dashboard/create-permissions',
-        element: <CreatePermission />,
       },
       {
         path: '/dashboard/create-permissions',

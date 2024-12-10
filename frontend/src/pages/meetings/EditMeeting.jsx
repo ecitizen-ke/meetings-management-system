@@ -7,83 +7,130 @@ import {
   InputAdornment,
   InputLabel,
   MenuItem,
-  Select,
   TextField,
   Typography,
 } from '@mui/material';
 import React, { useEffect, useState } from 'react';
-import { getData, postData, putData } from '../../utils/api';
+import { getData, patchData, postData, putData } from '../../utils/api';
 import { Config } from '../../Config';
 import { useNavigate, useParams } from 'react-router';
 import { useForm } from 'react-hook-form';
 import { Edit } from '@mui/icons-material';
-import { useDispatch } from 'react-redux';
-import moment from 'moment';
-import {
-  hideNotification,
-  showNotification,
-} from '../../redux/features/notifications/notificationSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import Select from 'react-select';
 import Notification from '../../components/Notification';
 import { handleApiError } from '../../utils/errorHandler';
 import { getToken, showMessage } from '../../utils/helpers';
+import moment from 'moment';
 import { useTokenRefresh } from '../../hooks/useTokenRefresh';
-const customHeaders = {
-  Authorization: 'Bearer ' + getToken(),
-  'Content-Type': 'application/json',
-};
+import {
+  resetVenueOther,
+  toggleVenueOther,
+} from '../../redux/features/venue/venueSlice';
+let count = 0;
+let townInputVal = null;
+let venue_id = null;
+let new_venue = null;
 const EditMeeting = () => {
+  const customHeaders = {
+    Authorization: 'Bearer ' + getToken(),
+    'Content-Type': 'application/json',
+  };
   const params = useParams();
   const [meeting, setMeeting] = useState(null);
-  const [boardrooms, setBoardrooms] = useState([]);
   const dispatch = useDispatch();
+  const createdVenue = useSelector((state) => state.venue);
   const navigate = useNavigate();
   const token = useTokenRefresh(getToken());
-
+  const [selectedOrgs, setSelectedOrgs] = useState([]);
+  const [organizations, setOrganizations] = useState([
+    {
+      label: 'Other (Specify)',
+      value: 'Other',
+    },
+  ]);
+  const [venues, setVenues] = useState([]);
   const {
     register,
     handleSubmit,
-    watch,
-    reset,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm();
   useEffect(() => {
+    fetchVenues();
+    fetchOrganizations();
     fetchMeeting();
-    fetchBoardrooms();
   }, []);
 
   const fetchMeeting = async () => {
     try {
-      const result = await getData(
+      const { data } = await getData(
         `${Config.API_URL}/meetings/${params.id}`,
         customHeaders
       );
-      setMeeting(result);
+      if (data.venue_id) {
+        setValue('venue_id', data.venue_id); // Initialize the select field
+      }
+      console.log(data);
+      setMeeting(data);
     } catch (error) {
       handleApiError(error, dispatch);
     }
   };
-  const fetchBoardrooms = async () => {
+  const fetchVenues = async () => {
     try {
-      const result = await getData(
-        `${Config.API_URL}/boardrooms`,
-        customHeaders
-      );
-      setBoardrooms(result);
+      const { data } = await getData(`${Config.API_URL}/venues`, customHeaders);
+      let venueArray = [];
+      data.forEach((venue) => {
+        let venueObj = {
+          label: '',
+          value: '',
+        };
+        venueObj.label = venue.building + ',   ' + venue.name;
+        venueObj.value = venue.id;
+        venueArray.push(venueObj);
+      });
+      setVenues([...venueArray]);
     } catch (error) {
       handleApiError(error, dispatch);
     }
   };
 
+  const fetchOrganizations = async () => {
+    try {
+      const { data } = await getData(
+        `${Config.API_URL}/organizations`,
+        customHeaders
+      );
+
+      setOrganizations(data);
+    } catch (error) {
+      handleApiError(error, dispatch);
+    }
+  };
   const onSubmit = async (data) => {
     try {
-      const result = await putData(
-        `${Config.API_URL}/meeting/${params.id}`,
+      data['start_time'] = moment(data.start_time, 'HH:mm:ss').format(
+        'HH:mm:ss'
+      );
+      data['end_time'] = moment(data.end_time, 'HH:mm:ss').format('HH:mm:ss');
+
+      data['organizations'] =
+        selectedOrgs.length > 0
+          ? selectedOrgs
+          : meeting.organizations.map((org) => org.id);
+
+      const result = await patchData(
+        `${Config.API_URL}/meetings/${params.id}`,
         data,
         customHeaders
       );
+      console.log(result);
+      return;
       showMessage(result.msg, 'success', dispatch);
       navigate('/dashboard/meetings');
     } catch (error) {
+      console.log(error);
       handleApiError(error, dispatch);
     }
   };
@@ -93,7 +140,7 @@ const EditMeeting = () => {
       <div className='page-header'>
         <div>
           <Typography variant='h4'>
-            Edit - {meeting && meeting.title}
+            Update Meeting {meeting && meeting.title}
           </Typography>
         </div>
         <div>
@@ -144,14 +191,12 @@ const EditMeeting = () => {
                 )}
                 <br />
                 <br />
-                <br />
                 <TextField
                   multiline={true}
                   minRows={5}
                   label='Meeting Description'
                   variant='outlined'
-                  defaultValue={meeting && meeting.description}
-                  focused={true}
+                  defaultValue={meeting.description}
                   fullWidth={true}
                   {...register('description', {
                     required: 'This field is required',
@@ -169,17 +214,15 @@ const EditMeeting = () => {
                 )}
                 <br />
                 <br />
-                <br />
-
                 <Grid container spacing={2}>
                   <Grid item md={4} xs={12}>
                     <TextField
                       type='date'
                       label='Meeting Date'
                       variant='outlined'
-                      defaultValue={moment(
-                        meeting && meeting.meeting_date
-                      ).format('YYYY-MM-DD')}
+                      defaultValue={moment(meeting.meeting_date).format(
+                        'YYYY-MM-DD'
+                      )}
                       fullWidth={true}
                       focused
                       {...register('meeting_date', {
@@ -203,7 +246,10 @@ const EditMeeting = () => {
                       label='Start Time'
                       variant='outlined'
                       fullWidth={true}
-                      defaultValue={meeting && meeting.start_time}
+                      defaultValue={moment(
+                        meeting.start_time,
+                        'HH:mm:ss'
+                      ).format('HH:mm')}
                       focused
                       {...register('start_time', {
                         required: 'This field is required',
@@ -224,9 +270,11 @@ const EditMeeting = () => {
                     <TextField
                       type='time'
                       label='End Time'
+                      defaultValue={moment(meeting.end_time, 'HH:mm:ss').format(
+                        'HH:mm'
+                      )}
                       variant='outlined'
                       fullWidth={true}
-                      defaultValue={meeting && meeting.end_time}
                       focused
                       {...register('end_time', {
                         required: 'This field is required',
@@ -246,36 +294,56 @@ const EditMeeting = () => {
                 </Grid>
                 <br />
                 <br />
+                Organizations
+                <Select
+                  isMulti={true}
+                  getOptionLabel={(option) => option.name}
+                  getOptionValue={(option) => option.id}
+                  defaultValue={meeting.organizations}
+                  options={organizations}
+                  onChange={(selectedOptions) => {
+                    const selectedIds = selectedOptions
+                      ? selectedOptions.map((option) => option.id)
+                      : [];
+                    console.log('Selected IDs:', selectedIds);
+                    setSelectedOrgs(selectedIds);
+                  }}
+                  onInputChange={(inputValue, { action }) => {
+                    if (action === 'input-change') {
+                      handleOrgInputChange(inputValue);
+                    }
+                  }}
+                />
                 <br />
-
-                <FormControl fullWidth>
-                  <InputLabel id='bordroom-select-label'>Boardroom</InputLabel>
-                  <Select
-                    labelId='bordroom-select-label'
-                    id='bordroom-select-label'
-                    // value={age}
-                    label='Boardroom'
-                    {...register('boardroom_id', {
-                      required: 'This field is required',
-                    })}
-                    defaultValue={meeting.boardroom_id}
-                  >
-                    {boardrooms.map((boardroom) => (
-                      <MenuItem
-                        selected={boardroom.id === 2}
-                        key={boardroom.id}
-                        value={boardroom.id}
+                <br />
+                <div className='row mb-3'>
+                  <div className='col-lg-12'>
+                    <label htmlFor=''>Venue</label>
+                    <select
+                      {...register('venue_id', {
+                        required: 'This field is required',
+                      })}
+                      className='form-control rounded-0'
+                      id=''
+                      defaultValue={meeting.venue_id || ''} // Set the default selected value for the <select>
+                    >
+                      {venues.map((venue) => (
+                        <option value={venue.value} key={venue.value}>
+                          {venue.label}
+                        </option>
+                      ))}
+                    </select>
+                    {errors.venue_id && (
+                      <span
+                        style={{
+                          color: 'crimson',
+                        }}
                       >
-                        {boardroom.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-
-                <br />
-                <br />
-                <br />
-
+                        {errors.venue_id.message}
+                      </span>
+                    )}
+                  </div>
+                </div>
                 <Box
                   flexDirection={`row`}
                   display={`flex`}
@@ -290,12 +358,11 @@ const EditMeeting = () => {
                     color='primary'
                     type='submit'
                   >
-                    {isSubmitting ? 'Updating ...' : 'Update'}
+                    {isSubmitting ? 'Please wait ...' : 'Update Meeting'}
                   </Button>
-
-                  <br />
                 </Box>
               </Box>
+              <br />
             </form>
           )}
         </Grid>

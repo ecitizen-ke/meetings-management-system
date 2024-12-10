@@ -69,9 +69,7 @@ const CreateMeeting = () => {
       value: 'Other',
     },
   ]);
-  const [typedOrgValue, setTypedOrgValue] = useState('');
   const dispatch = useDispatch();
-  const [manualEntry, setManualEntry] = useState(false);
   const navigate = useNavigate();
   const token = useTokenRefresh(getToken());
   const [venues, setVenues] = useState([
@@ -143,6 +141,7 @@ const CreateMeeting = () => {
     data['end_time'] = moment(data.end_time, 'HH:mm:ss').format('HH:mm:ss');
     data['organizations'] = selectedOrgs;
     data['venue_id'] = venue_id ? venue_id : createdVenue.venue.id;
+
     if (noTownOption) {
       data['no_town'] = true;
       data['town'] = townInputVal;

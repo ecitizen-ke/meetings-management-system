@@ -30,28 +30,18 @@ import {
   resetVenueOther,
   setCreatedVenue,
 } from '../redux/features/venue/venueSlice';
-let location_id = null;
-let townInputVal = null;
-let venue_id = null;
 const center = { lat: 37.7749, lng: -122.4194 };
 const VenueComponent = ({ venue }) => {
   const customHeaders = {
     Authorization: 'Bearer ' + getToken(),
     'Content-Type': 'application/json',
   };
-  const [open, setOpen] = useState(false);
-  const handleOpen = () => setOpen(true);
-  const handleClose = () => setOpen(false);
-  const [venues, setVenues] = useState([]);
-  const navigate = useNavigate();
   const dispatch = useDispatch();
   const token = useTokenRefresh(getToken());
   const [counties, setCounties] = useState([]);
-  const [suggestions, setSuggestions] = useState([]);
   const [town, setTown] = useState('');
   const [county, setCounty] = useState('');
   const [countyData, setCountyData] = useState([]);
-  const [isDisabled, setIsDisabled] = useState(true);
   const [position, setPosition] = useState(center);
   const [locSuggestions, setLocSuggestions] = useState([]);
   const [search, setSearch] = useState('');
@@ -70,24 +60,6 @@ const VenueComponent = ({ venue }) => {
     reset,
     formState: { errors, isSubmitting },
   } = useForm();
-
-  const fetchVenues = async () => {
-    try {
-      const response = await getData(`${Config.API_URL}/venues`, customHeaders);
-      console.log(response.data);
-
-      setVenues(response.data);
-    } catch (error) {
-      console.log(error);
-      dispatch(
-        showNotification({
-          message: error.response.data.message,
-          type: 'error', // success, error, warning, info
-        })
-      );
-      setTimeout(() => dispatch(hideNotification()), 3000);
-    }
-  };
   const fetchCounties = async () => {
     try {
       const response = await getData(
@@ -162,7 +134,6 @@ const VenueComponent = ({ venue }) => {
     setSearch(suggestion.formatted);
   };
   useEffect(() => {
-    fetchVenues();
     fetchCounties();
   }, [token]);
 
@@ -229,7 +200,6 @@ const VenueComponent = ({ venue }) => {
       setTimeout(() => dispatch(hideNotification()), 3000);
     }
   };
-
   return (
     <>
       <form onSubmit={handleSubmit(onSubmit)} action='' method='post'>
@@ -239,7 +209,7 @@ const VenueComponent = ({ venue }) => {
           className='form-control w-100'
           placeholder='Type venue...'
           value={search}
-          defaultValue={`venue && venue.name`}
+          defaultValue={venue && venue.name}
           onChange={handleSearchChange}
           style={{
             width: '300px',

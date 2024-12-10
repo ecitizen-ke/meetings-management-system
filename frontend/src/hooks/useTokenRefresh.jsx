@@ -16,13 +16,13 @@ const customHeaders = {
 const refreshToken = async () => {
   try {
     // Make an API request to refresh the token
-    const response = await postData(
+    const { data } = await postData(
       `${Config.API_URL}/auth/users/login/refresh`,
       {},
       customHeaders
     );
-    console.log('New refresh token: ' + response.access_token);
-    return response.access_token;
+    console.log('New refresh token: ' + data.access_token);
+    return data.access_token;
   } catch (error) {
     console.error('Failed to refresh token:', error);
   }

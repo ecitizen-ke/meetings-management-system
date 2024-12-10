@@ -17,6 +17,7 @@ import {
   VerifiedUser,
 } from '@mui/icons-material';
 import Swal from 'sweetalert2';
+import { useSelector } from 'react-redux';
 const Topbar = () => {
   const [anchorEl, setAnchorEl] = useState(null);
 
@@ -24,6 +25,7 @@ const Topbar = () => {
     setAnchorEl(event.currentTarget);
   };
 
+  const user = useSelector((state) => state.auth);
   const handleMenuClose = () => {
     setAnchorEl(null);
   };
@@ -64,10 +66,10 @@ const Topbar = () => {
         Meetings Management System
       </Typography>
       <Box sx={{ ml: 'auto' }}>
+        Hi, {user.auth ? user.auth.name : ``}
         <IconButton onClick={handleMenuOpen}>
           <Avatar alt='Profile Picture' src={avatar} />
         </IconButton>
-
         <Menu
           anchorEl={anchorEl}
           open={Boolean(anchorEl)}
