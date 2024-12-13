@@ -536,7 +536,7 @@ INSERT INTO `locations` (`county`, `town`) VALUES
 ('Garissa', 'Ugunja'),
 ('Nairobi', 'Nairobi Hospital'),
 ('Garissa', 'bondo'),
-('Nairobi', 'Nairobi Upper Hill'),
+('Nairobi', 'Upper Hill'),
 ('Nairobi', 'Naivasha Road'),
 ('Nairobi', 'Nakumatt Ukay'),
 ('Nairobi', 'Ndenderu'),
